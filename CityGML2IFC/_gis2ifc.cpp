@@ -1412,6 +1412,7 @@ _citygml_exporter::_citygml_exporter(_gis2ifc* pSite)
 	, m_iTransportationObjectClass(0)
 	, m_iFurnitureObjectClass(0)
 	, m_iReliefObjectClass(0)
+	, m_iThingClass(0)
 	, m_mapFeatures()
 	, m_mapFeatureElements()
 	, m_iCurrentOwlBuildingElementInstance(0)
@@ -1446,6 +1447,7 @@ _citygml_exporter::_citygml_exporter(_gis2ifc* pSite)
 	m_iTransportationObjectClass = GetClassByName(getSite()->getOwlModel(), "class:_TransportationObject");
 	m_iFurnitureObjectClass = GetClassByName(getSite()->getOwlModel(), "class:CityFurniture");
 	m_iReliefObjectClass = GetClassByName(getSite()->getOwlModel(), "class:_ReliefComponent");
+	m_iThingClass = GetClassByName(getSite()->getOwlModel(), "class:Thing");
 }
 
 /*virtual*/ _citygml_exporter::~_citygml_exporter()
@@ -1458,13 +1460,6 @@ _citygml_exporter::_citygml_exporter(_gis2ifc* pSite)
 
 	m_mapBuildings.clear();
 	m_mapBuildingElements.clear();
-
-	/*if (m_iBuildingClass == 0)
-	{
-		getSite()->logWarn("There are no Buildings.");
-
-		return;
-	}*/
 
 	createIfcModel(L"IFC4");
 
@@ -3114,7 +3109,8 @@ bool _citygml_exporter::isFeatureClass(OwlInstance iInstanceClass) const
 		isTunnelObjectClass(iInstanceClass) ||
 		isTransportationObjectClass(iInstanceClass) ||
 		isFurnitureObjectClass(iInstanceClass) ||
-		isReliefObjectClass(iInstanceClass))
+		isReliefObjectClass(iInstanceClass) ||
+		isUnknownClass(iInstanceClass))
 	{
 		return true;
 	}
@@ -3169,6 +3165,13 @@ bool _citygml_exporter::isReliefObjectClass(OwlClass iInstanceClass) const
 	assert(iInstanceClass != 0);
 
 	return (iInstanceClass == m_iReliefObjectClass) || IsClassAncestor(iInstanceClass, m_iReliefObjectClass);
+}
+
+bool _citygml_exporter::isUnknownClass(OwlClass iInstanceClass) const
+{
+	assert(iInstanceClass != 0);
+
+	return (iInstanceClass == m_iThingClass) || IsClassAncestor(iInstanceClass, m_iThingClass);
 }
 
 // ************************************************************************************************

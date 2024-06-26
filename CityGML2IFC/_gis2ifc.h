@@ -304,6 +304,7 @@ private: // Members
 	OwlClass m_iTransportationObjectClass;
 	OwlClass m_iFurnitureObjectClass;
 	OwlClass m_iReliefObjectClass;
+	OwlClass m_iThingClass; // Unknown
 	map<OwlInstance, vector<OwlInstance>> m_mapFeatures; // Feature : Supported Elements
 	map<OwlInstance, vector<OwlInstance>> m_mapFeatureElements; // Feature (Supported) Element : Geometries
 	
@@ -383,6 +384,7 @@ protected:  // Methods
 	bool isTransportationObjectClass(OwlClass iInstanceClass) const;
 	bool isFurnitureObjectClass(OwlClass iInstanceClass) const;
 	bool isReliefObjectClass(OwlClass iInstanceClass) const;
+	bool isUnknownClass(OwlClass iInstanceClass) const;
 };
 
 // ************************************************************************************************
