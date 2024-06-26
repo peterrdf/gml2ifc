@@ -1,0 +1,17 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs/gml2ifc/v16
+/.vs
+/CityGML2IFC
+/Debug/CityGML2IFC.pdb
+/Debug/CityGML2IFC.exe
+/x64/Debug/schema/temp
+/x64/Debug/CityGML2IFC.pdb
+/x64/Debug/CityGML2IFC.exe
+/x64/Release/schema/temp
+/x64/Release/CityGML2IFC.pdb
+/x64/Release/CityGML2IFC.exe
+/Release/CityGML2IFC.pdb
+/Release/CityGML2IFC.exe
