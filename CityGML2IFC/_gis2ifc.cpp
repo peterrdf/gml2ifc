@@ -1412,6 +1412,9 @@ _citygml_exporter::_citygml_exporter(_gis2ifc* pSite)
 	, m_iTransportationObjectClass(0)
 	, m_iFurnitureObjectClass(0)
 	, m_iReliefObjectClass(0)
+	, m_iLandUseClass(0)
+	, m_iTrafficSpaceClass(0)
+	, m_iTrafficAreaClass(0)
 	, m_iThingClass(0)
 	, m_mapFeatures()
 	, m_mapFeatureElements()
@@ -1447,6 +1450,9 @@ _citygml_exporter::_citygml_exporter(_gis2ifc* pSite)
 	m_iTransportationObjectClass = GetClassByName(getSite()->getOwlModel(), "class:_TransportationObject");
 	m_iFurnitureObjectClass = GetClassByName(getSite()->getOwlModel(), "class:CityFurniture");
 	m_iReliefObjectClass = GetClassByName(getSite()->getOwlModel(), "class:_ReliefComponent");
+	m_iLandUseClass = GetClassByName(getSite()->getOwlModel(), "class:LandUse");
+	m_iTrafficSpaceClass = GetClassByName(getSite()->getOwlModel(), "class:trafficSpace");
+	m_iTrafficAreaClass = GetClassByName(getSite()->getOwlModel(), "class:TrafficArea");
 	m_iThingClass = GetClassByName(getSite()->getOwlModel(), "class:Thing");
 }
 
@@ -2003,6 +2009,8 @@ void _citygml_exporter::createFeatures(SdaiInstance iSiteInstance, SdaiInstance 
 
 		SdaiInstance iFeatureInstancePlacement = 0;
 		if (isTransportationObjectClass(iInstanceClass) ||
+			isTrafficSpaceClass(iInstanceClass) ||
+			isTrafficAreaClass(iInstanceClass) ||
 			isBridgeObjectClass(iInstanceClass) ||
 			isTunnelObjectClass(iInstanceClass))
 		{			
@@ -2020,6 +2028,7 @@ void _citygml_exporter::createFeatures(SdaiInstance iSiteInstance, SdaiInstance 
 			vecFeatureInstances.push_back(iFeatureInstance);
 		}
 		else if (isReliefObjectClass(iInstanceClass) ||
+			isLandUseClass(iInstanceClass) ||
 			isWaterObjectClass(iInstanceClass) ||
 			isVegetationObjectClass(iInstanceClass))
 		{
@@ -2110,10 +2119,6 @@ void _citygml_exporter::createFeaturesRecursively(OwlInstance iInstance)
 						m_mapFeatures[piValues[iValue]] = vector<OwlInstance>();
 
 						searchForFeatureElements(piValues[iValue], piValues[iValue]);
-					}
-					else
-					{
-						assert(false); // Internal error!
 					}
 				}
 				else
@@ -3108,8 +3113,11 @@ bool _citygml_exporter::isFeatureClass(OwlInstance iInstanceClass) const
 		isBridgeObjectClass(iInstanceClass) ||
 		isTunnelObjectClass(iInstanceClass) ||
 		isTransportationObjectClass(iInstanceClass) ||
+		isTrafficSpaceClass(iInstanceClass) ||
+		isTrafficAreaClass(iInstanceClass) ||
 		isFurnitureObjectClass(iInstanceClass) ||
 		isReliefObjectClass(iInstanceClass) ||
+		isLandUseClass(iInstanceClass) ||
 		isUnknownClass(iInstanceClass))
 	{
 		return true;
@@ -3165,6 +3173,27 @@ bool _citygml_exporter::isReliefObjectClass(OwlClass iInstanceClass) const
 	assert(iInstanceClass != 0);
 
 	return (iInstanceClass == m_iReliefObjectClass) || IsClassAncestor(iInstanceClass, m_iReliefObjectClass);
+}
+
+bool _citygml_exporter::isLandUseClass(OwlClass iInstanceClass) const
+{
+	assert(iInstanceClass != 0);
+
+	return (iInstanceClass == m_iLandUseClass) || IsClassAncestor(iInstanceClass, m_iLandUseClass);
+}
+
+bool _citygml_exporter::isTrafficSpaceClass(OwlClass iInstanceClass) const
+{
+	assert(iInstanceClass != 0);
+
+	return (iInstanceClass == m_iTrafficSpaceClass) || IsClassAncestor(iInstanceClass, m_iTrafficSpaceClass);
+}
+
+bool _citygml_exporter::isTrafficAreaClass(OwlClass iInstanceClass) const
+{
+	assert(iInstanceClass != 0);
+
+	return (iInstanceClass == m_iTrafficAreaClass) || IsClassAncestor(iInstanceClass, m_iTrafficAreaClass);
 }
 
 bool _citygml_exporter::isUnknownClass(OwlClass iInstanceClass) const
