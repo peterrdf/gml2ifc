@@ -51,7 +51,7 @@ typedef		int64_t										ConceptualFace;
 
 #define		OBJECTPROPERTY_TYPE							1
 #define		OBJECTTYPEPROPERTY_TYPE						1
-#define		DATATYPEPROPERTY_TYPE_BOOLEAN 				2
+#define		DATATYPEPROPERTY_TYPE_BOOLEAN				2
 #define		DATATYPEPROPERTY_TYPE_STRING				3		//	DATATYPEPROPERTY_TYPE_CHAR
 #define		DATATYPEPROPERTY_TYPE_INTEGER				4
 #define		DATATYPEPROPERTY_TYPE_DOUBLE				5
@@ -546,7 +546,7 @@ static	inline	const wchar_t	* GetAssertionFileW(
 //	Note: this setting is independent from the model, this call can also be called without a model defined.
 //
 //	The ascii value defines
-//		true [default]	8 bit serializatiom (size of char returned in bits)
+//		true [default]	8 bit serialization (size of char returned in bits)
 //		false			16/32 bit serialization (depending on the operating system, i.e. sizeof of wchar_t returned in number of bits)
 //	Note: this setting is model-dependent and requires a model present to have any effect.
 //
@@ -765,7 +765,7 @@ OwlModel		DECL STDC	GetModel(
 //		  by the hosting application.
 //	Note: internally there is no performance gain / loss. This is purely meant for situations
 //		  where the hosting application can benefit performance wise from having an ordered list.
-//	Note: use in combination with other libraries is not adviced, i.e. when combined with the
+//	Note: use in combination with other libraries is not advised, i.e. when combined with the
 //		  IFC generation from the IFC Engine component for example
 //
 void			DECL STDC	OrderedHandles(
@@ -828,7 +828,7 @@ static	inline	void	PeelArray(
 //				void					returns
 //
 //	This function allows to enable or disable several active consistency checks. Enabling the checks can 
-//	introduce performance effects; it is helpfull for and meant for debugging on client side.
+//	introduce performance effects; it is helpful for and meant for debugging on client side.
 //	If model is zero the consistency checks are set for all open and to be created models.
 //
 void			DECL STDC	SetInternalCheck(
@@ -846,7 +846,7 @@ void			DECL STDC	SetInternalCheck(
 //
 //	This function returns all current enabled active consistency checks given the mask the function is 
 //	called for.
-//	When leaving mask and settinbg zero it will return all bits that can be set.
+//	When leaving mask and setting zero it will return all bits that can be set.
 //
 uint64_t		DECL STDC	GetInternalCheck(
 									OwlModel				model,
@@ -878,7 +878,7 @@ int64_t			DECL STDC	GetInternalCheckIssueCnt(
 //	This function returns the oldest issues in the list of issues and reduces the list of issues with 1.
 //	The name and description represent the issue as ASCII string, if relevant the relating owlInstance
 //	will be returned through relatedOwlInstance.
-//	Namer, Description and relatedOwlInstance are optional.
+//	Name, Description and relatedOwlInstance are optional.
 //
 void			DECL STDC	GetInternalCheckIssue(
 									OwlModel				model,
@@ -924,7 +924,7 @@ static	inline	void	GetInternalCheckIssue(
 //	This function returns the oldest issues in the list of issues and reduces the list of issues with 1.
 //	The name and description represent the issue as Unicode string, if relevant the relating owlInstance
 //	will be returned through relatedOwlInstance.
-//	Namer, Description and relatedOwlInstance are optional.
+//	Name, Description and relatedOwlInstance are optional.
 //
 void			DECL STDC	GetInternalCheckIssueW(
 									OwlModel				model,
@@ -1419,7 +1419,7 @@ static	inline	int64_t	SaveInstanceTreeW(
 //
 //				int64_t					returns								OUT
 //
-//	This function saves the selected instance and its dependancies in a stream.
+//	This function saves the selected instance and its dependencies in a stream.
 //
 int64_t			DECL STDC	SaveInstanceTreeS(
 									OwlInstance				owlInstance,
@@ -1435,7 +1435,7 @@ int64_t			DECL STDC	SaveInstanceTreeS(
 //
 //				int64_t					returns								OUT
 //
-//	This function saves the selected instance and its dependancies in an array.
+//	This function saves the selected instance and its dependencies in an array.
 //
 int64_t			DECL STDC	SaveInstanceTreeA(
 									OwlInstance				owlInstance,
@@ -1451,7 +1451,7 @@ int64_t			DECL STDC	SaveInstanceTreeA(
 //
 //				int64_t					returns								OUT
 //
-//	This function saves the selected instance and its dependancies on location file name.
+//	This function saves the selected instance and its dependencies on location file name.
 //
 int64_t			DECL STDC	SaveInstanceNetwork(
 									OwlInstance				owlInstance,
@@ -1490,7 +1490,7 @@ static	inline	int64_t	SaveInstanceNetwork(
 //
 //				int64_t					returns								OUT
 //
-//	This function saves the selected instance and its dependancies on location file name.
+//	This function saves the selected instance and its dependencies on location file name.
 //
 int64_t			DECL STDC	SaveInstanceNetworkW(
 									OwlInstance				owlInstance,
@@ -1530,7 +1530,7 @@ static	inline	int64_t	SaveInstanceNetworkW(
 //
 //				int64_t					returns								OUT
 //
-//	This function saves the selected instance and its dependancies in a stream.
+//	This function saves the selected instance and its dependencies in a stream.
 //
 int64_t			DECL STDC	SaveInstanceNetworkS(
 									OwlInstance				owlInstance,
@@ -1548,7 +1548,7 @@ int64_t			DECL STDC	SaveInstanceNetworkS(
 //
 //				int64_t					returns								OUT
 //
-//	This function saves the selected instance and its dependancies in an array.
+//	This function saves the selected instance and its dependencies in an array.
 //
 int64_t			DECL STDC	SaveInstanceNetworkA(
 									OwlInstance				owlInstance,
@@ -1718,7 +1718,7 @@ void			DECL STDC	SetOverrideFileIO(
 //	Available formats
 //		RDF
 //		TTL
-//		BIN/L - readible but large BIN format
+//		BIN/L - readable but large BIN format
 //		BIN/S - Optimized Binary, only running within given revision 
 //		BIN/X - Optimized Binary, running in all revisions supporting BIN/X
 //
@@ -1791,6 +1791,254 @@ OwlInstance		DECL STDC	CopyInstanceNetwork(
 									bool					includeInverseRelations,
 									OwlModel				targetModel
 								);
+
+//
+//		EncodeBase64                                            (http://rdf.bg/gkdoc/CP64/EncodeBase64.html)
+//				char					* output							IN / OUT
+//				const unsigned char		* input								IN
+//				int64_t					size								IN
+//				bool					terminator							IN
+//
+//				int64_t					returns								OUT
+//
+//	Function to encode any data input array into a BASE64 string.
+//
+//	The output string has to be allocated by the host. The return value defines the length of the string size in bytes.
+//
+//	Terminator adds a 0 element to the end of the BASE64 generated string, it will NOT increase the length.
+//
+//	If output is nullptr the length will be calculated but the string itself will not be generated.
+//
+int64_t			DECL STDC	EncodeBase64(
+									char					* output,
+									const unsigned char		* input,
+									int64_t					size,
+									bool					terminator
+								);
+
+#ifdef __cplusplus
+	}
+#endif
+
+//
+//
+static	inline	int64_t	EncodeBase64(
+								char					* output,
+								const unsigned char		* input,
+								int64_t					size
+							)
+{
+	return	EncodeBase64(
+					output,
+					input,
+					size,
+					false								//	terminator
+				);
+}
+
+//
+//
+static	inline	char	* EncodeBase64(
+								const unsigned char		* input,
+								int64_t					size
+							)
+{
+	char	* output = new char[(int_t) EncodeBase64(nullptr, input, size) / sizeof(char) + 1];
+
+	EncodeBase64(
+			output,
+			input,
+			size,
+			true								//	terminator
+		);
+
+	return  output;
+}
+
+#ifdef __cplusplus
+	extern "C" {
+#endif
+
+//
+//		EncodeBase64W                                           (http://rdf.bg/gkdoc/CP64/EncodeBase64W.html)
+//				wchar_t					* output							IN / OUT
+//				const unsigned char		* input								IN
+//				int64_t					size								IN
+//				bool					terminator							IN
+//
+//				int64_t					returns								OUT
+//
+//	Function to encode any data input array into a BASE64 string.
+//
+//	The output string has to be allocated by the host. The return value defines the length of the string size in bytes.
+//
+//	Terminator adds a 0 element to the end of the BASE64 generated string, it will NOT increase the length.
+//
+//	If output is nullptr the length will be calculated but the string itself will not be generated.
+//
+int64_t			DECL STDC	EncodeBase64W(
+									wchar_t					* output,
+									const unsigned char		* input,
+									int64_t					size,
+									bool					terminator
+								);
+
+#ifdef __cplusplus
+	}
+#endif
+
+//
+//
+static	inline	int64_t	EncodeBase64W(
+								wchar_t					* output,
+								const unsigned char		* input,
+								int64_t					size
+							)
+{
+	return	EncodeBase64W(
+					output,
+					input,
+					size,
+					false								//	terminator
+				);
+}
+
+//
+//
+static	inline	wchar_t	* EncodeBase64W(
+								const unsigned char		* input,
+								int64_t					size
+							)
+{
+	wchar_t * output = new wchar_t[(int_t) EncodeBase64(nullptr, input, size) / sizeof(wchar_t) + 1];
+
+	EncodeBase64W(
+			output,
+			input,
+			size,
+			true								//	terminator
+		);
+
+	return  output;
+}
+
+#ifdef __cplusplus
+	extern "C" {
+#endif
+
+//
+//		DecodeBase64                                            (http://rdf.bg/gkdoc/CP64/DecodeBase64.html)
+//				unsigned char			* output							IN / OUT
+//				const char				* input								IN
+//				int64_t					size								IN
+//
+//				int64_t					returns								OUT
+//
+//	Function to decode a BASE64 string into any data output array.
+//
+//	The BASE64 string is measured by the (non-zero) size given or by the terminator.
+//
+//	If output is nullptr the length will be calculated but the string itself will not be generated.
+//
+int64_t			DECL STDC	DecodeBase64(
+									unsigned char			* output,
+									const char				* input,
+									int64_t					size
+								);
+
+#ifdef __cplusplus
+	}
+#endif
+
+//
+//
+static	inline	int64_t	DecodeBase64(
+								unsigned char			* output,
+								char					* input,
+								int64_t					size
+							)
+{
+	return	DecodeBase64(
+					output,
+					(const char*) input,
+					size
+				);
+}
+
+//
+//
+static	inline	int64_t	DecodeBase64(
+								unsigned char			* output,
+								const char				* input
+							)
+{
+	return	DecodeBase64(
+					output,
+					input,
+					0									//	size
+				);
+}
+
+#ifdef __cplusplus
+	extern "C" {
+#endif
+
+//
+//		DecodeBase64W                                           (http://rdf.bg/gkdoc/CP64/DecodeBase64W.html)
+//				unsigned char			* output							IN / OUT
+//				const wchar_t			* input								IN
+//				int64_t					size								IN
+//
+//				int64_t					returns								OUT
+//
+//	Function to decode a BASE64 string into any data output array.
+//
+//	The BASE64 string is measured by the (non-zero) size given or by the terminator.
+//
+//	If output is nullptr the length will be calculated but the string itself will not be generated.
+//
+int64_t			DECL STDC	DecodeBase64W(
+									unsigned char			* output,
+									const wchar_t			* input,
+									int64_t					size
+								);
+
+#ifdef __cplusplus
+	}
+#endif
+
+//
+//
+static	inline	int64_t	DecodeBase64W(
+								unsigned char			* output,
+								wchar_t					* input,
+								int64_t					size
+							)
+{
+	return	DecodeBase64W(
+					output,
+					(const wchar_t*) input,
+					size
+				);
+}
+
+//
+//
+static	inline	int64_t	DecodeBase64W(
+								unsigned char			* output,
+								const wchar_t			* input
+							)
+{
+	return	DecodeBase64W(
+					output,
+					input,
+					0									//	size
+				);
+}
+
+#ifdef __cplusplus
+	extern "C" {
+#endif
 
 //
 //		CopyModel                                               (http://rdf.bg/gkdoc/CP64/CopyModel.html)
@@ -1866,7 +2114,7 @@ OwlModel		DECL STDC	IsModel(
 //		-	when the name is already used for an instance or property;
 //		-	if the model input is zero or not a model handle.
 //
-//	Giving the class a name is optional, if a name is not given it will recieve an automatically generated name,
+//	Giving the class a name is optional, if a name is not given it will receive an automatically generated name,
 //	it's automatically generated name can change between sessions.
 //
 OwlClass		DECL STDC	CreateClass(
@@ -1899,7 +2147,7 @@ static	inline	OwlClass	CreateClass(
 {
 	return	CreateClass(
 					model,
-					(const char*) nullptr					//	name
+					(const char*) nullptr				//	name
 				);
 }
 
@@ -1921,7 +2169,7 @@ static	inline	OwlClass	CreateClass(
 //		-	when the name is already used for an instance or property;
 //		-	if the model input is zero or not a model handle.
 //
-//	Giving the class a name is optional, if a name is not given it will recieve an automatically generated name,
+//	Giving the class a name is optional, if a name is not given it will receive an automatically generated name,
 //	it's automatically generated name can change between sessions.
 //
 OwlClass		DECL STDC	CreateClassW(
@@ -1954,7 +2202,7 @@ static	inline	OwlClass	CreateClassW(
 {
 	return	CreateClassW(
 					model,
-					(const wchar_t*) nullptr				//	name
+					(const wchar_t*) nullptr			//	name
 				);
 }
 
@@ -2058,7 +2306,7 @@ OwlClass		DECL STDC	GetClassesByIterator(
 //
 //				int64_t					returns								OUT
 //
-//	Defines (set/unset) the parent class of a given class. Multiple-inheritence is supported and behavior
+//	Defines (set/unset) the parent class of a given class. Multiple-inheritance is supported and behavior
 //	of parent classes is also inherited as well as cardinality restrictions on datatype properties and
 //	object properties (relations).
 //
@@ -2067,7 +2315,7 @@ OwlClass		DECL STDC	GetClassesByIterator(
 //	Returns the same value as IsClassAncestor after the call.
 //
 //	When unset: it removes parentOwlClass from immediate parents and returns 1, 
-//	or retunrs 0 if parentOwlClass is not immediate parent
+//	or returns 0 if parentOwlClass is not immediate parent
 //
 int64_t			DECL STDC	SetClassParent(
 									OwlClass				owlClass,
@@ -2084,7 +2332,7 @@ int64_t			DECL STDC	SetClassParent(
 //
 //				int64_t					returns								OUT
 //
-//	Defines (set/unset) the parent class of a given class. Multiple-inheritence is supported and behavior
+//	Defines (set/unset) the parent class of a given class. Multiple-inheritance is supported and behavior
 //	of parent classes is also inherited as well as cardinality restrictions on datatype properties and
 //	object properties (relations).
 //
@@ -2093,8 +2341,8 @@ int64_t			DECL STDC	SetClassParent(
 //	Returns the same value as IsClassAncestor after the call.
 //
 //	When unset: it removes parentOwlClass from immediate parents and returns 1, 
-//	or retunrs 0 if parentOwlClass is not immediate parent
-// 
+//	or returns 0 if parentOwlClass is not immediate parent
+//
 //	This call has the same behavior as SetClassParent, however needs to be
 //	used in case classes are exchanged as a successive series of integers.
 //
@@ -2547,7 +2795,7 @@ static	inline	const wchar_t	* GetNameOfClassWEx(
 //
 //	Returns a handle to a property.
 //	If input property is zero, the handle will point to the first property having cardinality restriction to the class.
-//	else it will point to next propety with known restriction
+//	else it will point to next property with known restriction
 //	If all properties are past (or no relevant properties are found), the function will return 0.
 //	minCard and maxCard will contain restrictions for returned property
 //
@@ -2595,7 +2843,7 @@ static	inline	RdfProperty	GetClassPropertyByIterator(
 //
 //	Returns a handle to a property.
 //	If input property is zero, the handle will point to the first property having cardinality restriction to the class.
-//	else it will point to next propety with known restriction
+//	else it will point to next property with known restriction
 //	If all properties are past (or no relevant properties are found), the function will return 0.
 //	minCard and maxCard will contain restrictions for returned property
 //
@@ -2862,7 +3110,7 @@ OwlClass		DECL STDC	IsClass(
 //		-	when the name is already used for a class or instance;
 //		-	if the model input is zero or not a model handle.
 //
-//	Giving the property a name is optional, if a name is not given it will recieve an automatically generated name,
+//	Giving the property a name is optional, if a name is not given it will receive an automatically generated name,
 //	it's automatically generated name can change between sessions.
 //
 RdfProperty		DECL STDC	CreateProperty(
@@ -2936,7 +3184,7 @@ static	inline	RdfProperty	CreateProperty(
 //		-	when the name is already used for a class or instance;
 //		-	if the model input is zero or not a model handle.
 //
-//	Giving the property a name is optional, if a name is not given it will recieve an automatically generated name,
+//	Giving the property a name is optional, if a name is not given it will receive an automatically generated name,
 //	it's automatically generated name can change between sessions.
 //
 RdfProperty		DECL STDC	CreatePropertyW(
@@ -3111,7 +3359,7 @@ void			DECL STDC	SetPropertyRangeRestriction(
 //				void					returns
 //
 //	Sets or unsets a specific owlClass as range restriction to an rdfProperty. The property is expected to
-//	be an objectp[roperty, i.e. relation.]
+//	be an object[property, i.e. relation.]
 //	If rdfProperty is not an object property this call has no effect.
 //
 void			DECL STDC	SetPropertyRangeRestrictionEx(
@@ -3669,12 +3917,12 @@ RdfPropertyType	DECL STDC	GetPropertyTypeEx(
 //			0	Vertex does not contain second 2D texture info
 //			1	Vertex does contain second 2D texture info => if set, bit 6 will also be set
 //
-//		0	The property is not defined yet
-//		1	The property is an Object Type Property
-//		2	The property is an Data Type Property of type Boolean
-//		3	The property is an Data Type Property of type Char
-//		4	The property is an Data Type Property of type Integer
-//		5	The property is an Data Type Property of type Double
+//	Error return codes:
+//		0	successful
+//		1	argument rdfProperty is incorrect (not a proper handle to an active property)
+//		2	another property is dependent on the property to be deleted (for example through an inheritance relation)
+//		3	an instance has a non-zero cardinality for the property to be deleted
+//		4	undefined error
 //
 int64_t			DECL STDC	RemoveProperty(
 									RdfProperty				rdfProperty
@@ -3693,7 +3941,7 @@ int64_t			DECL STDC	RemoveProperty(
 //	The return value represents a bit set defining findings during the removal, if a clean removal with no side effects was possible the return value is 0. In all other cases 
 //	the following bits represent the findings during removal:
 //		bit 0:
-//			0	Iunput as expected
+//			0	Input as expected
 //			1	Encountered an issue on input value, i.e. property was not recognized as property
 //		bit 1:
 //			0	No 'child' properties found
@@ -3711,13 +3959,12 @@ int64_t			DECL STDC	RemoveProperty(
 //			0	Vertex does not contain second 2D texture info
 //			1	Vertex does contain second 2D texture info => if set, bit 6 will also be set
 //
-//		0	The property is not defined yet
-//		1	The property is an Object Type Property
-//		2	The property is an Data Type Property of type Boolean
-//		3	The property is an Data Type Property of type Char
-//		4	The property is an Data Type Property of type Integer
-//		5	The property is an Data Type Property of type Double
-//
+//	Error return codes:
+//		0	successful
+//		1	argument model or rdfProperty is incorrect (not a proper handle to an active model)
+//		2	another property is dependent on the property to be deleted (for example through an inheritance relation)
+//		3	an instance has a non-zero cardinality for the property to be deleted
+//		4	undefined error
 //
 //	This call has the same behavior as RemoveProperty, however needs to be
 //	used in case properties are exchanged as a successive series of integers.
@@ -4568,7 +4815,7 @@ static	inline	const wchar_t	* GetNameOfInstanceWEx(
 //	in the context of an instance.
 //	The value of card gives the actual card of the values list.
 //	The list values of undefined (void) items is a list of booleans, chars, integers
-//	or doubles, this list has a length as givin in the values card. The actual used type
+//	or doubles, this list has a length as given in the values card. The actual used type
 //	is given by the definition of the dataTypeProperty.
 //	The return value always should be 0, if not something is wrong in the way this property is called.
 //
@@ -4712,7 +4959,7 @@ static	inline	int64_t	SetDatatypeProperty(
 //	in the context of an instance.
 //	The value of card gives the actual card of the values list.
 //	The list values of undefined (void) items is a list of booleans, chars, integers
-//	or doubles, this list has a length as givin in the values card. The actual used type
+//	or doubles, this list has a length as given in the values card. The actual used type
 //	is given by the definition of the dataTypeProperty.
 //	The return value always should be 0, if not something is wrong in the way this property is called.
 //
@@ -4743,7 +4990,7 @@ int64_t			DECL STDC	SetDatatypePropertyEx(
 //	in the context of an instance.
 //	The value of card gives the actual card of the values list.
 //	The list values of undefined (void) items is a list of booleans, chars, integers
-//	or doubles, this list has a length as givin in the value card. The actual used type
+//	or doubles, this list has a length as given in the value card. The actual used type
 //	is given by the definition of the dataTypeProperty.
 //	The return value always should be 0, if not something is wrong in the way this property is called.
 //
@@ -4793,7 +5040,7 @@ static	inline	int64_t	GetDatatypeProperty(
 //	in the context of an instance.
 //	The value of card gives the actual card of the values list.
 //	The list values of undefined (void) items is a list of booleans, chars, integers
-//	or doubles, this list has a length as givin in the value card. The actual used type
+//	or doubles, this list has a length as given in the value card. The actual used type
 //	is given by the definition of the dataTypeProperty.
 //	The return value always should be 0, if not something is wrong in the way this property is called.
 //
@@ -4848,7 +5095,7 @@ static	inline	int64_t	GetDatatypePropertyEx(
 //	in the context of an instance.
 //	The value of card gives the actual card of the values list.
 //	The list values of integers is a list of handles to instances, this list
-//	has a length as givin in the values card.
+//	has a length as given in the values card.
 //	The return value always should be 0, if not something is wrong in the way this property is called.
 //
 //	Note: the client application needs to make sure the cardinality of
@@ -4901,7 +5148,7 @@ static	inline	int64_t	SetObjectProperty(
 //	in the context of an instance.
 //	The value of card gives the actual card of the values list.
 //	The list values of integers is a list of handles to instances, this list
-//	has a length as givin in the values card.
+//	has a length as given in the values card.
 //	The return value always should be 0, if not something is wrong in the way this property is called.
 //
 //	This call has the same behavior as SetObjectProperty, however needs to be
@@ -4931,7 +5178,7 @@ int64_t			DECL STDC	SetObjectPropertyEx(
 //	in the context of an instance.
 //	The value of card gives the actual card of the values list.
 //	The list values of integers is a list of handles to instances, this list
-//	has a length as givin in the value card.
+//	has a length as given in the value card.
 //	The return value always should be 0, if not something is wrong in the way this property is called.
 //
 int64_t			DECL STDC	GetObjectProperty(
@@ -5003,7 +5250,7 @@ static	inline	OwlInstance	GetObjectProperty(
 //	in the context of an instance.
 //	The value of card gives the actual card of the values list.
 //	The list values of integers is a list of handles to instances, this list
-//	has a length as givin in the values card.
+//	has a length as given in the values card.
 //	The return value always should be 0, if not something is wrong in the way this property is called.
 //
 //	This call has the same behavior as GetObjectProperty, however needs to be
@@ -5051,7 +5298,7 @@ static	inline	int64_t	GetObjectPropertyEx(
 //				int64_t					returns								OUT
 //
 //	InstanceInContext structures give you more detailed information about
-//	individual parts of the geometry of a certain instance viualized.
+//	individual parts of the geometry of a certain instance visualized.
 //	It is allowed to have more then 1 InstanceInContext structures per instance.
 //	InstanceInContext structures are updated dynamically when the geometry
 //	structure is updated.
@@ -5066,7 +5313,7 @@ int64_t			DECL STDC	CreateInstanceInContextStructure(
 //
 //				void					returns
 //
-//	InstanceInContext structures are updated dynamically and therfore even while the cost
+//	InstanceInContext structures are updated dynamically and therefore even while the cost
 //	in performance and memory is limited it is advised to destroy structures as soon
 //	as they are obsolete.
 //
@@ -5285,6 +5532,20 @@ static	inline	int64_t	CalculateInstance(
 				);
 }
 
+//
+//
+static	inline	int64_t	CalculateInstance(
+								OwlInstance				owlInstance
+							)
+{
+	return	CalculateInstance(
+					owlInstance,
+					nullptr,							//	vertexBufferSize
+					nullptr,							//	indexBufferSize
+					nullptr								//	transformationBufferSize
+				);
+}
+
 #ifdef __cplusplus
 	extern "C" {
 #endif
@@ -5311,7 +5572,7 @@ int64_t			DECL STDC	UpdateInstance(
 //
 //				int64_t					returns								OUT
 //
-//	This function fills in values that are implicitely known but not given by the user. This function
+//	This function fills in values that are implicitly known but not given by the user. This function
 //	can also be used to identify default values of properties if not given.
 //
 int64_t			DECL STDC	InferenceInstance(
@@ -6323,7 +6584,7 @@ static	inline	bool	IsDuplicate(
 //	This function calculates the perimeter of an instance.
 //
 //	Note: internally the call does not store its results, any optimization based on known
-//		  dependancies between instances need to be implemented on the client.
+//		  dependencies between instances need to be implemented on the client.
 //	Note: due to internal structure using already calculated vertex buffer / index buffer does not
 //		  give any performance benefits, in opposite to GetVolume and GetArea
 //
@@ -6340,7 +6601,7 @@ double			DECL STDC	GetPerimeter(
 //				double					returns								OUT
 //
 //	This function calculates the area of an instance.
-//	For perfomance reasons it is benefitial to call it with vertex and index buffer when
+//	For performance reasons it is beneficial to call it with vertex and index buffer when
 //	the arrays are calculated anyway or Volume and Area are needed.
 //
 //	There are two ways to call GetVolume:
@@ -6354,7 +6615,7 @@ double			DECL STDC	GetPerimeter(
 //				operation.
 //
 //	Note: internally the call does not store its results, any optimization based on known
-//		  dependancies between instances need to be implemented on the client.
+//		  dependencies between instances need to be implemented on the client.
 //	Note: in case precision is important and vertex buffer is 32 bit it is advised to
 //		  set vertexBuffer and indexBuffer to 0 even if arrays are existing.
 //
@@ -6396,7 +6657,7 @@ static	inline	double	GetArea(
 //				double					returns								OUT
 //
 //	This function calculates the volume of an instance.
-//	For perfomance reasons it is benefitial to call it with vertex and index buffer when
+//	For performance reasons it is beneficial to call it with vertex and index buffer when
 //	the arrays are calculated anyway or Volume and Area are needed.
 //
 //	There are two ways to call GetVolume:
@@ -6410,7 +6671,7 @@ static	inline	double	GetArea(
 //				operation.
 //
 //	Note: internally the call does not store its results, any optimization based on known
-//		  dependancies between instances need to be implemented on the client.
+//		  dependencies between instances need to be implemented on the client.
 //	Note: in case precision is important and vertex buffer is 32 bit it is advised to
 //		  set vertexBuffer and indexBuffer to 0 even if arrays are existing.
 //
@@ -6453,7 +6714,7 @@ static	inline	double	GetVolume(
 //				void					returns
 //
 //	This function calculates the center of an instance.
-//	For perfomance reasons it is benefitial to call it with vertex and index buffer when
+//	For performance reasons it is beneficial to call it with vertex and index buffer when
 //	the arrays are calculated anyway or Volume and Area are needed.
 //
 //	There are two ways to call GetCenter:
@@ -6467,7 +6728,7 @@ static	inline	double	GetVolume(
 //				operation.
 //
 //	Note: internally the call does not store its results, any optimization based on known
-//		  dependancies between instances need to be implemented on the client.
+//		  dependencies between instances need to be implemented on the client.
 //	Note: in case precision is important and vertex array is 32 bit it is advised to
 //		  set vertexBuffer and indexBuffer to 0 even if arrays are existing.
 //
@@ -6769,8 +7030,8 @@ static	inline	uint32_t	GetColorOfComponent(
 				(const void**) &values,
 				&card
 			);
-		assert(card == 1);
-		rgbwValues[i] = (card == 1) ? values[0] : 0.;
+		assert(card == 0 || card == 1);
+		rgbwValues[i] = (card == 1) ? values[0] : ((i == 3) ? 1. : 0.);
 	}
 
 	return	COLOR_ARR_RGBW(rgbwValues);
@@ -7526,7 +7787,7 @@ int64_t			DECL STDC	SetDataTypeProperty(
 //		GetDataTypeProperty                                     (http://rdf.bg/gkdoc/CP64/GetDataTypeProperty___.html)
 //				OwlInstance				owlInstance							IN
 //				OwlDatatypeProperty		owlDatatypeProperty					IN
-//				const void				** values							IN
+//				const void				** values							IN / OUT
 //				int64_t					* card								IN / OUT
 //
 //				int64_t					returns								OUT
