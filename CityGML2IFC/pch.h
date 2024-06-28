@@ -23,7 +23,7 @@ static std::wstring CA2W(const std::string& str)
     return converterX.from_bytes(str);
 }
 
-static std::string CW2W(const std::wstring& wstr)
+static std::string CW2A(const std::wstring& wstr)
 {
     using convert_typeX = std::codecvt_utf8<wchar_t>;
     std::wstring_convert<convert_typeX, wchar_t> converterX;

@@ -416,7 +416,15 @@ void _exporter_base::createIfcModel(const wchar_t* szSchemaName)
 		"IFC Engine DLL version 1.03 beta", //  preprocessorVersion //#tbd
 		"IFC Engine DLL version 1.03 beta", //  originatingSystem //#tbd
 		"The authorising person",           //  authorization //#tbd
+#ifdef _WINDOWS
 		CW2A(szSchemaName)                  //  fileSchema //#tbd
+#else
+#ifdef __EMSCRIPTEN__
+		CW2A(szSchemaName).c_str()                  //  fileSchema //#tbd
+#else
+#error NOT IMPLEMENTED!
+#endif
+#endif		
 	);
 }
 
@@ -1352,7 +1360,15 @@ string _exporter_base::getTag(OwlInstance iInstance) const
 
 	SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, true);
 
+#ifdef _WINDOWS
 	return (LPCSTR)CW2A(szValue[0]);
+#else
+#ifdef __EMSCRIPTEN__
+	return CW2A(szValue[0]);
+#else
+#error NOT IMPLEMENTED!
+#endif
+#endif
 }
 
 OwlInstance* _exporter_base::getObjectProperty(OwlInstance iInstance, const string& strPropertyName, int64_t& iInstancesCount) const
@@ -2915,7 +2931,15 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 					mapProperties[szPropertyName] = buildPropertySingleValueText(
 						strPropertyName.c_str(),
 						"attribute",
+#ifdef _WINDOWS
 						CW2A(szValue[0]),
+#else
+#ifdef __EMSCRIPTEN__
+						CW2A(szValue[0]).c_str(),
+#else
+#error NOT IMPLEMENTED!
+#endif
+#endif
 						"IFCTEXT");
 				}
 				break;
@@ -2947,7 +2971,15 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 			mapProperties[szPropertyName] = buildPropertySingleValueText(
 				strPropertyName.c_str(),
 				"attribute",
+#ifdef _WINDOWS
 				CW2A(szValue[0]),
+#else
+#ifdef __EMSCRIPTEN__
+				CW2A(szValue[0]).c_str(),
+#else
+#error NOT IMPLEMENTED!
+#endif
+#endif				
 				"IFCTEXT");
 		} // attr:
 

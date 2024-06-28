@@ -8,7 +8,7 @@
 #include <rpc.h>
 #pragma comment(lib, "rpcrt4.lib")
 #else
-#error NOT IMPLEMENTED
+#error NOT IMPLEMENTED!
 #endif
 
 // ************************************************************************************************
@@ -39,7 +39,7 @@ public: // Methods
 
         return "";
 #else
-#error NOT IMPLEMENTED
+#error NOT IMPLEMENTED!
 #endif
     }
 

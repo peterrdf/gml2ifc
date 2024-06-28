@@ -1,8 +1,15 @@
 #pragma once
 
-#include "engine.h"
+#include "../include/engine.h"
+#include "../include/ifcengine.h"
+
+#ifdef _WINDOWS
 #include "gisengine.h"
-#include "ifcengine.h"
+#endif
+
+#ifdef __EMSCRIPTEN__
+#include "../gisengine/gisengine.h"
+#endif
 
 #include "_guid.h"
 
