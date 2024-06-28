@@ -1,15 +1,53 @@
 #pragma once
 
 #include <vector>
-#include <string>
 #include <iostream>
+#include <sstream>
+#include <random>
+#include <climits>
+#include <algorithm>
+#include <functional>
+#include <string>
 
 #ifdef _WINDOWS
 #include <rpc.h>
 #pragma comment(lib, "rpcrt4.lib")
-#else
-#error NOT IMPLEMENTED!
 #endif
+
+#ifdef __EMSCRIPTEN__
+static unsigned char random_char()
+{
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(0, 255);
+
+    return static_cast<unsigned char>(dis(gen));
+}
+
+static std::string generate_hex(const unsigned int len)
+{
+    std::stringstream ss;
+    for (unsigned int i = 0; i < len; i++)
+    {
+        auto rc = random_char();
+        std::stringstream hexstream;
+        hexstream << std::hex << int(rc);
+        auto hex = hexstream.str();
+        ss << (hex.length() < 2 ? '0' + hex : hex);
+    }
+
+    return ss.str();
+}
+
+typedef struct _GUID {
+    unsigned long  Data1;
+    unsigned short Data2;
+    unsigned short Data3;
+    unsigned char  Data4[8];
+} GUID;
+
+typedef GUID UUID;
+#endif // __EMSCRIPTEN__
 
 // ************************************************************************************************
 static const std::string base64_chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_$";
@@ -21,11 +59,11 @@ class _guid
 
 public: // Methods
 
-    // UUID
+#ifdef _WINDOWS
     static std::string create()
     {
-#ifdef _WINDOWS
         UUID uuid;
+
         BYTE* szUUID = nullptr;
         if ((UuidCreate(&uuid) == RPC_S_OK) && 
             (UuidToStringA(&uuid, &szUUID) == RPC_S_OK))
@@ -35,24 +73,21 @@ public: // Methods
             RpcStringFreeA(&szUUID);
 
             return strUUID;
-        }
+        }        
 
         return "";
-#else
-#error NOT IMPLEMENTED!
-#endif
     }
+#endif
 
     // GlobalId
     static std::string createGlobalId()
     {
         UUID uuid;
+#ifdef _WINDOWS
         BYTE* szUUID = nullptr;
         if ((UuidCreate(&uuid) == RPC_S_OK) &&
             (UuidToStringA(&uuid, &szUUID) == RPC_S_OK))
         {
-            std::string strUUID((char*)szUUID);
-
             RpcStringFreeA(&szUUID);
 
             char szGlobalId[23];
@@ -61,7 +96,44 @@ public: // Methods
                 return szGlobalId;
             }
         }
+#else
+#ifdef __EMSCRIPTEN__
+        char* szEnd = nullptr;
 
+        std::string strData1 = "0x" + generate_hex(4);
+        uuid.Data1 = std::strtoul(strData1.c_str(), &szEnd, 0);
+        if (szEnd == nullptr)
+        {
+            return "";
+        }
+
+        std::string strData2 = "0x" + generate_hex(2);
+        uuid.Data2 = (unsigned short)std::strtoul(strData2.c_str(), &szEnd, 0);
+        if (szEnd == nullptr)
+        {
+            return "";
+        }
+
+        std::string strData3 = "0x" + generate_hex(2);
+        uuid.Data3 = (unsigned short)std::strtoul(strData3.c_str(), &szEnd, 0);
+        if (szEnd == nullptr)
+        {
+            return "";
+        }
+
+        std::string strData4 = generate_hex(8);
+        for (size_t iChar = 0; iChar < strData4.size(); iChar++)
+        {
+            uuid.Data4[iChar] = (unsigned char)strData4.at(iChar);
+        }
+
+        char szGlobalId[23];
+        if (createGlobalIdFromGuid(&uuid, szGlobalId))
+        {
+            return szGlobalId;
+        }
+#endif
+#endif
         return "";
     }
 
