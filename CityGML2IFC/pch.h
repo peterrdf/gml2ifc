@@ -7,7 +7,29 @@
 #ifndef PCH_H
 #define PCH_H
 
+#ifdef _WINDOWS
 // add headers that you want to pre-compile here
 #include "framework.h"
+#else
+#include <string>
+#include <locale>
+#include <codecvt>
 
-#endif //PCH_H
+static std::wstring CA2W(const std::string& str)
+{
+    using convert_typeX = std::codecvt_utf8<wchar_t>;
+    std::wstring_convert<convert_typeX, wchar_t> converterX;
+
+    return converterX.from_bytes(str);
+}
+
+static std::string CW2W(const std::wstring& wstr)
+{
+    using convert_typeX = std::codecvt_utf8<wchar_t>;
+    std::wstring_convert<convert_typeX, wchar_t> converterX;
+
+    return converterX.to_bytes(wstr);
+}
+#endif
+
+#endif // PCH_H
