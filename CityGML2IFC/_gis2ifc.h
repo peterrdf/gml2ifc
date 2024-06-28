@@ -98,7 +98,7 @@ public: // Members
 
 public: // Methods
 
-	_matrix::_matrix()
+	_matrix()
 		: _11(1.)
 		, _12(0.)
 		, _13(0.)
@@ -113,7 +113,7 @@ public: // Methods
 		, _43(0.)
 	{}
 
-	_matrix::~_matrix()
+	~_matrix()
 	{}
 };
 
