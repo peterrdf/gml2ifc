@@ -10,7 +10,7 @@
 #ifdef _WINDOWS
 // add headers that you want to pre-compile here
 #include "framework.h"
-#else
+#else // _WINDOWS
 #include <string>
 #include <locale>
 #include <codecvt>
@@ -30,6 +30,6 @@ static std::string CW2W(const std::wstring& wstr)
 
     return converterX.to_bytes(wstr);
 }
-#endif
+#endif // _WINDOWS
 
 #endif // PCH_H
