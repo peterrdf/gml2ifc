@@ -42,34 +42,8 @@ void _gis2ifc::execute(const wstring& strInputFile, const wstring& strOuputFile)
 	OwlInstance iRootInstance = ImportGISModelW(m_iOwlModel, strInputFile.c_str());
 	if (iRootInstance != 0)
 	{
-		logInfo("Exporting...");
-
-		if (IsGML(m_iOwlModel))
-		{
-			_gml_exporter exporter(this);
-			exporter.execute(iRootInstance, strOuputFile);
-
-			logInfo("Done.");
-		}
-		else if (IsCityGML(m_iOwlModel))
-		{
-			_citygml_exporter exporter(this);
-			exporter.execute(iRootInstance, strOuputFile);
-
-			logInfo("Done.");
-		}
-		else if (IsCityJSON(m_iOwlModel))
-		{
-			_cityjson_exporter exporter(this);
-			exporter.execute(iRootInstance, strOuputFile);
-
-			logInfo("Done.");
-		}
-		else
-		{
-			logErr("Not supported format.");
-		}
-	} // if (iRootInstance != 0)
+		executeCore(iRootInstance, strOuputFile);
+	}
 	else
 	{
 		logErr("Not supported format.");
@@ -97,34 +71,8 @@ void _gis2ifc::execute(unsigned char* szData, size_t iSize, const wstring& strOu
 	OwlInstance iRootInstance = ImportGISModelA(m_iOwlModel, szData, iSize);
 	if (iRootInstance != 0)
 	{
-		logInfo("Exporting...");
-
-		if (IsGML(m_iOwlModel))
-		{
-			_gml_exporter exporter(this);
-			exporter.execute(iRootInstance, strOuputFile);
-
-			logInfo("Done.");
-		}
-		else if (IsCityGML(m_iOwlModel))
-		{
-			_citygml_exporter exporter(this);
-			exporter.execute(iRootInstance, strOuputFile);
-
-			logInfo("Done.");
-		}
-		else if (IsCityJSON(m_iOwlModel))
-		{
-			_cityjson_exporter exporter(this);
-			exporter.execute(iRootInstance, strOuputFile);
-
-			logInfo("Done.");
-		}
-		else
-		{
-			logErr("Not supported format.");
-		}
-	} // if (iRootInstance != 0)
+		executeCore(iRootInstance, strOuputFile);
+	}
 	else
 	{
 		logErr("Not supported format.");
@@ -172,6 +120,40 @@ void _gis2ifc::setFormatSettings(OwlModel iOwlModel)
 	SetFormat(iOwlModel, (int64_t)iSettings, (int64_t)iMask);
 
 	SetBehavior(iOwlModel, 2048 + 4096, 2048 + 4096);
+}
+
+void _gis2ifc::executeCore(OwlInstance iRootInstance, const wstring& strOuputFile)
+{
+	assert(iRootInstance != 0);
+	assert(!strOuputFile.empty());
+
+	logInfo("Exporting...");
+
+	if (IsGML(m_iOwlModel))
+	{
+		_gml_exporter exporter(this);
+		exporter.execute(iRootInstance, strOuputFile);
+
+		logInfo("Done.");
+	}
+	else if (IsCityGML(m_iOwlModel))
+	{
+		_citygml_exporter exporter(this);
+		exporter.execute(iRootInstance, strOuputFile);
+
+		logInfo("Done.");
+	}
+	else if (IsCityJSON(m_iOwlModel))
+	{
+		_cityjson_exporter exporter(this);
+		exporter.execute(iRootInstance, strOuputFile);
+
+		logInfo("Done.");
+	}
+	else
+	{
+		logErr("Not supported format.");
+	}
 }
 
 // ************************************************************************************************

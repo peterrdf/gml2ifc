@@ -57,6 +57,7 @@ public: // Methods
 private: // Methods
 
 	void setFormatSettings(OwlModel iOwlModel);
+	void executeCore(OwlInstance iRootInstance, const wstring& strOuputFile);
 };
 
 // ************************************************************************************************
