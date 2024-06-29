@@ -76,6 +76,61 @@ void _gis2ifc::execute(const wstring& strInputFile, const wstring& strOuputFile)
 	}
 }
 
+void _gis2ifc::execute(unsigned char* szData, size_t iSize, const wstring& strOuputFile)
+{
+	assert(szData != nullptr);
+	assert(iSize > 0);
+	assert(!strOuputFile.empty());
+
+	/* Import */
+	if (m_iOwlModel != 0)
+	{
+		CloseModel(m_iOwlModel);
+		m_iOwlModel = 0;
+	}
+
+	m_iOwlModel = CreateModel();
+	assert(m_iOwlModel != 0);
+
+	setFormatSettings(m_iOwlModel);
+
+	OwlInstance iRootInstance = ImportGISModelA(m_iOwlModel, szData, iSize);
+	if (iRootInstance != 0)
+	{
+		logInfo("Exporting...");
+
+		if (IsGML(m_iOwlModel))
+		{
+			_gml_exporter exporter(this);
+			exporter.execute(iRootInstance, strOuputFile);
+
+			logInfo("Done.");
+		}
+		else if (IsCityGML(m_iOwlModel))
+		{
+			_citygml_exporter exporter(this);
+			exporter.execute(iRootInstance, strOuputFile);
+
+			logInfo("Done.");
+		}
+		else if (IsCityJSON(m_iOwlModel))
+		{
+			_cityjson_exporter exporter(this);
+			exporter.execute(iRootInstance, strOuputFile);
+
+			logInfo("Done.");
+		}
+		else
+		{
+			logErr("Not supported format.");
+		}
+	} // if (iRootInstance != 0)
+	else
+	{
+		logErr("Not supported format.");
+	}
+}
+
 /*static*/ string _gis2ifc::dateTimeStamp()
 {
 	auto timePointNow = chrono::system_clock::now();

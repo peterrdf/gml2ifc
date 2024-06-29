@@ -42,6 +42,7 @@ public: // Methods
 	virtual ~_gis2ifc();
 
 	void execute(const wstring& strInputFile, const wstring& strOuputFile);
+	void execute(unsigned char* szData, size_t iSize, const wstring& strOuputFile);
 
 	// Log
 	static string dateTimeStamp();
