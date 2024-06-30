@@ -429,15 +429,14 @@ void _exporter_base::createIfcModel(const wchar_t* szSchemaName)
 		}
 	}*/
 
-	//#todo
-	/*_itoa(1900 + tInfo->tm_year, &timeStamp[0], 10);
-	_itoa(100 + 1 + tInfo->tm_mon, &timeStamp[4], 10);
-	_itoa(100 + tInfo->tm_mday, &timeStamp[7], 10);*/
+	sprintf(&timeStamp[0], "%d", 1900 + tInfo->tm_year);
+	sprintf(&timeStamp[4], "%d", 100 + 1 + tInfo->tm_mon);
+	sprintf(&timeStamp[7], "%d", 100 + tInfo->tm_mday);
 	timeStamp[4] = '-';
 	timeStamp[7] = '-';
-	/*_itoa(100 + tInfo->tm_hour, &timeStamp[10], 10);
-	_itoa(100 + tInfo->tm_min, &timeStamp[13], 10);
-	_itoa(100 + tInfo->tm_sec, &timeStamp[16], 10);*/
+	sprintf(&timeStamp[10], "%d", 100 + tInfo->tm_hour);
+	sprintf(&timeStamp[13], "%d", 100 + tInfo->tm_min);
+	sprintf(&timeStamp[16], "%d", 100 + tInfo->tm_sec);
 	timeStamp[10] = 'T';
 	timeStamp[13] = ':';
 	timeStamp[16] = ':';
