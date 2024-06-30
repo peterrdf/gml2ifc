@@ -457,7 +457,7 @@ void _exporter_base::createIfcModel(const wchar_t* szSchemaName)
 		CW2A(szSchemaName)                  //  fileSchema //#tbd
 #else
 #ifdef __EMSCRIPTEN__
-		CW2A(szSchemaName).c_str()                  //  fileSchema //#tbd
+		(LPCSTR)CW2A(szSchemaName)                  //  fileSchema //#tbd
 #else
 #error NOT IMPLEMENTED!
 #endif
@@ -1401,7 +1401,7 @@ string _exporter_base::getTag(OwlInstance iInstance) const
 	return (LPCSTR)CW2A(szValue[0]);
 #else
 #ifdef __EMSCRIPTEN__
-	return CW2A(szValue[0]);
+	return (LPCSTR)CW2A(szValue[0]);
 #else
 #error NOT IMPLEMENTED!
 #endif
@@ -2972,7 +2972,7 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 						CW2A(szValue[0]),
 #else
 #ifdef __EMSCRIPTEN__
-						CW2A(szValue[0]).c_str(),
+						(LPCSTR)CW2A(szValue[0]),
 #else
 #error NOT IMPLEMENTED!
 #endif
@@ -3012,7 +3012,7 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 				CW2A(szValue[0]),
 #else
 #ifdef __EMSCRIPTEN__
-				CW2A(szValue[0]).c_str(),
+				(LPCSTR)CW2A(szValue[0]),
 #else
 #error NOT IMPLEMENTED!
 #endif

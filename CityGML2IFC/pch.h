@@ -11,25 +11,7 @@
 // add headers that you want to pre-compile here
 #include "framework.h"
 #else // _WINDOWS
-#include <string>
-#include <locale>
-#include <codecvt>
-
-static std::wstring CA2W(const std::string& str)
-{
-    using convert_typeX = std::codecvt_utf8<wchar_t>;
-    std::wstring_convert<convert_typeX, wchar_t> converterX;
-
-    return converterX.from_bytes(str);
-}
-
-static std::string CW2A(const std::wstring& wstr)
-{
-    using convert_typeX = std::codecvt_utf8<wchar_t>;
-    std::wstring_convert<convert_typeX, wchar_t> converterX;
-
-    return converterX.to_bytes(wstr);
-}
+#include "../gisengine/Parsers/_string.h"
 #endif // _WINDOWS
 
 #endif // PCH_H
