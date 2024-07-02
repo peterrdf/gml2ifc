@@ -2329,71 +2329,86 @@ void _citygml_exporter::createGeometry(OwlInstance iInstance, vector<SdaiInstanc
 
 		OwlInstance iTransformationMatrixTransformationInstance = piInstances[0];
 		assert(iTransformationMatrixTransformationInstance != 0);
-		assert(isTransformationClass(GetInstanceClass(iTransformationMatrixTransformationInstance)));
 
-		// Transformation Matrix Transformation - matrix
-		piInstances = nullptr;
-		iInstancesCount = 0;
-		GetObjectProperty(
-			iTransformationMatrixTransformationInstance,
-			GetPropertyByName(getSite()->getOwlModel(), "matrix"),
-			&piInstances,
-			&iInstancesCount);
-		assert(iInstancesCount == 1);
-
-		OwlInstance iTransformationMatrixInstance = piInstances[0];
-		assert(iTransformationMatrixInstance != 0);
-
-		// Reference Point Transformation - object
-		piInstances = nullptr;
-		iInstancesCount = 0;
-		GetObjectProperty(
-			iTransformationMatrixTransformationInstance,
-			GetPropertyByName(getSite()->getOwlModel(), "object"),
-			&piInstances,
-			&iInstancesCount);
-		assert(iInstancesCount == 1);		
-		
-		OwlInstance iRelativeGMLGeometryInstance = piInstances[0];
-		assert(iRelativeGMLGeometryInstance != 0);
-
-		iInstanceClass = GetInstanceClass(iRelativeGMLGeometryInstance);
-		assert(isCollectionClass(iInstanceClass));
-
-		piInstances = nullptr;
-		iInstancesCount = 0;
-		GetObjectProperty(
-			iRelativeGMLGeometryInstance,
-			GetPropertyByName(getSite()->getOwlModel(), "objects"),
-			&piInstances,
-			&iInstancesCount);
-		assert(iInstancesCount == 1);
-
-		OwlInstance iMappedItemGeometryInstance = piInstances[0];
-		assert(iMappedItemGeometryInstance != 0);
-
-		auto itMappedItem = m_mapMappedItems.find(iMappedItemGeometryInstance);
-		if (itMappedItem == m_mapMappedItems.end())
+		if (isTransformationClass(GetInstanceClass(iTransformationMatrixTransformationInstance)))
 		{
-			vector<SdaiInstance> vecMappedItemGeometryInstances;
-			createGeometry(iMappedItemGeometryInstance, vecMappedItemGeometryInstances, false);
+			// Transformation Matrix Transformation - matrix
+			piInstances = nullptr;
+			iInstancesCount = 0;
+			GetObjectProperty(
+				iTransformationMatrixTransformationInstance,
+				GetPropertyByName(getSite()->getOwlModel(), "matrix"),
+				&piInstances,
+				&iInstancesCount);
+			assert(iInstancesCount == 1);
 
-			m_mapMappedItems[iMappedItemGeometryInstance] = vecMappedItemGeometryInstances;			
+			OwlInstance iTransformationMatrixInstance = piInstances[0];
+			assert(iTransformationMatrixInstance != 0);
 
-			vecGeometryInstances.push_back(
-				buildMappedItem(
-					vecMappedItemGeometryInstances,
-					iReferencePointMatrixInstance,
-					iTransformationMatrixInstance)
-			);
-		}
+			// Reference Point Transformation - object
+			piInstances = nullptr;
+			iInstancesCount = 0;
+			GetObjectProperty(
+				iTransformationMatrixTransformationInstance,
+				GetPropertyByName(getSite()->getOwlModel(), "object"),
+				&piInstances,
+				&iInstancesCount);
+			assert(iInstancesCount == 1);
+
+			OwlInstance iRelativeGMLGeometryInstance = piInstances[0];
+			assert(iRelativeGMLGeometryInstance != 0);
+
+			iInstanceClass = GetInstanceClass(iRelativeGMLGeometryInstance);
+			assert(isCollectionClass(iInstanceClass));
+
+			piInstances = nullptr;
+			iInstancesCount = 0;
+			GetObjectProperty(
+				iRelativeGMLGeometryInstance,
+				GetPropertyByName(getSite()->getOwlModel(), "objects"),
+				&piInstances,
+				&iInstancesCount);
+			assert(iInstancesCount == 1);
+
+			OwlInstance iMappedItemGeometryInstance = piInstances[0];
+			assert(iMappedItemGeometryInstance != 0);
+
+			auto itMappedItem = m_mapMappedItems.find(iMappedItemGeometryInstance);
+			if (itMappedItem == m_mapMappedItems.end())
+			{
+				vector<SdaiInstance> vecMappedItemGeometryInstances;
+				createGeometry(iMappedItemGeometryInstance, vecMappedItemGeometryInstances, false);
+
+				m_mapMappedItems[iMappedItemGeometryInstance] = vecMappedItemGeometryInstances;
+
+				vecGeometryInstances.push_back(
+					buildMappedItem(
+						vecMappedItemGeometryInstances,
+						iReferencePointMatrixInstance,
+						iTransformationMatrixInstance)
+				);
+			}
+			else
+			{
+				vecGeometryInstances.push_back(
+					buildMappedItem(
+						itMappedItem->second,
+						iReferencePointMatrixInstance,
+						iTransformationMatrixInstance));
+			}
+		} // if (isTransformationClass( ...
 		else
 		{
-			vecGeometryInstances.push_back(
-				buildMappedItem(
-					itMappedItem->second,
-					iReferencePointMatrixInstance,
-					iTransformationMatrixInstance));
+			wchar_t* szClassName = nullptr;
+			GetNameOfClassW(GetInstanceClass(iTransformationMatrixTransformationInstance), &szClassName);
+
+			if (wstring(szClassName) != L"Cube")
+			{
+				string strEvent = "Internal error; expected 'Cube': '";
+				strEvent += CW2A(szClassName);
+				strEvent += "'";
+				getSite()->logErr(strEvent);
+			}
 		}
 	}
 	else
@@ -2512,7 +2527,8 @@ void _citygml_exporter::createMultiSurface(OwlInstance iInstance, vector<SdaiIns
 		{
 			createCompositeSurface(piInstances[iInstanceIndex], vecGeometryInstances, bCreateIfcShapeRepresentation);
 		}
-		else if (iChildInstanceClass == GetClassByName(getSite()->getOwlModel(), "class:SurfacePropertyType"))
+		else if ((iChildInstanceClass == GetClassByName(getSite()->getOwlModel(), "class:SurfacePropertyType")) ||
+			(iChildInstanceClass == GetClassByName(getSite()->getOwlModel(), "class:SurfaceType")))
 		{
 			createSurfaceMember(piInstances[iInstanceIndex], vecGeometryInstances, bCreateIfcShapeRepresentation);
 		}
