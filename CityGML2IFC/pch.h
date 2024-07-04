@@ -7,7 +7,11 @@
 #ifndef PCH_H
 #define PCH_H
 
+#ifdef _WINDOWS
 // add headers that you want to pre-compile here
 #include "framework.h"
+#else // _WINDOWS
+#include "../gisengine/Parsers/_string.h"
+#endif // _WINDOWS
 
-#endif //PCH_H
+#endif // PCH_H

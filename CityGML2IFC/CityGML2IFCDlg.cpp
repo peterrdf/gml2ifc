@@ -8,9 +8,6 @@
 #include "CityGML2IFCDlg.h"
 #include "afxdialogex.h"
 
-
-#include "baseIfc.h"
-
 #include "_gis2ifc.h"
 
 #ifdef _DEBUG

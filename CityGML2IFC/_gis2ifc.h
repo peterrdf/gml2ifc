@@ -1,8 +1,15 @@
 #pragma once
 
-#include "engine.h"
+#include "../include/engine.h"
+#include "../include/ifcengine.h"
+
+#ifdef _WINDOWS
 #include "gisengine.h"
-#include "ifcengine.h"
+#endif
+
+#ifdef __EMSCRIPTEN__
+#include "../gisengine/gisengine.h"
+#endif
 
 #include "_guid.h"
 
@@ -35,6 +42,7 @@ public: // Methods
 	virtual ~_gis2ifc();
 
 	void execute(const wstring& strInputFile, const wstring& strOuputFile);
+	void execute(unsigned char* szData, size_t iSize, const wstring& strOuputFile);
 
 	// Log
 	static string dateTimeStamp();
@@ -49,6 +57,7 @@ public: // Methods
 private: // Methods
 
 	void setFormatSettings(OwlModel iOwlModel);
+	void executeCore(OwlInstance iRootInstance, const wstring& strOuputFile);
 };
 
 // ************************************************************************************************
@@ -91,7 +100,7 @@ public: // Members
 
 public: // Methods
 
-	_matrix::_matrix()
+	_matrix()
 		: _11(1.)
 		, _12(0.)
 		, _13(0.)
@@ -106,7 +115,7 @@ public: // Methods
 		, _43(0.)
 	{}
 
-	_matrix::~_matrix()
+	~_matrix()
 	{}
 };
 

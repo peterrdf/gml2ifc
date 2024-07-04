@@ -42,34 +42,37 @@ void _gis2ifc::execute(const wstring& strInputFile, const wstring& strOuputFile)
 	OwlInstance iRootInstance = ImportGISModelW(m_iOwlModel, strInputFile.c_str());
 	if (iRootInstance != 0)
 	{
-		logInfo("Exporting...");
+		executeCore(iRootInstance, strOuputFile);
+	}
+	else
+	{
+		logErr("Not supported format.");
+	}
+}
 
-		if (IsGML(m_iOwlModel))
-		{
-			_gml_exporter exporter(this);
-			exporter.execute(iRootInstance, strOuputFile);
+void _gis2ifc::execute(unsigned char* szData, size_t iSize, const wstring& strOuputFile)
+{
+	assert(szData != nullptr);
+	assert(iSize > 0);
+	assert(!strOuputFile.empty());
 
-			logInfo("Done.");
-		}
-		else if (IsCityGML(m_iOwlModel))
-		{
-			_citygml_exporter exporter(this);
-			exporter.execute(iRootInstance, strOuputFile);
+	/* Import */
+	if (m_iOwlModel != 0)
+	{
+		CloseModel(m_iOwlModel);
+		m_iOwlModel = 0;
+	}
 
-			logInfo("Done.");
-		}
-		else if (IsCityJSON(m_iOwlModel))
-		{
-			_cityjson_exporter exporter(this);
-			exporter.execute(iRootInstance, strOuputFile);
+	m_iOwlModel = CreateModel();
+	assert(m_iOwlModel != 0);
 
-			logInfo("Done.");
-		}
-		else
-		{
-			logErr("Not supported format.");
-		}
-	} // if (iRootInstance != 0)
+	setFormatSettings(m_iOwlModel);
+
+	OwlInstance iRootInstance = ImportGISModelA(m_iOwlModel, szData, iSize);
+	if (iRootInstance != 0)
+	{
+		executeCore(iRootInstance, strOuputFile);
+	}
 	else
 	{
 		logErr("Not supported format.");
@@ -117,6 +120,40 @@ void _gis2ifc::setFormatSettings(OwlModel iOwlModel)
 	SetFormat(iOwlModel, (int64_t)iSettings, (int64_t)iMask);
 
 	SetBehavior(iOwlModel, 2048 + 4096, 2048 + 4096);
+}
+
+void _gis2ifc::executeCore(OwlInstance iRootInstance, const wstring& strOuputFile)
+{
+	assert(iRootInstance != 0);
+	assert(!strOuputFile.empty());
+
+	logInfo("Exporting...");
+
+	if (IsGML(m_iOwlModel))
+	{
+		_gml_exporter exporter(this);
+		exporter.execute(iRootInstance, strOuputFile);
+
+		logInfo("Done.");
+	}
+	else if (IsCityGML(m_iOwlModel))
+	{
+		_citygml_exporter exporter(this);
+		exporter.execute(iRootInstance, strOuputFile);
+
+		logInfo("Done.");
+	}
+	else if (IsCityJSON(m_iOwlModel))
+	{
+		_cityjson_exporter exporter(this);
+		exporter.execute(iRootInstance, strOuputFile);
+
+		logInfo("Done.");
+	}
+	else
+	{
+		logErr("Not supported format.");
+	}
 }
 
 // ************************************************************************************************
@@ -392,14 +429,14 @@ void _exporter_base::createIfcModel(const wchar_t* szSchemaName)
 		}
 	}*/
 
-	_itoa(1900 + tInfo->tm_year, &timeStamp[0], 10);
-	_itoa(100 + 1 + tInfo->tm_mon, &timeStamp[4], 10);
-	_itoa(100 + tInfo->tm_mday, &timeStamp[7], 10);
+	sprintf(&timeStamp[0], "%d", 1900 + tInfo->tm_year);
+	sprintf(&timeStamp[4], "%d", 100 + 1 + tInfo->tm_mon);
+	sprintf(&timeStamp[7], "%d", 100 + tInfo->tm_mday);
 	timeStamp[4] = '-';
 	timeStamp[7] = '-';
-	_itoa(100 + tInfo->tm_hour, &timeStamp[10], 10);
-	_itoa(100 + tInfo->tm_min, &timeStamp[13], 10);
-	_itoa(100 + tInfo->tm_sec, &timeStamp[16], 10);
+	sprintf(&timeStamp[10], "%d", 100 + tInfo->tm_hour);
+	sprintf(&timeStamp[13], "%d", 100 + tInfo->tm_min);
+	sprintf(&timeStamp[16], "%d", 100 + tInfo->tm_sec);
 	timeStamp[10] = 'T';
 	timeStamp[13] = ':';
 	timeStamp[16] = ':';
@@ -416,7 +453,15 @@ void _exporter_base::createIfcModel(const wchar_t* szSchemaName)
 		"IFC Engine DLL version 1.03 beta", //  preprocessorVersion //#tbd
 		"IFC Engine DLL version 1.03 beta", //  originatingSystem //#tbd
 		"The authorising person",           //  authorization //#tbd
+#ifdef _WINDOWS
 		CW2A(szSchemaName)                  //  fileSchema //#tbd
+#else
+#ifdef __EMSCRIPTEN__
+		(LPCSTR)CW2A(szSchemaName)                  //  fileSchema //#tbd
+#else
+#error NOT IMPLEMENTED!
+#endif
+#endif		
 	);
 }
 
@@ -1352,7 +1397,15 @@ string _exporter_base::getTag(OwlInstance iInstance) const
 
 	SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, true);
 
+#ifdef _WINDOWS
 	return (LPCSTR)CW2A(szValue[0]);
+#else
+#ifdef __EMSCRIPTEN__
+	return (LPCSTR)CW2A(szValue[0]);
+#else
+#error NOT IMPLEMENTED!
+#endif
+#endif
 }
 
 OwlInstance* _exporter_base::getObjectProperty(OwlInstance iInstance, const string& strPropertyName, int64_t& iInstancesCount) const
@@ -2276,71 +2329,86 @@ void _citygml_exporter::createGeometry(OwlInstance iInstance, vector<SdaiInstanc
 
 		OwlInstance iTransformationMatrixTransformationInstance = piInstances[0];
 		assert(iTransformationMatrixTransformationInstance != 0);
-		assert(isTransformationClass(GetInstanceClass(iTransformationMatrixTransformationInstance)));
 
-		// Transformation Matrix Transformation - matrix
-		piInstances = nullptr;
-		iInstancesCount = 0;
-		GetObjectProperty(
-			iTransformationMatrixTransformationInstance,
-			GetPropertyByName(getSite()->getOwlModel(), "matrix"),
-			&piInstances,
-			&iInstancesCount);
-		assert(iInstancesCount == 1);
-
-		OwlInstance iTransformationMatrixInstance = piInstances[0];
-		assert(iTransformationMatrixInstance != 0);
-
-		// Reference Point Transformation - object
-		piInstances = nullptr;
-		iInstancesCount = 0;
-		GetObjectProperty(
-			iTransformationMatrixTransformationInstance,
-			GetPropertyByName(getSite()->getOwlModel(), "object"),
-			&piInstances,
-			&iInstancesCount);
-		assert(iInstancesCount == 1);		
-		
-		OwlInstance iRelativeGMLGeometryInstance = piInstances[0];
-		assert(iRelativeGMLGeometryInstance != 0);
-
-		iInstanceClass = GetInstanceClass(iRelativeGMLGeometryInstance);
-		assert(isCollectionClass(iInstanceClass));
-
-		piInstances = nullptr;
-		iInstancesCount = 0;
-		GetObjectProperty(
-			iRelativeGMLGeometryInstance,
-			GetPropertyByName(getSite()->getOwlModel(), "objects"),
-			&piInstances,
-			&iInstancesCount);
-		assert(iInstancesCount == 1);
-
-		OwlInstance iMappedItemGeometryInstance = piInstances[0];
-		assert(iMappedItemGeometryInstance != 0);
-
-		auto itMappedItem = m_mapMappedItems.find(iMappedItemGeometryInstance);
-		if (itMappedItem == m_mapMappedItems.end())
+		if (isTransformationClass(GetInstanceClass(iTransformationMatrixTransformationInstance)))
 		{
-			vector<SdaiInstance> vecMappedItemGeometryInstances;
-			createGeometry(iMappedItemGeometryInstance, vecMappedItemGeometryInstances, false);
+			// Transformation Matrix Transformation - matrix
+			piInstances = nullptr;
+			iInstancesCount = 0;
+			GetObjectProperty(
+				iTransformationMatrixTransformationInstance,
+				GetPropertyByName(getSite()->getOwlModel(), "matrix"),
+				&piInstances,
+				&iInstancesCount);
+			assert(iInstancesCount == 1);
 
-			m_mapMappedItems[iMappedItemGeometryInstance] = vecMappedItemGeometryInstances;			
+			OwlInstance iTransformationMatrixInstance = piInstances[0];
+			assert(iTransformationMatrixInstance != 0);
 
-			vecGeometryInstances.push_back(
-				buildMappedItem(
-					vecMappedItemGeometryInstances,
-					iReferencePointMatrixInstance,
-					iTransformationMatrixInstance)
-			);
-		}
+			// Reference Point Transformation - object
+			piInstances = nullptr;
+			iInstancesCount = 0;
+			GetObjectProperty(
+				iTransformationMatrixTransformationInstance,
+				GetPropertyByName(getSite()->getOwlModel(), "object"),
+				&piInstances,
+				&iInstancesCount);
+			assert(iInstancesCount == 1);
+
+			OwlInstance iRelativeGMLGeometryInstance = piInstances[0];
+			assert(iRelativeGMLGeometryInstance != 0);
+
+			iInstanceClass = GetInstanceClass(iRelativeGMLGeometryInstance);
+			assert(isCollectionClass(iInstanceClass));
+
+			piInstances = nullptr;
+			iInstancesCount = 0;
+			GetObjectProperty(
+				iRelativeGMLGeometryInstance,
+				GetPropertyByName(getSite()->getOwlModel(), "objects"),
+				&piInstances,
+				&iInstancesCount);
+			assert(iInstancesCount == 1);
+
+			OwlInstance iMappedItemGeometryInstance = piInstances[0];
+			assert(iMappedItemGeometryInstance != 0);
+
+			auto itMappedItem = m_mapMappedItems.find(iMappedItemGeometryInstance);
+			if (itMappedItem == m_mapMappedItems.end())
+			{
+				vector<SdaiInstance> vecMappedItemGeometryInstances;
+				createGeometry(iMappedItemGeometryInstance, vecMappedItemGeometryInstances, false);
+
+				m_mapMappedItems[iMappedItemGeometryInstance] = vecMappedItemGeometryInstances;
+
+				vecGeometryInstances.push_back(
+					buildMappedItem(
+						vecMappedItemGeometryInstances,
+						iReferencePointMatrixInstance,
+						iTransformationMatrixInstance)
+				);
+			}
+			else
+			{
+				vecGeometryInstances.push_back(
+					buildMappedItem(
+						itMappedItem->second,
+						iReferencePointMatrixInstance,
+						iTransformationMatrixInstance));
+			}
+		} // if (isTransformationClass( ...
 		else
 		{
-			vecGeometryInstances.push_back(
-				buildMappedItem(
-					itMappedItem->second,
-					iReferencePointMatrixInstance,
-					iTransformationMatrixInstance));
+			wchar_t* szClassName = nullptr;
+			GetNameOfClassW(GetInstanceClass(iTransformationMatrixTransformationInstance), &szClassName);
+
+			if (wstring(szClassName) != L"Cube")
+			{
+				string strEvent = "Internal error; expected 'Cube': '";
+				strEvent += CW2A(szClassName);
+				strEvent += "'";
+				getSite()->logErr(strEvent);
+			}
 		}
 	}
 	else
@@ -2459,7 +2527,8 @@ void _citygml_exporter::createMultiSurface(OwlInstance iInstance, vector<SdaiIns
 		{
 			createCompositeSurface(piInstances[iInstanceIndex], vecGeometryInstances, bCreateIfcShapeRepresentation);
 		}
-		else if (iChildInstanceClass == GetClassByName(getSite()->getOwlModel(), "class:SurfacePropertyType"))
+		else if ((iChildInstanceClass == GetClassByName(getSite()->getOwlModel(), "class:SurfacePropertyType")) ||
+			(iChildInstanceClass == GetClassByName(getSite()->getOwlModel(), "class:SurfaceType")))
 		{
 			createSurfaceMember(piInstances[iInstanceIndex], vecGeometryInstances, bCreateIfcShapeRepresentation);
 		}
@@ -2915,7 +2984,15 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 					mapProperties[szPropertyName] = buildPropertySingleValueText(
 						strPropertyName.c_str(),
 						"attribute",
+#ifdef _WINDOWS
 						CW2A(szValue[0]),
+#else
+#ifdef __EMSCRIPTEN__
+						(LPCSTR)CW2A(szValue[0]),
+#else
+#error NOT IMPLEMENTED!
+#endif
+#endif
 						"IFCTEXT");
 				}
 				break;
@@ -2947,7 +3024,15 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 			mapProperties[szPropertyName] = buildPropertySingleValueText(
 				strPropertyName.c_str(),
 				"attribute",
+#ifdef _WINDOWS
 				CW2A(szValue[0]),
+#else
+#ifdef __EMSCRIPTEN__
+				(LPCSTR)CW2A(szValue[0]),
+#else
+#error NOT IMPLEMENTED!
+#endif
+#endif				
 				"IFCTEXT");
 		} // attr:
 
