@@ -2274,11 +2274,13 @@ void _citygml_exporter::createGeometry(OwlInstance iInstance, vector<SdaiInstanc
 	}
 	else if (iInstanceClass == GetClassByName(getSite()->getOwlModel(), "Point3D"))
 	{
-		createPoint3D(iInstance, vecGeometryInstances, bCreateIfcShapeRepresentation);
+		//#todo
+		//createPoint3D(iInstance, vecGeometryInstances, bCreateIfcShapeRepresentation);
 	}
 	else if (iInstanceClass == GetClassByName(getSite()->getOwlModel(), "Point3DSet"))
 	{
-		createPoint3DSet(iInstance, vecGeometryInstances, bCreateIfcShapeRepresentation);
+		//#todo
+		//createPoint3DSet(iInstance, vecGeometryInstances, bCreateIfcShapeRepresentation);
 	}
 	else if (iInstanceClass == GetClassByName(getSite()->getOwlModel(), "PolyLine3D"))
 	{
