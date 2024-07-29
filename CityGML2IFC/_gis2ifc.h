@@ -233,6 +233,14 @@ protected: // Methods
 		const char* szDescription,
 		SdaiInstance iRelatingStructureInstance,
 		const vector<SdaiInstance>& vecRelatedElements);
+	SdaiInstance buildAllignmentSegmentInstance(
+		const char* szName,
+		const char* szDescription,
+		SdaiInstance iDesignParameters);
+	SdaiInstance buildAllignmentHorizontalSegmentInstance(
+		const char* szName,
+		const char* szDescription,
+		SdaiInstance iStartPoint);
 	SdaiInstance buildBuildingElementInstance(
 		const char* szEntity,
 		const char* szName,

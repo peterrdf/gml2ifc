@@ -861,6 +861,45 @@ SdaiInstance _exporter_base::buildRelNestsInstance(
 	return iIfcRelNestsInstance;
 }
 
+SdaiInstance _exporter_base::buildAllignmentSegmentInstance(
+	const char* szName,
+	const char* szDescription,
+	SdaiInstance iDesignParameters)
+{
+	assert(iDesignParameters != 0);
+
+	SdaiInstance iIfcAlignmentSegmentInstance = sdaiCreateInstanceBN(m_iIfcModel, "IfcAlignmentSegment");
+	assert(iIfcAlignmentSegmentInstance != 0);
+
+	sdaiPutAttrBN(iIfcAlignmentSegmentInstance, "GlobalId", sdaiSTRING, (void*)_guid::createGlobalId().c_str());
+	sdaiPutAttrBN(iIfcAlignmentSegmentInstance, "OwnerHistory", sdaiINSTANCE, (void*)getOwnerHistoryInstance());
+	sdaiPutAttrBN(iIfcAlignmentSegmentInstance, "Name", sdaiSTRING, szName);
+	sdaiPutAttrBN(iIfcAlignmentSegmentInstance, "Description", sdaiSTRING, szDescription);
+	sdaiPutAttrBN(iIfcAlignmentSegmentInstance, "DesignParameters", sdaiINSTANCE, (void*)iDesignParameters);
+
+	return iIfcAlignmentSegmentInstance;
+}
+
+SdaiInstance _exporter_base::buildAllignmentHorizontalSegmentInstance(
+	const char* szName,
+	const char* szDescription,
+	SdaiInstance iStartPoint)
+{
+	assert(iStartPoint != 0);
+
+	SdaiInstance iIfcAlignmentSegmentInstance = sdaiCreateInstanceBN(m_iIfcModel, "IfcAlignmentHorizontalSegment");
+	assert(iIfcAlignmentSegmentInstance != 0);
+
+	sdaiPutAttrBN(iIfcAlignmentSegmentInstance, "GlobalId", sdaiSTRING, (void*)_guid::createGlobalId().c_str());
+	sdaiPutAttrBN(iIfcAlignmentSegmentInstance, "OwnerHistory", sdaiINSTANCE, (void*)getOwnerHistoryInstance());
+	sdaiPutAttrBN(iIfcAlignmentSegmentInstance, "Name", sdaiSTRING, szName);
+	sdaiPutAttrBN(iIfcAlignmentSegmentInstance, "Description", sdaiSTRING, szDescription);
+	sdaiPutAttrBN(iIfcAlignmentSegmentInstance, "StartPoint", sdaiINSTANCE, (void*)iStartPoint);
+	sdaiPutAttrBN(iIfcAlignmentSegmentInstance, "PredefinedType", sdaiSTRING, "LINE");
+
+	return iIfcAlignmentSegmentInstance;
+}
+
 SdaiInstance _exporter_base::buildRelContainedInSpatialStructureInstance(
 	const char* szName,
 	const char* szDescription,
@@ -1549,7 +1588,7 @@ _citygml_exporter::_citygml_exporter(_gis2ifc* pSite)
 	m_mapBuildings.clear();
 	m_mapBuildingElements.clear();
 
-	createIfcModel(L"IFC4");
+	createIfcModel(L"IFC4X3_ADD2");
 
 	string strTag = getTag(iRootInstance);
 
@@ -2838,28 +2877,25 @@ void _citygml_exporter::createPoint3D(OwlInstance iInstance, vector<SdaiInstance
 		pdValue[0],
 		pdValue[1],
 		pdValue[2]);
-	assert(iCartesianPointInstance != 0);
+	assert(iCartesianPointInstance != 0);	
 
-	if (bCreateIfcShapeRepresentation)
-	{
-		SdaiInstance iShapeRepresentationInstance = sdaiCreateInstanceBN(getIfcModel(), "IfcShapeRepresentation");
-		assert(iShapeRepresentationInstance != 0);
+	SdaiInstance iAlignmentHorizontalSegmentInstance = buildAllignmentHorizontalSegmentInstance(
+		"",
+		"",
+		iCartesianPointInstance);
 
-		SdaiAggr pItems = sdaiCreateAggrBN(iShapeRepresentationInstance, "Items");
-		assert(pItems != 0);
+	SdaiInstance iAlignmentSegmentInstance = buildAllignmentSegmentInstance(
+		"",
+		"",
+		iAlignmentHorizontalSegmentInstance);
 
-		sdaiAppend(pItems, sdaiINSTANCE, (void*)iCartesianPointInstance);
+	SdaiInstance iRelNestsInstance = buildRelNestsInstance(
+		"",
+		"",
+		m_iCurrentOwlBuildingElementInstance,
+		vector<SdaiInstance>{ iAlignmentSegmentInstance });
 
-		sdaiPutAttrBN(iShapeRepresentationInstance, "RepresentationIdentifier", sdaiSTRING, "Body");
-		sdaiPutAttrBN(iShapeRepresentationInstance, "RepresentationType", sdaiSTRING, "PointCloud");
-		sdaiPutAttrBN(iShapeRepresentationInstance, "ContextOfItems", sdaiINSTANCE, (void*)getGeometricRepresentationContextInstance());
-
-		vecGeometryInstances.push_back(iShapeRepresentationInstance);
-	}
-	else
-	{
-		vecGeometryInstances.push_back(iCartesianPointInstance);
-	}	
+	vecGeometryInstances.push_back(iRelNestsInstance);
 }
 
 void _citygml_exporter::createPoint3DSet(OwlInstance iInstance, vector<SdaiInstance>& vecGeometryInstances, bool bCreateIfcShapeRepresentation)
