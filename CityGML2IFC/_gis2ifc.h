@@ -223,6 +223,11 @@ protected: // Methods
 		const char* szDescription, 
 		SdaiInstance iRelatingObjectInstance, 
 		const vector<SdaiInstance>& vecRelatedObjects);
+	SdaiInstance buildRelNestsInstance(
+		const char* szName,
+		const char* szDescription,
+		SdaiInstance iRelatingObjectInstance,
+		const vector<SdaiInstance>& vecRelatedObjects);
 	SdaiInstance buildRelContainedInSpatialStructureInstance(
 		const char* szName,
 		const char* szDescription,

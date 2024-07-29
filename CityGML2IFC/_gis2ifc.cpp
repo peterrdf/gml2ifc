@@ -832,6 +832,35 @@ SdaiInstance _exporter_base::buildRelAggregatesInstance(
 	return iRelAggregatesInstance;
 }
 
+SdaiInstance _exporter_base::buildRelNestsInstance(
+	const char* szName,
+	const char* szDescription,
+	SdaiInstance iRelatingObjectInstance,
+	const vector<SdaiInstance>& vecRelatedObjects)
+{
+	assert(iRelatingObjectInstance != 0);
+	assert(!vecRelatedObjects.empty());
+
+	SdaiInstance iIfcRelNestsInstance = sdaiCreateInstanceBN(m_iIfcModel, "IfcRelNests");
+	assert(iIfcRelNestsInstance != 0);
+
+	sdaiPutAttrBN(iIfcRelNestsInstance, "GlobalId", sdaiSTRING, (void*)_guid::createGlobalId().c_str());
+	sdaiPutAttrBN(iIfcRelNestsInstance, "OwnerHistory", sdaiINSTANCE, (void*)getOwnerHistoryInstance());
+	sdaiPutAttrBN(iIfcRelNestsInstance, "Name", sdaiSTRING, szName);
+	sdaiPutAttrBN(iIfcRelNestsInstance, "Description", sdaiSTRING, szDescription);
+	sdaiPutAttrBN(iIfcRelNestsInstance, "RelatingObject", sdaiINSTANCE, (void*)iRelatingObjectInstance);
+
+	SdaiAggr pRelatedObjects = sdaiCreateAggrBN(iIfcRelNestsInstance, "RelatedObjects");
+	assert(pRelatedObjects != nullptr);
+
+	for (auto iRelatedObject : vecRelatedObjects)
+	{
+		sdaiAppend(pRelatedObjects, sdaiINSTANCE, (void*)iRelatedObject);
+	}
+
+	return iIfcRelNestsInstance;
+}
+
 SdaiInstance _exporter_base::buildRelContainedInSpatialStructureInstance(
 	const char* szName,
 	const char* szDescription,
@@ -2274,8 +2303,7 @@ void _citygml_exporter::createGeometry(OwlInstance iInstance, vector<SdaiInstanc
 	}
 	else if (iInstanceClass == GetClassByName(getSite()->getOwlModel(), "Point3D"))
 	{
-		//#todo
-		//createPoint3D(iInstance, vecGeometryInstances, bCreateIfcShapeRepresentation);
+		createPoint3D(iInstance, vecGeometryInstances, bCreateIfcShapeRepresentation);
 	}
 	else if (iInstanceClass == GetClassByName(getSite()->getOwlModel(), "Point3DSet"))
 	{
