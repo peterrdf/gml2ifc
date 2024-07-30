@@ -1594,12 +1594,13 @@ _citygml_exporter::_citygml_exporter(_gis2ifc* pSite)
 	, m_iThingClass(0)
 	, m_mapFeatures()
 	, m_mapFeatureElements()
-	, m_iCurrentOwlBuildingElementInstance(0)
+	, m_iCurrentOwlBuildingElementInstance(0)	
 	, m_iDefaultWallSurfaceColorRgbInstance(0)
 	, m_iDefaultRoofSurfaceColorRgbInstance(0)
 	, m_iDefaultDoorColorRgbInstance(0)
 	, m_iDefaultWindowColorRgbInstance(0)
 	, m_iDefaultColorRgbInstance(0)
+	, m_mapCRS()
 {
 	// Geometry Kernel
 	m_iCollectionClass = GetClassByName(getSite()->getOwlModel(), "Collection");
@@ -1832,12 +1833,22 @@ void _citygml_exporter::createBuildings(SdaiInstance iSiteInstance, SdaiInstance
 					vecNewGeometryInstances.begin(),
 					vecNewGeometryInstances.end());
 
-				// CRS #todo
+				// CRS
 				const wchar_t* szSrsName = getStringAttributeValue(iOwlBuildingElementGeometryInstance, "srsName");
 				if ((szSrsName != nullptr) && (wstring(szSrsName).find(L"EPSG") != string::npos))
 				{
-					map<OwlIn, set<iSdaiIns>>
-					cout << "";
+					for (auto iNewInstance : vecNewGeometryInstances)
+					{
+						auto itCRS = m_mapCRS.find(iOwlBuildingElementGeometryInstance);
+						if (itCRS != m_mapCRS.end())
+						{
+							itCRS->second.insert(iNewInstance);
+						}
+						else
+						{
+							m_mapCRS[iOwlBuildingElementGeometryInstance] = set<SdaiInstance>{ iNewInstance };
+						}
+					}			
 				}
 			}
 
@@ -2183,11 +2194,22 @@ void _citygml_exporter::createFeatures(SdaiInstance iSiteInstance, SdaiInstance 
 					vecNewGeometryInstances.begin(),
 					vecNewGeometryInstances.end());
 
-				// CRS #todo
+				// CRS
 				const wchar_t* szSrsName = getStringAttributeValue(iOwlFeatureElementGeometryInstance, "srsName");
 				if ((szSrsName != nullptr) && (wstring(szSrsName).find(L"EPSG") != string::npos))
 				{
-					cout << "";
+					for (auto iNewInstance : vecNewGeometryInstances)
+					{
+						auto itCRS = m_mapCRS.find(iOwlFeatureElementGeometryInstance);
+						if (itCRS != m_mapCRS.end())
+						{
+							itCRS->second.insert(iNewInstance);
+						}
+						else
+						{
+							m_mapCRS[iOwlFeatureElementGeometryInstance] = set<SdaiInstance>{ iNewInstance };
+						}
+					}
 				}
 			}
 

@@ -24,6 +24,7 @@
 #include <fstream>
 #include <time.h>
 #include <map>
+#include <set>
 using namespace std;
 
 // ************************************************************************************************
@@ -340,6 +341,7 @@ private: // Members
 	SdaiInstance m_iDefaultDoorColorRgbInstance;
 	SdaiInstance m_iDefaultWindowColorRgbInstance;
 	SdaiInstance m_iDefaultColorRgbInstance;
+	map<OwlInstance, set<SdaiInstance>> m_mapCRS;
 
 public: // Methods
 
