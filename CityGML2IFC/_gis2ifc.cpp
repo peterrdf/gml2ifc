@@ -383,14 +383,15 @@ SdaiInstance _exporter_base::getProjectInstance()
 		SdaiAggr pRepresentationContexts = sdaiCreateAggrBN(m_iProjectInstance, "RepresentationContexts");
 		assert(pRepresentationContexts != nullptr);
 
+		//#todo
 		// TEST !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		//sdaiAppend(pRepresentationContexts, sdaiINSTANCE, (void*)getGeometricRepresentationContextInstance());
 
 		SdaiInstance iGeometricRepresentationContextInstance = getGeometricRepresentationContextInstance();
 
-		SdaiInstance iSourceCRS = createProjectedCRS("EPSG:25830");
-		SdaiInstance iTargetCRS = createProjectedCRS("EPSG:25830");
-		SdaiInstance iMapConversion = createMapConversion(iSourceCRS, iTargetCRS);
+		SdaiInstance iSourceCRS = buildProjectedCRS("EPSG:25830");
+		SdaiInstance iTargetCRS = buildProjectedCRS("EPSG:25830");
+		SdaiInstance iMapConversion = buildMapConversion(iSourceCRS, iTargetCRS);
 		sdaiPutAttrBN(iGeometricRepresentationContextInstance, "HasCoordinateOperation", sdaiINSTANCE, (void*)iMapConversion);
 
 
@@ -1045,7 +1046,7 @@ SdaiInstance _exporter_base::buildMappedItem(
 	return iShapeRepresentationInstance;
 }
 
-SdaiInstance _exporter_base::createMapConversion(OwlInstance iSourceCRSInstance, OwlInstance iTargetCRSInstance)
+SdaiInstance _exporter_base::buildMapConversion(OwlInstance iSourceCRSInstance, OwlInstance iTargetCRSInstance)
 {
 	assert(iSourceCRSInstance != 0);
 	assert(iTargetCRSInstance != 0);
@@ -1059,7 +1060,7 @@ SdaiInstance _exporter_base::createMapConversion(OwlInstance iSourceCRSInstance,
 	return iMapConversionInstance;
 }
 
-SdaiInstance _exporter_base::createProjectedCRS(const string& strEPSG)
+SdaiInstance _exporter_base::buildProjectedCRS(const string& strEPSG)
 {
 	assert(!strEPSG.empty());
 

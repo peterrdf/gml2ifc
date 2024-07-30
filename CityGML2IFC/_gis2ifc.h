@@ -248,8 +248,8 @@ protected: // Methods
 		OwlInstance iTransformationMatrixInstance);
 
 	/* CRS */
-	SdaiInstance createMapConversion(OwlInstance iSourceCRSInstance, OwlInstance iTargetCRSInstance);
-	SdaiInstance createProjectedCRS(const string& strEPSG);
+	SdaiInstance buildMapConversion(OwlInstance iSourceCRSInstance, OwlInstance iTargetCRSInstance);
+	SdaiInstance buildProjectedCRS(const string& strEPSG);
 
 	/* Style */
 	void createStyledItemInstance(OwlInstance iOwlInstance, SdaiInstance iSdaiInstance);
