@@ -285,6 +285,7 @@ protected: // Methods
 
 	/* Helpers */
 	string getTag(OwlInstance iInstance) const;
+	const wchar_t* getStringAttributeValue(OwlInstance iInstance, const string& strAttributeName) const;
 	OwlInstance* getObjectProperty(OwlInstance iInstance, const string& strPropertyName, int64_t& iInstancesCount) const;
 	bool hasObjectProperty(OwlInstance iInstance, const string& strPropertyName);
 };

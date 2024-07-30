@@ -383,29 +383,29 @@ SdaiInstance _exporter_base::getProjectInstance()
 		SdaiAggr pRepresentationContexts = sdaiCreateAggrBN(m_iProjectInstance, "RepresentationContexts");
 		assert(pRepresentationContexts != nullptr);
 
-		//#todo
+		////#todo
 		// TEST !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		//sdaiAppend(pRepresentationContexts, sdaiINSTANCE, (void*)getGeometricRepresentationContextInstance());
+		sdaiAppend(pRepresentationContexts, sdaiINSTANCE, (void*)getGeometricRepresentationContextInstance());
 
-		SdaiInstance iGeometricRepresentationContextInstance = getGeometricRepresentationContextInstance();
+		//SdaiInstance iGeometricRepresentationContextInstance = getGeometricRepresentationContextInstance();
 
-		SdaiInstance iSourceCRS = buildProjectedCRS("EPSG:25830");
-		SdaiInstance iTargetCRS = buildProjectedCRS("EPSG:25830");
-		SdaiInstance iMapConversion = buildMapConversion(iSourceCRS, iTargetCRS);
+		//SdaiInstance iSourceCRS = buildProjectedCRS("EPSG:25830");
+		//SdaiInstance iTargetCRS = buildProjectedCRS("EPSG:25830");
+		//SdaiInstance iMapConversion = buildMapConversion(iSourceCRS, iTargetCRS);
 
-		double dOrthogonalHeight = 10000; // #todo
-		sdaiPutAttrBN(iMapConversion, "OrthogonalHeight", sdaiREAL, &dOrthogonalHeight);
+		//double dOrthogonalHeight = 10000; // #todo
+		//sdaiPutAttrBN(iMapConversion, "OrthogonalHeight", sdaiREAL, &dOrthogonalHeight);
 
-		double dEastings = 0.; // #todo
-		sdaiPutAttrBN(iMapConversion, "Eastings", sdaiREAL, &dEastings);
+		//double dEastings = 0.; // #todo
+		//sdaiPutAttrBN(iMapConversion, "Eastings", sdaiREAL, &dEastings);
 
-		double dNorthings = 1.; // #todo
-		sdaiPutAttrBN(iMapConversion, "Northings", sdaiREAL, &dNorthings);
+		//double dNorthings = 1.; // #todo
+		//sdaiPutAttrBN(iMapConversion, "Northings", sdaiREAL, &dNorthings);
 
-		sdaiPutAttrBN(iGeometricRepresentationContextInstance, "HasCoordinateOperation", sdaiINSTANCE, (void*)iMapConversion);
+		//sdaiPutAttrBN(iGeometricRepresentationContextInstance, "HasCoordinateOperation", sdaiINSTANCE, (void*)iMapConversion);
 
 
-		sdaiAppend(pRepresentationContexts, sdaiINSTANCE, (void*)iGeometricRepresentationContextInstance);
+		//sdaiAppend(pRepresentationContexts, sdaiINSTANCE, (void*)iGeometricRepresentationContextInstance);
 		// TEST !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	}
 
@@ -1500,6 +1500,37 @@ string _exporter_base::getTag(OwlInstance iInstance) const
 #endif
 }
 
+const wchar_t* _exporter_base::getStringAttributeValue(OwlInstance iInstance, const string& strAttributeName) const
+{
+	assert(iInstance != 0);
+	assert(!strAttributeName.empty());
+
+	int64_t iPropertyInstance = GetInstancePropertyByIterator(iInstance, 0);
+	while (iPropertyInstance != 0)
+	{
+		char* szPropertyName = nullptr;
+		GetNameOfProperty(iPropertyInstance, &szPropertyName);
+
+		string strPropertyName = szPropertyName;
+		if (strPropertyName == "attr:str:" + strAttributeName)
+		{
+			assert(GetPropertyType(iPropertyInstance) == DATATYPEPROPERTY_TYPE_WCHAR_T_ARRAY);
+
+			wchar_t** szValue = nullptr;
+			int64_t iValuesCount = 0;
+			GetDatatypeProperty(iInstance, iPropertyInstance, (void**)&szValue, &iValuesCount);
+
+			assert(iValuesCount == 1);
+
+			return szValue[0];
+		} // if (strPropertyName == ...
+
+		iPropertyInstance = GetInstancePropertyByIterator(iInstance, iPropertyInstance);
+	} // while (iPropertyInstance != 0)
+
+	return nullptr;
+}
+
 OwlInstance* _exporter_base::getObjectProperty(OwlInstance iInstance, const string& strPropertyName, int64_t& iInstancesCount) const
 {
 	assert(iInstance != 0);
@@ -1793,7 +1824,21 @@ void _citygml_exporter::createBuildings(SdaiInstance iSiteInstance, SdaiInstance
 			vector<SdaiInstance> vecSdaiBuildingElementGeometryInstances;
 			for (auto iOwlBuildingElementGeometryInstance : itBuildingElement->second)
 			{
-				createGeometry(iOwlBuildingElementGeometryInstance, vecSdaiBuildingElementGeometryInstances, true);
+				vector<SdaiInstance> vecNewGeometryInstances;
+				createGeometry(iOwlBuildingElementGeometryInstance, vecNewGeometryInstances, true);
+
+				vecSdaiBuildingElementGeometryInstances.insert(
+					vecSdaiBuildingElementGeometryInstances.end(),
+					vecNewGeometryInstances.begin(),
+					vecNewGeometryInstances.end());
+
+				// CRS #todo
+				const wchar_t* szSrsName = getStringAttributeValue(iOwlBuildingElementGeometryInstance, "srsName");
+				if ((szSrsName != nullptr) && (wstring(szSrsName).find(L"EPSG") != string::npos))
+				{
+					map<OwlIn, set<iSdaiIns>>
+					cout << "";
+				}
 			}
 
 			if (vecSdaiBuildingElementGeometryInstances.empty())
@@ -2130,7 +2175,20 @@ void _citygml_exporter::createFeatures(SdaiInstance iSiteInstance, SdaiInstance 
 
 			for (auto iOwlFeatureElementGeometryInstance : itFeatureElement->second)
 			{
-				createGeometry(iOwlFeatureElementGeometryInstance, vecSdaiFeatureElementGeometryInstances, true);
+				vector<SdaiInstance> vecNewGeometryInstances;
+				createGeometry(iOwlFeatureElementGeometryInstance, vecNewGeometryInstances, true);
+				
+				vecSdaiFeatureElementGeometryInstances.insert(
+					vecSdaiFeatureElementGeometryInstances.end(),
+					vecNewGeometryInstances.begin(),
+					vecNewGeometryInstances.end());
+
+				// CRS #todo
+				const wchar_t* szSrsName = getStringAttributeValue(iOwlFeatureElementGeometryInstance, "srsName");
+				if ((szSrsName != nullptr) && (wstring(szSrsName).find(L"EPSG") != string::npos))
+				{
+					cout << "";
+				}
 			}
 
 			m_iCurrentOwlBuildingElementInstance = 0;
