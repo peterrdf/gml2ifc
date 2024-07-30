@@ -2969,6 +2969,29 @@ void _citygml_exporter::createPolyLine3D(OwlInstance iInstance, vector<SdaiInsta
 	}	
 }
 
+SdaiInstance _citygml_exporter::createMapConversion(OwlInstance iSourceCRSInstance, OwlInstance iTargetCRSInstance)
+{
+	assert(iSourceCRSInstance != 0);
+	assert(iTargetCRSInstance != 0);
+
+	SdaiInstance iMapConversionInstance = sdaiCreateInstanceBN(getIfcModel(), "IfcMapConversion");
+	assert(iMapConversionInstance != 0);
+
+	return iMapConversionInstance;
+}
+
+SdaiInstance _citygml_exporter::createProjectedCRS(const string& strEPSG)
+{
+	assert(!strEPSG.empty());
+
+	SdaiInstance iProjectedCRSInstance = sdaiCreateInstanceBN(getIfcModel(), "IfcProjectedCRS");
+	assert(iProjectedCRSInstance != 0);
+
+	sdaiPutAttrBN(iProjectedCRSInstance, "Name", sdaiSTRING, strEPSG.c_str());
+
+	return iProjectedCRSInstance;
+}
+
 void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance iSdaiInstance)
 {
 	assert(iOwlInstance != 0);

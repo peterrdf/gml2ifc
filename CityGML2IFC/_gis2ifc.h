@@ -371,6 +371,10 @@ protected:  // Methods
 	void createPoint3DSet(OwlInstance iInstance, vector<SdaiInstance>& vecGeometryInstances, bool bCreateIfcShapeRepresentation);
 	void createPolyLine3D(OwlInstance iInstance, vector<SdaiInstance>& vecGeometryInstances, bool bCreateIfcShapeRepresentation);
 
+	// CRS
+	SdaiInstance createMapConversion(OwlInstance iSourceCRSInstance, OwlInstance iTargetCRSInstance);
+	SdaiInstance createProjectedCRS(const string& strEPSG);
+
 	void createProperties(OwlInstance iOwlInstance, SdaiInstance iSdaiInstance);
 
 	SdaiInstance buildBuildingElementInstance(
