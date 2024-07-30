@@ -173,7 +173,8 @@ protected: // Methods
 	/* Geometry */
 	SdaiInstance buildSIUnitInstance(const char* szUnitType, const char* szPrefix, const char* szName);
 	SdaiInstance buildMeasureWithUnitInstance();
-	SdaiInstance buildDirectionInstance(double dX, double dY, double dZ);
+	SdaiInstance buildDirectionInstance2D(double dX, double dY);
+	SdaiInstance buildDirectionInstance3D(double dX, double dY, double dZ);
 	SdaiInstance buildCartesianPointInstance(double dX, double dY, double dZ);
 	SdaiInstance buildSiteInstance(
 		const char* szName,

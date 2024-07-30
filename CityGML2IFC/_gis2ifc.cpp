@@ -361,7 +361,7 @@ SdaiInstance _exporter_base::getGeometricRepresentationContextInstance()
 		sdaiPutAttrBN(m_iGeometricRepresentationContextInstance, "CoordinateSpaceDimension", sdaiINTEGER, &iCoordinateSpaceDimension);
 		sdaiPutAttrBN(m_iGeometricRepresentationContextInstance, "Precision", sdaiREAL, &dPrecision);
 		sdaiPutAttrBN(m_iGeometricRepresentationContextInstance, "WorldCoordinateSystem", sdaiINSTANCE, (void*)getWorldCoordinateSystemInstance());
-		sdaiPutAttrBN(m_iGeometricRepresentationContextInstance, "TrueNorth", sdaiINSTANCE, (void*)buildDirectionInstance(0., 1., 0.));
+		sdaiPutAttrBN(m_iGeometricRepresentationContextInstance, "TrueNorth", sdaiINSTANCE, (void*)buildDirectionInstance2D(0., 1.));
 	}
 
 	return  m_iGeometricRepresentationContextInstance;
@@ -531,7 +531,21 @@ SdaiInstance _exporter_base::buildMeasureWithUnitInstance()
 	return iMeasureWithUnitInstance;
 }
 
-SdaiInstance _exporter_base::buildDirectionInstance(double dX, double dY, double dZ)
+SdaiInstance _exporter_base::buildDirectionInstance2D(double dX, double dY)
+{
+	SdaiInstance iDirectionInstance = sdaiCreateInstanceBN(m_iIfcModel, "IfcDirection");
+	assert(iDirectionInstance != 0);
+
+	SdaiAggr pDirectionRatios = sdaiCreateAggrBN(iDirectionInstance, "DirectionRatios");
+	assert(pDirectionRatios != nullptr);
+
+	sdaiAppend(pDirectionRatios, sdaiREAL, &dX);
+	sdaiAppend(pDirectionRatios, sdaiREAL, &dY);
+
+	return iDirectionInstance;
+}
+
+SdaiInstance _exporter_base::buildDirectionInstance3D(double dX, double dY, double dZ)
 {
 	SdaiInstance iDirectionInstance = sdaiCreateInstanceBN(m_iIfcModel, "IfcDirection");
 	assert(iDirectionInstance != 0);
@@ -625,8 +639,8 @@ SdaiInstance _exporter_base::buildAxis2Placement3DInstance(_matrix* pMatrix)
 	assert(iAxis2Placement3DInstance != 0);
 
 	sdaiPutAttrBN(iAxis2Placement3DInstance, "Location", sdaiINSTANCE, (void*)buildCartesianPointInstance(pMatrix->_41, pMatrix->_42, pMatrix->_43));
-	sdaiPutAttrBN(iAxis2Placement3DInstance, "Axis", sdaiINSTANCE, (void*)buildDirectionInstance(pMatrix->_31, pMatrix->_32, pMatrix->_33));
-	sdaiPutAttrBN(iAxis2Placement3DInstance, "RefDirection", sdaiINSTANCE, (void*)buildDirectionInstance(pMatrix->_11, pMatrix->_12, pMatrix->_13));
+	sdaiPutAttrBN(iAxis2Placement3DInstance, "Axis", sdaiINSTANCE, (void*)buildDirectionInstance3D(pMatrix->_31, pMatrix->_32, pMatrix->_33));
+	sdaiPutAttrBN(iAxis2Placement3DInstance, "RefDirection", sdaiINSTANCE, (void*)buildDirectionInstance3D(pMatrix->_11, pMatrix->_12, pMatrix->_13));
 
 	return iAxis2Placement3DInstance;
 }
@@ -1029,9 +1043,9 @@ SdaiInstance _exporter_base::buildMappedItem(
 			&iValuesCount);
 		assert(iValuesCount == 12);
 
-		sdaiPutAttrBN(iCartesianTransformationOperator3DInstance, "Axis1", sdaiINSTANCE, (void*)buildDirectionInstance(pdValues[0], pdValues[1], pdValues[2]));
-		sdaiPutAttrBN(iCartesianTransformationOperator3DInstance, "Axis2", sdaiINSTANCE, (void*)buildDirectionInstance(pdValues[3], pdValues[4], pdValues[5]));
-		sdaiPutAttrBN(iCartesianTransformationOperator3DInstance, "Axis3", sdaiINSTANCE, (void*)buildDirectionInstance(pdValues[6], pdValues[7], pdValues[8]));
+		sdaiPutAttrBN(iCartesianTransformationOperator3DInstance, "Axis1", sdaiINSTANCE, (void*)buildDirectionInstance3D(pdValues[0], pdValues[1], pdValues[2]));
+		sdaiPutAttrBN(iCartesianTransformationOperator3DInstance, "Axis2", sdaiINSTANCE, (void*)buildDirectionInstance3D(pdValues[3], pdValues[4], pdValues[5]));
+		sdaiPutAttrBN(iCartesianTransformationOperator3DInstance, "Axis3", sdaiINSTANCE, (void*)buildDirectionInstance3D(pdValues[6], pdValues[7], pdValues[8]));
 
 		SdaiInstance iLocalOriginInstance = buildCartesianPointInstance(pdValues[9], pdValues[10], pdValues[11]);
 		assert(iLocalOriginInstance != 0);
