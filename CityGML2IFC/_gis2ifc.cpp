@@ -392,6 +392,16 @@ SdaiInstance _exporter_base::getProjectInstance()
 		SdaiInstance iSourceCRS = buildProjectedCRS("EPSG:25830");
 		SdaiInstance iTargetCRS = buildProjectedCRS("EPSG:25830");
 		SdaiInstance iMapConversion = buildMapConversion(iSourceCRS, iTargetCRS);
+
+		double dOrthogonalHeight = 10000; // #todo
+		sdaiPutAttrBN(iMapConversion, "OrthogonalHeight", sdaiREAL, &dOrthogonalHeight);
+
+		double dEastings = 0.; // #todo
+		sdaiPutAttrBN(iMapConversion, "Eastings", sdaiREAL, &dEastings);
+
+		double dNorthings = 1.; // #todo
+		sdaiPutAttrBN(iMapConversion, "Northings", sdaiREAL, &dNorthings);
+
 		sdaiPutAttrBN(iGeometricRepresentationContextInstance, "HasCoordinateOperation", sdaiINSTANCE, (void*)iMapConversion);
 
 
@@ -1390,7 +1400,7 @@ SdaiInstance _exporter_base::buildMaterial()
 
 	sdaiPutAttrBN(iMaterialInstance, "Name", sdaiSTRING, (void*)"Material");
 
-	return  iMaterialInstance;
+	return iMaterialInstance;
 }
 
 SdaiInstance _exporter_base::buildMaterialLayer(double dThickness)
