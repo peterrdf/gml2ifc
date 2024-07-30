@@ -247,6 +247,10 @@ protected: // Methods
 		OwlInstance iReferencePointMatrixInstance,
 		OwlInstance iTransformationMatrixInstance);
 
+	/* CRS */
+	SdaiInstance createMapConversion(OwlInstance iSourceCRSInstance, OwlInstance iTargetCRSInstance);
+	SdaiInstance createProjectedCRS(const string& strEPSG);
+
 	/* Style */
 	void createStyledItemInstance(OwlInstance iOwlInstance, SdaiInstance iSdaiInstance);
 	void createStyledItemInstance(SdaiInstance iSdaiInstance, double dR, double G, double dB, double dTransparency);
@@ -342,7 +346,7 @@ public: // Methods
 
 	virtual void execute(OwlInstance iRootInstance, const wstring& strOuputFile) override;
 
-protected:  // Methods
+protected:  // Methods	
 
 	virtual void createDefaultStyledItemInstance(SdaiInstance iSdaiInstance) override;
 
@@ -369,11 +373,7 @@ protected:  // Methods
 	void createBoundaryRepresentation(OwlInstance iInstance, vector<SdaiInstance>& vecGeometryInstances, bool bCreateIfcShapeRepresentation);
 	void createPoint3D(OwlInstance iInstance, vector<SdaiInstance>& vecGeometryInstances, bool bCreateIfcShapeRepresentation);
 	void createPoint3DSet(OwlInstance iInstance, vector<SdaiInstance>& vecGeometryInstances, bool bCreateIfcShapeRepresentation);
-	void createPolyLine3D(OwlInstance iInstance, vector<SdaiInstance>& vecGeometryInstances, bool bCreateIfcShapeRepresentation);
-
-	// CRS
-	SdaiInstance createMapConversion(OwlInstance iSourceCRSInstance, OwlInstance iTargetCRSInstance);
-	SdaiInstance createProjectedCRS(const string& strEPSG);
+	void createPolyLine3D(OwlInstance iInstance, vector<SdaiInstance>& vecGeometryInstances, bool bCreateIfcShapeRepresentation);	
 
 	void createProperties(OwlInstance iOwlInstance, SdaiInstance iSdaiInstance);
 

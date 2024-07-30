@@ -383,7 +383,19 @@ SdaiInstance _exporter_base::getProjectInstance()
 		SdaiAggr pRepresentationContexts = sdaiCreateAggrBN(m_iProjectInstance, "RepresentationContexts");
 		assert(pRepresentationContexts != nullptr);
 
-		sdaiAppend(pRepresentationContexts, sdaiINSTANCE, (void*)getGeometricRepresentationContextInstance());
+		// TEST !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		//sdaiAppend(pRepresentationContexts, sdaiINSTANCE, (void*)getGeometricRepresentationContextInstance());
+
+		SdaiInstance iGeometricRepresentationContextInstance = getGeometricRepresentationContextInstance();
+
+		SdaiInstance iSourceCRS = createProjectedCRS("EPSG:25830");
+		SdaiInstance iTargetCRS = createProjectedCRS("EPSG:25830");
+		SdaiInstance iMapConversion = createMapConversion(iSourceCRS, iTargetCRS);
+		sdaiPutAttrBN(iGeometricRepresentationContextInstance, "HasCoordinateOperation", sdaiINSTANCE, (void*)iMapConversion);
+
+
+		sdaiAppend(pRepresentationContexts, sdaiINSTANCE, (void*)iGeometricRepresentationContextInstance);
+		// TEST !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	}
 
 	return m_iProjectInstance;
@@ -1031,6 +1043,32 @@ SdaiInstance _exporter_base::buildMappedItem(
 	sdaiAppend(pItems, sdaiINSTANCE, (void*)iMappedItemInstance);
 
 	return iShapeRepresentationInstance;
+}
+
+SdaiInstance _exporter_base::createMapConversion(OwlInstance iSourceCRSInstance, OwlInstance iTargetCRSInstance)
+{
+	assert(iSourceCRSInstance != 0);
+	assert(iTargetCRSInstance != 0);
+
+	SdaiInstance iMapConversionInstance = sdaiCreateInstanceBN(getIfcModel(), "IfcMapConversion");
+	assert(iMapConversionInstance != 0);
+
+	sdaiPutAttrBN(iMapConversionInstance, "SourceCRS", sdaiINSTANCE, (void*)iSourceCRSInstance);
+	sdaiPutAttrBN(iMapConversionInstance, "TargetCRS", sdaiINSTANCE, (void*)iTargetCRSInstance);
+
+	return iMapConversionInstance;
+}
+
+SdaiInstance _exporter_base::createProjectedCRS(const string& strEPSG)
+{
+	assert(!strEPSG.empty());
+
+	SdaiInstance iProjectedCRSInstance = sdaiCreateInstanceBN(getIfcModel(), "IfcProjectedCRS");
+	assert(iProjectedCRSInstance != 0);
+
+	sdaiPutAttrBN(iProjectedCRSInstance, "Name", sdaiSTRING, strEPSG.c_str());
+
+	return iProjectedCRSInstance;
 }
 
 void _exporter_base::createStyledItemInstance(OwlInstance iOwlInstance, SdaiInstance iSdaiInstance)
@@ -2303,7 +2341,8 @@ void _citygml_exporter::createGeometry(OwlInstance iInstance, vector<SdaiInstanc
 	}
 	else if (iInstanceClass == GetClassByName(getSite()->getOwlModel(), "Point3D"))
 	{
-		createPoint3D(iInstance, vecGeometryInstances, bCreateIfcShapeRepresentation);
+		//#todo
+		//createPoint3D(iInstance, vecGeometryInstances, bCreateIfcShapeRepresentation);
 	}
 	else if (iInstanceClass == GetClassByName(getSite()->getOwlModel(), "Point3DSet"))
 	{
@@ -2967,29 +3006,6 @@ void _citygml_exporter::createPolyLine3D(OwlInstance iInstance, vector<SdaiInsta
 	{
 		vecGeometryInstances.push_back(iPolyLineInstance);
 	}	
-}
-
-SdaiInstance _citygml_exporter::createMapConversion(OwlInstance iSourceCRSInstance, OwlInstance iTargetCRSInstance)
-{
-	assert(iSourceCRSInstance != 0);
-	assert(iTargetCRSInstance != 0);
-
-	SdaiInstance iMapConversionInstance = sdaiCreateInstanceBN(getIfcModel(), "IfcMapConversion");
-	assert(iMapConversionInstance != 0);
-
-	return iMapConversionInstance;
-}
-
-SdaiInstance _citygml_exporter::createProjectedCRS(const string& strEPSG)
-{
-	assert(!strEPSG.empty());
-
-	SdaiInstance iProjectedCRSInstance = sdaiCreateInstanceBN(getIfcModel(), "IfcProjectedCRS");
-	assert(iProjectedCRSInstance != 0);
-
-	sdaiPutAttrBN(iProjectedCRSInstance, "Name", sdaiSTRING, strEPSG.c_str());
-
-	return iProjectedCRSInstance;
 }
 
 void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance iSdaiInstance)
