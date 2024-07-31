@@ -141,7 +141,6 @@ private: // Members
 	SdaiInstance m_iConversionBasedUnitInstance;
 	SdaiInstance m_iUnitAssignmentInstance;
 	SdaiInstance m_iWorldCoordinateSystemInstance;
-	SdaiInstance m_iGeometricRepresentationContextInstance;
 	SdaiInstance m_iProjectInstance;	
 
 public: // Methods
@@ -161,17 +160,17 @@ public: // Methods
 	SdaiInstance getDimensionalExponentsInstance();
 	SdaiInstance getConversionBasedUnitInstance();
 	SdaiInstance getUnitAssignmentInstance();
-	SdaiInstance getWorldCoordinateSystemInstance();
-	SdaiInstance getGeometricRepresentationContextInstance();
+	SdaiInstance getWorldCoordinateSystemInstance();	
 	SdaiInstance getProjectInstance();
 
-protected: // Methods	
+protected: // Methods
 
 	/* Model */
 	void createIfcModel(const wchar_t* szSchemaName);
 	void saveIfcFile(const wchar_t* szFileName);
 
 	/* Geometry */
+	SdaiInstance buildGeometricRepresentationContextInstance();
 	SdaiInstance buildSIUnitInstance(const char* szUnitType, const char* szPrefix, const char* szName);
 	SdaiInstance buildMeasureWithUnitInstance();
 	SdaiInstance buildDirectionInstance2D(double dX, double dY);
