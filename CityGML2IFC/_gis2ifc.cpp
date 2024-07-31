@@ -189,6 +189,15 @@ _exporter_base::_exporter_base(_gis2ifc* pSite)
 	}
 }
 
+void _exporter_base::execute(OwlInstance iRootInstance, const wstring& strOuputFile)
+{
+	preProcessing();
+
+	executeCore(iRootInstance, strOuputFile);
+
+	postProcessing();
+}
+
 SdaiInstance _exporter_base::getPersonInstance()
 {
 	if (m_iPersonInstance == 0) 
@@ -1632,7 +1641,7 @@ _citygml_exporter::_citygml_exporter(_gis2ifc* pSite)
 /*virtual*/ _citygml_exporter::~_citygml_exporter()
 {}
 
-/*virtual*/ void _citygml_exporter::execute(OwlInstance iRootInstance, const wstring& strOuputFile)
+/*virtual*/ void _citygml_exporter::executeCore(OwlInstance iRootInstance, const wstring& strOuputFile)
 {
 	assert(iRootInstance != 0);
 	assert(!strOuputFile.empty());

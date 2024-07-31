@@ -148,7 +148,7 @@ public: // Methods
 	_exporter_base(_gis2ifc* pSite);
 	virtual ~_exporter_base();
 
-	virtual void execute(OwlInstance iRootInstance, const wstring& strOuputFile) = 0;
+	void execute(OwlInstance iRootInstance, const wstring& strOuputFile);
 
 	_gis2ifc* getSite() const { return m_pSite; }
 	SdaiModel getIfcModel() const { return m_iIfcModel; }
@@ -164,6 +164,10 @@ public: // Methods
 	SdaiInstance getProjectInstance();
 
 protected: // Methods
+
+	virtual void preProcessing() {}
+	virtual void executeCore(OwlInstance iRootInstance, const wstring& strOuputFile) = 0;
+	virtual void postProcessing() {}
 
 	/* Model */
 	void createIfcModel(const wchar_t* szSchemaName);
@@ -345,11 +349,11 @@ private: // Members
 public: // Methods
 
 	_citygml_exporter(_gis2ifc* pSite);
-	virtual ~_citygml_exporter();
-
-	virtual void execute(OwlInstance iRootInstance, const wstring& strOuputFile) override;
+	virtual ~_citygml_exporter();	
 
 protected:  // Methods	
+
+	virtual void executeCore(OwlInstance iRootInstance, const wstring& strOuputFile) override;
 
 	virtual void createDefaultStyledItemInstance(SdaiInstance iSdaiInstance) override;
 
