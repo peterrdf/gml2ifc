@@ -1582,7 +1582,6 @@ _citygml_exporter::_citygml_exporter(_gis2ifc* pSite)
 	, m_iDefaultDoorColorRgbInstance(0)
 	, m_iDefaultWindowColorRgbInstance(0)
 	, m_iDefaultColorRgbInstance(0)
-	, m_mapCRS()
 {
 	// Geometry Kernel
 	m_iCollectionClass = GetClassByName(getSite()->getOwlModel(), "Collection");
@@ -1658,34 +1657,6 @@ _citygml_exporter::_citygml_exporter(_gis2ifc* pSite)
 	createFeatures(iSiteInstance, iSiteInstancePlacement);
 
 	saveIfcFile(strOuputFile.c_str());
-}
-
-/*virtual*/ void _citygml_exporter::postProcessing() /*override*/
-{
-	for (auto itCRS : m_mapCRS)
-	{
-		for (auto iGeometryInstance : itCRS.second)
-		{
-			SdaiInstance iGeometricRepresentationContextInstance = 0;
-			sdaiGetAttrBN(iGeometryInstance, "ContextOfItems", sdaiINSTANCE, &iGeometricRepresentationContextInstance);
-			assert(iGeometricRepresentationContextInstance != 0);
-
-			SdaiInstance iSourceCRS = buildProjectedCRS("EPSG:25830"); // #todo
-			SdaiInstance iTargetCRS = buildProjectedCRS("EPSG:25830"); // #todo
-			SdaiInstance iMapConversion = buildMapConversion(iSourceCRS, iTargetCRS);
-
-			double dOrthogonalHeight = 10000; // #todo
-			sdaiPutAttrBN(iMapConversion, "OrthogonalHeight", sdaiREAL, &dOrthogonalHeight);
-
-			double dEastings = 0.; // #todo
-			sdaiPutAttrBN(iMapConversion, "Eastings", sdaiREAL, &dEastings);
-
-			double dNorthings = 1.; // #todo
-			sdaiPutAttrBN(iMapConversion, "Northings", sdaiREAL, &dNorthings);
-
-			sdaiPutAttrBN(iGeometricRepresentationContextInstance, "HasCoordinateOperation", sdaiINSTANCE, (void*)iMapConversion);
-		} // for (auto iGeometryInstance ...
-	} // for (auto itCRS ...
 }
 
 /*virtual*/ void _citygml_exporter::createDefaultStyledItemInstance(SdaiInstance iSdaiInstance) /*override*/
@@ -1842,24 +1813,6 @@ void _citygml_exporter::createBuildings(SdaiInstance iSiteInstance, SdaiInstance
 					vecSdaiBuildingElementGeometryInstances.end(),
 					vecNewGeometryInstances.begin(),
 					vecNewGeometryInstances.end());
-
-				// CRS
-				const wchar_t* szSrsName = getStringAttributeValue(iOwlBuildingElementGeometryInstance, "srsName");
-				if ((szSrsName != nullptr) && (wstring(szSrsName).find(L"EPSG") != string::npos))
-				{
-					for (auto iNewInstance : vecNewGeometryInstances)
-					{
-						auto itCRS = m_mapCRS.find(iOwlBuildingElementGeometryInstance);
-						if (itCRS != m_mapCRS.end())
-						{
-							itCRS->second.insert(iNewInstance);
-						}
-						else
-						{
-							m_mapCRS[iOwlBuildingElementGeometryInstance] = set<SdaiInstance>{ iNewInstance };
-						}
-					}			
-				}
 			}
 
 			if (vecSdaiBuildingElementGeometryInstances.empty())
@@ -2203,24 +2156,6 @@ void _citygml_exporter::createFeatures(SdaiInstance iSiteInstance, SdaiInstance 
 					vecSdaiFeatureElementGeometryInstances.end(),
 					vecNewGeometryInstances.begin(),
 					vecNewGeometryInstances.end());
-
-				// CRS
-				const wchar_t* szSrsName = getStringAttributeValue(iOwlFeatureElementGeometryInstance, "srsName");
-				if ((szSrsName != nullptr) && (wstring(szSrsName).find(L"EPSG") != string::npos))
-				{
-					for (auto iNewInstance : vecNewGeometryInstances)
-					{
-						auto itCRS = m_mapCRS.find(iOwlFeatureElementGeometryInstance);
-						if (itCRS != m_mapCRS.end())
-						{
-							itCRS->second.insert(iNewInstance);
-						}
-						else
-						{
-							m_mapCRS[iOwlFeatureElementGeometryInstance] = set<SdaiInstance>{ iNewInstance };
-						}
-					}
-				}
 			}
 
 			m_iCurrentOwlBuildingElementInstance = 0;
@@ -2964,7 +2899,31 @@ void _citygml_exporter::createBoundaryRepresentation(OwlInstance iInstance, vect
 
 		sdaiPutAttrBN(iShapeRepresentationInstance, "RepresentationIdentifier", sdaiSTRING, "Body");
 		sdaiPutAttrBN(iShapeRepresentationInstance, "RepresentationType", sdaiSTRING, "Brep");
-		sdaiPutAttrBN(iShapeRepresentationInstance, "ContextOfItems", sdaiINSTANCE, (void*)buildGeometricRepresentationContextInstance());
+
+		SdaiInstance iGeometricRepresentationContextInstance = buildGeometricRepresentationContextInstance();
+		assert(iGeometricRepresentationContextInstance != 0);
+
+		// CRS
+		const wchar_t* szSrsName = getStringAttributeValue(m_iCurrentOwlBuildingElementInstance, "srsName");
+		if ((szSrsName != nullptr) && (wstring(szSrsName).find(L"EPSG") != string::npos))
+		{
+			SdaiInstance iSourceCRS = buildProjectedCRS("EPSG:25830"); // #todo
+			SdaiInstance iTargetCRS = buildProjectedCRS("EPSG:25830"); // #todo
+			SdaiInstance iMapConversion = buildMapConversion(iSourceCRS, iTargetCRS);
+
+			double dOrthogonalHeight = 10000; // #todo
+			sdaiPutAttrBN(iMapConversion, "OrthogonalHeight", sdaiREAL, &dOrthogonalHeight);
+
+			double dEastings = 0.; // #todo
+			sdaiPutAttrBN(iMapConversion, "Eastings", sdaiREAL, &dEastings);
+
+			double dNorthings = 1.; // #todo
+			sdaiPutAttrBN(iMapConversion, "Northings", sdaiREAL, &dNorthings);			
+
+			sdaiPutAttrBN(iGeometricRepresentationContextInstance, "HasCoordinateOperation", sdaiINSTANCE, (void*)iMapConversion);
+		} // if ((szSrsName != nullptr) && ...		
+
+		sdaiPutAttrBN(iShapeRepresentationInstance, "ContextOfItems", sdaiINSTANCE, (void*)iGeometricRepresentationContextInstance);
 
 		vecGeometryInstances.push_back(iShapeRepresentationInstance);
 	}
@@ -3006,7 +2965,31 @@ void _citygml_exporter::createPoint3D(OwlInstance iInstance, vector<SdaiInstance
 
 		sdaiPutAttrBN(iShapeRepresentationInstance, "RepresentationIdentifier", sdaiSTRING, "Body");
 		sdaiPutAttrBN(iShapeRepresentationInstance, "RepresentationType", sdaiSTRING, "PointCloud");
-		sdaiPutAttrBN(iShapeRepresentationInstance, "ContextOfItems", sdaiINSTANCE, (void*)buildGeometricRepresentationContextInstance());
+
+		SdaiInstance iGeometricRepresentationContextInstance = buildGeometricRepresentationContextInstance();
+		assert(iGeometricRepresentationContextInstance != 0);
+
+		// CRS
+		const wchar_t* szSrsName = getStringAttributeValue(iInstance, "srsName");
+		if ((szSrsName != nullptr) && (wstring(szSrsName).find(L"EPSG") != string::npos))
+		{
+			SdaiInstance iSourceCRS = buildProjectedCRS("EPSG:25830"); // #todo
+			SdaiInstance iTargetCRS = buildProjectedCRS("EPSG:25830"); // #todo
+			SdaiInstance iMapConversion = buildMapConversion(iSourceCRS, iTargetCRS);
+
+			double dOrthogonalHeight = 10000; // #todo
+			sdaiPutAttrBN(iMapConversion, "OrthogonalHeight", sdaiREAL, &dOrthogonalHeight);
+
+			double dEastings = 0.; // #todo
+			sdaiPutAttrBN(iMapConversion, "Eastings", sdaiREAL, &dEastings);
+
+			double dNorthings = 1.; // #todo
+			sdaiPutAttrBN(iMapConversion, "Northings", sdaiREAL, &dNorthings);
+
+			sdaiPutAttrBN(iGeometricRepresentationContextInstance, "HasCoordinateOperation", sdaiINSTANCE, (void*)iMapConversion);
+		} // if ((szSrsName != nullptr) && ...		
+
+		sdaiPutAttrBN(iShapeRepresentationInstance, "ContextOfItems", sdaiINSTANCE, (void*)iGeometricRepresentationContextInstance);
 
 		vecGeometryInstances.push_back(iShapeRepresentationInstance);
 	}
@@ -3051,7 +3034,31 @@ void _citygml_exporter::createPoint3DSet(OwlInstance iInstance, vector<SdaiInsta
 
 		sdaiPutAttrBN(iShapeRepresentationInstance, "RepresentationIdentifier", sdaiSTRING, "Body");
 		sdaiPutAttrBN(iShapeRepresentationInstance, "RepresentationType", sdaiSTRING, "PointCloud");
-		sdaiPutAttrBN(iShapeRepresentationInstance, "ContextOfItems", sdaiINSTANCE, (void*)buildGeometricRepresentationContextInstance());
+
+		SdaiInstance iGeometricRepresentationContextInstance = buildGeometricRepresentationContextInstance();
+		assert(iGeometricRepresentationContextInstance != 0);
+
+		// CRS
+		const wchar_t* szSrsName = getStringAttributeValue(iInstance, "srsName");
+		if ((szSrsName != nullptr) && (wstring(szSrsName).find(L"EPSG") != string::npos))
+		{
+			SdaiInstance iSourceCRS = buildProjectedCRS("EPSG:25830"); // #todo
+			SdaiInstance iTargetCRS = buildProjectedCRS("EPSG:25830"); // #todo
+			SdaiInstance iMapConversion = buildMapConversion(iSourceCRS, iTargetCRS);
+
+			double dOrthogonalHeight = 10000; // #todo
+			sdaiPutAttrBN(iMapConversion, "OrthogonalHeight", sdaiREAL, &dOrthogonalHeight);
+
+			double dEastings = 0.; // #todo
+			sdaiPutAttrBN(iMapConversion, "Eastings", sdaiREAL, &dEastings);
+
+			double dNorthings = 1.; // #todo
+			sdaiPutAttrBN(iMapConversion, "Northings", sdaiREAL, &dNorthings);
+
+			sdaiPutAttrBN(iGeometricRepresentationContextInstance, "HasCoordinateOperation", sdaiINSTANCE, (void*)iMapConversion);
+		} // if ((szSrsName != nullptr) && ...		
+
+		sdaiPutAttrBN(iShapeRepresentationInstance, "ContextOfItems", sdaiINSTANCE, (void*)iGeometricRepresentationContextInstance);
 
 		vecGeometryInstances.push_back(iShapeRepresentationInstance);
 	}
@@ -3113,7 +3120,31 @@ void _citygml_exporter::createPolyLine3D(OwlInstance iInstance, vector<SdaiInsta
 
 		sdaiPutAttrBN(iShapeRepresentationInstance, "RepresentationIdentifier", sdaiSTRING, "Body");
 		sdaiPutAttrBN(iShapeRepresentationInstance, "RepresentationType", sdaiSTRING, "Curve3D");
-		sdaiPutAttrBN(iShapeRepresentationInstance, "ContextOfItems", sdaiINSTANCE, (void*)buildGeometricRepresentationContextInstance());
+
+		SdaiInstance iGeometricRepresentationContextInstance = buildGeometricRepresentationContextInstance();
+		assert(iGeometricRepresentationContextInstance != 0);
+
+		// CRS
+		const wchar_t* szSrsName = getStringAttributeValue(iInstance, "srsName");
+		if ((szSrsName != nullptr) && (wstring(szSrsName).find(L"EPSG") != string::npos))
+		{
+			SdaiInstance iSourceCRS = buildProjectedCRS("EPSG:25830"); // #todo
+			SdaiInstance iTargetCRS = buildProjectedCRS("EPSG:25830"); // #todo
+			SdaiInstance iMapConversion = buildMapConversion(iSourceCRS, iTargetCRS);
+
+			double dOrthogonalHeight = 10000; // #todo
+			sdaiPutAttrBN(iMapConversion, "OrthogonalHeight", sdaiREAL, &dOrthogonalHeight);
+
+			double dEastings = 0.; // #todo
+			sdaiPutAttrBN(iMapConversion, "Eastings", sdaiREAL, &dEastings);
+
+			double dNorthings = 1.; // #todo
+			sdaiPutAttrBN(iMapConversion, "Northings", sdaiREAL, &dNorthings);
+
+			sdaiPutAttrBN(iGeometricRepresentationContextInstance, "HasCoordinateOperation", sdaiINSTANCE, (void*)iMapConversion);
+		} // if ((szSrsName != nullptr) && ...		
+
+		sdaiPutAttrBN(iShapeRepresentationInstance, "ContextOfItems", sdaiINSTANCE, (void*)iGeometricRepresentationContextInstance);
 
 		vecGeometryInstances.push_back(iShapeRepresentationInstance);
 	}

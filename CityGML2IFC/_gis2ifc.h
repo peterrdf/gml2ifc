@@ -344,7 +344,6 @@ private: // Members
 	SdaiInstance m_iDefaultDoorColorRgbInstance;
 	SdaiInstance m_iDefaultWindowColorRgbInstance;
 	SdaiInstance m_iDefaultColorRgbInstance;
-	map<OwlInstance, set<SdaiInstance>> m_mapCRS;
 
 public: // Methods
 
@@ -354,7 +353,6 @@ public: // Methods
 protected:  // Methods	
 
 	virtual void executeCore(OwlInstance iRootInstance, const wstring& strOuputFile) override;
-	virtual void postProcessing() override;
 
 	virtual void createDefaultStyledItemInstance(SdaiInstance iSdaiInstance) override;
 
