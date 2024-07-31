@@ -390,7 +390,37 @@ SdaiInstance _exporter_base::getProjectInstance()
 		SdaiAggr pRepresentationContexts = sdaiCreateAggrBN(m_iProjectInstance, "RepresentationContexts");
 		assert(pRepresentationContexts != nullptr);
 
-		sdaiAppend(pRepresentationContexts, sdaiINSTANCE, (void*)buildGeometricRepresentationContextInstance());
+		SdaiInstance iGeometricRepresentationContextInstance = buildGeometricRepresentationContextInstance();
+		assert(iGeometricRepresentationContextInstance != 0);
+
+		// CRS
+		OwlInstance iModelEnvelopeInstance = getModelEnvelopeInstance();
+		if (iModelEnvelopeInstance != 0)
+		{
+			const wchar_t* szSrsName = getStringAttributeValue(iModelEnvelopeInstance, "srsName");
+			if ((szSrsName != nullptr) && (wstring(szSrsName).find(L"EPSG") != string::npos))
+			{
+				string strEPSG = getEPSG(szSrsName);
+				assert(!strEPSG.empty());
+
+				SdaiInstance iSourceCRS = buildProjectedCRS(strEPSG);
+				SdaiInstance iTargetCRS = buildProjectedCRS(strEPSG);
+				SdaiInstance iMapConversion = buildMapConversion(iSourceCRS, iTargetCRS);
+
+				double dOrthogonalHeight = 10000; // #todo
+				sdaiPutAttrBN(iMapConversion, "OrthogonalHeight", sdaiREAL, &dOrthogonalHeight);
+
+				double dEastings = 0.; // #todo
+				sdaiPutAttrBN(iMapConversion, "Eastings", sdaiREAL, &dEastings);
+
+				double dNorthings = 1.; // #todo
+				sdaiPutAttrBN(iMapConversion, "Northings", sdaiREAL, &dNorthings);
+
+				sdaiPutAttrBN(iGeometricRepresentationContextInstance, "HasCoordinateOperation", sdaiINSTANCE, (void*)iMapConversion);
+			} // if ((szSrsName != nullptr) && ...
+		} // if (iModelEnvelopeInstance != 0)
+
+		sdaiAppend(pRepresentationContexts, sdaiINSTANCE, (void*)iGeometricRepresentationContextInstance);
 	}
 
 	return m_iProjectInstance;
@@ -1611,6 +1641,7 @@ _citygml_exporter::_citygml_exporter(_gis2ifc* pSite)
 	, m_iCityModelClass(0)
 	, m_iBoundingShapeClass(0)
 	, m_iEnvelopeClass(0)
+	, m_iModelEnvelopeInstance(0)
 	, m_iCityObjectGroupMemberClass(0)
 	, m_iGeometryMemberClass(0)
 	, m_iBuildingClass(0)
@@ -1692,15 +1723,13 @@ _citygml_exporter::_citygml_exporter(_gis2ifc* pSite)
 
 		if (isEnvelopeClass(iInstanceClass))
 		{
+			OwlInstance iEnvelopeInstance = iInstance;
+
 			OwlInstance iParentInstance = GetInstanceInverseReferencesByIterator(iInstance, 0);
 			if (iParentInstance != 0)
 			{
 				OwlClass iParentInstanceClass = GetInstanceClass(iParentInstance);
 				assert(iParentInstanceClass != 0);
-
-				char* szClassName = nullptr;
-				GetNameOfClass(iParentInstanceClass, &szClassName);
-				assert(szClassName != nullptr);
 
 				if (isBoundingShapeClass(iParentInstanceClass))
 				{
@@ -1712,7 +1741,11 @@ _citygml_exporter::_citygml_exporter(_gis2ifc* pSite)
 
 						if (isCityModelClass(iParentInstanceClass))
 						{
-							cout << "";
+							m_iModelEnvelopeInstance = iEnvelopeInstance;
+						}
+						else if (isBuildingClass(iParentInstanceClass))
+						{
+							//#todo
 						}
 					} // if (iParentInstance != 0)	
 				} // if (isBoundingShapeClass(iParentInstanceClass))
@@ -1763,6 +1796,11 @@ _citygml_exporter::_citygml_exporter(_gis2ifc* pSite)
 	createFeatures(iSiteInstance, iSiteInstancePlacement);
 
 	saveIfcFile(strOuputFile.c_str());
+}
+
+/*virtual*/ OwlInstance _citygml_exporter::getModelEnvelopeInstance() /*override*/
+{
+	return m_iModelEnvelopeInstance;
 }
 
 /*virtual*/ void _citygml_exporter::createDefaultStyledItemInstance(SdaiInstance iSdaiInstance) /*override*/

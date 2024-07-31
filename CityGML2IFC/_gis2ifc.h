@@ -168,6 +168,7 @@ protected: // Methods
 	virtual void preProcessing() {}
 	virtual void executeCore(OwlInstance iRootInstance, const wstring& strOuputFile) = 0;
 	virtual void postProcessing() {}
+	virtual OwlInstance getModelEnvelopeInstance() { return 0; }
 
 	/* Model */
 	void createIfcModel(const wchar_t* szSchemaName);
@@ -310,6 +311,7 @@ private: // Members
 	OwlClass m_iCityModelClass;
 	OwlClass m_iBoundingShapeClass;
 	OwlClass m_iEnvelopeClass;
+	OwlInstance m_iModelEnvelopeInstance;
 
 	// CityObjectGroup
 	OwlClass m_iCityObjectGroupMemberClass;
@@ -360,6 +362,7 @@ protected:  // Methods
 
 	virtual void preProcessing() override;
 	virtual void executeCore(OwlInstance iRootInstance, const wstring& strOuputFile) override;
+	virtual OwlInstance getModelEnvelopeInstance() override;
 
 	virtual void createDefaultStyledItemInstance(SdaiInstance iSdaiInstance) override;
 
@@ -404,7 +407,7 @@ protected:  // Methods
 	// CRS
 	OwlClass isCityModelClass(OwlClass iInstanceClass) const;
 	OwlClass isBoundingShapeClass(OwlClass iInstanceClass) const;
-	OwlClass isEnvelopeClass(OwlClass iInstanceClass) const;
+	OwlClass isEnvelopeClass(OwlClass iInstanceClass) const;	
 	
 	// Building
 	bool isBuildingElement(OwlInstance iInstance) const;
