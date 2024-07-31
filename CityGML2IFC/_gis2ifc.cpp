@@ -371,30 +371,7 @@ SdaiInstance _exporter_base::getProjectInstance()
 		SdaiAggr pRepresentationContexts = sdaiCreateAggrBN(m_iProjectInstance, "RepresentationContexts");
 		assert(pRepresentationContexts != nullptr);
 
-		////#todo
-		// TEST !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		sdaiAppend(pRepresentationContexts, sdaiINSTANCE, (void*)buildGeometricRepresentationContextInstance());
-
-		//SdaiInstance iGeometricRepresentationContextInstance = buildGeometricRepresentationContextInstance();
-
-		//SdaiInstance iSourceCRS = buildProjectedCRS("EPSG:25830");
-		//SdaiInstance iTargetCRS = buildProjectedCRS("EPSG:25830");
-		//SdaiInstance iMapConversion = buildMapConversion(iSourceCRS, iTargetCRS);
-
-		//double dOrthogonalHeight = 10000; // #todo
-		//sdaiPutAttrBN(iMapConversion, "OrthogonalHeight", sdaiREAL, &dOrthogonalHeight);
-
-		//double dEastings = 0.; // #todo
-		//sdaiPutAttrBN(iMapConversion, "Eastings", sdaiREAL, &dEastings);
-
-		//double dNorthings = 1.; // #todo
-		//sdaiPutAttrBN(iMapConversion, "Northings", sdaiREAL, &dNorthings);
-
-		//sdaiPutAttrBN(iGeometricRepresentationContextInstance, "HasCoordinateOperation", sdaiINSTANCE, (void*)iMapConversion);
-
-
-		//sdaiAppend(pRepresentationContexts, sdaiINSTANCE, (void*)iGeometricRepresentationContextInstance);
-		// TEST !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	}
 
 	return m_iProjectInstance;
@@ -1681,6 +1658,34 @@ _citygml_exporter::_citygml_exporter(_gis2ifc* pSite)
 	createFeatures(iSiteInstance, iSiteInstancePlacement);
 
 	saveIfcFile(strOuputFile.c_str());
+}
+
+/*virtual*/ void _citygml_exporter::postProcessing() /*override*/
+{
+	for (auto itCRS : m_mapCRS)
+	{
+		for (auto iGeometryInstance : itCRS.second)
+		{
+			SdaiInstance iGeometricRepresentationContextInstance = 0;
+			sdaiGetAttrBN(iGeometryInstance, "ContextOfItems", sdaiINSTANCE, &iGeometricRepresentationContextInstance);
+			assert(iGeometricRepresentationContextInstance != 0);
+
+			SdaiInstance iSourceCRS = buildProjectedCRS("EPSG:25830"); // #todo
+			SdaiInstance iTargetCRS = buildProjectedCRS("EPSG:25830"); // #todo
+			SdaiInstance iMapConversion = buildMapConversion(iSourceCRS, iTargetCRS);
+
+			double dOrthogonalHeight = 10000; // #todo
+			sdaiPutAttrBN(iMapConversion, "OrthogonalHeight", sdaiREAL, &dOrthogonalHeight);
+
+			double dEastings = 0.; // #todo
+			sdaiPutAttrBN(iMapConversion, "Eastings", sdaiREAL, &dEastings);
+
+			double dNorthings = 1.; // #todo
+			sdaiPutAttrBN(iMapConversion, "Northings", sdaiREAL, &dNorthings);
+
+			sdaiPutAttrBN(iGeometricRepresentationContextInstance, "HasCoordinateOperation", sdaiINSTANCE, (void*)iMapConversion);
+		} // for (auto iGeometryInstance ...
+	} // for (auto itCRS ...
 }
 
 /*virtual*/ void _citygml_exporter::createDefaultStyledItemInstance(SdaiInstance iSdaiInstance) /*override*/

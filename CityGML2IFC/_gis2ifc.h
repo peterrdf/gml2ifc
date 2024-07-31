@@ -354,6 +354,7 @@ public: // Methods
 protected:  // Methods	
 
 	virtual void executeCore(OwlInstance iRootInstance, const wstring& strOuputFile) override;
+	virtual void postProcessing() override;
 
 	virtual void createDefaultStyledItemInstance(SdaiInstance iSdaiInstance) override;
 
