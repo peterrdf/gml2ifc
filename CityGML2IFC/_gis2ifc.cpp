@@ -1,6 +1,25 @@
 #include "pch.h"
 #include "_gis2ifc.h"
 
+#include <locale>
+#include <codecvt>
+
+// ************************************************************************************************
+static wstring utf8_to_wstring(const char* szInput)
+{
+	assert(szInput != nullptr);
+
+	return wstring_convert<codecvt_utf8_utf16<wchar_t>>().from_bytes(szInput);
+}
+
+// ************************************************************************************************
+static string wstring_to_utf8(const wchar_t* szInput)
+{
+	assert(szInput != nullptr);
+
+	return wstring_convert<codecvt_utf8_utf16<wchar_t>>().to_bytes(szInput);
+}
+
 // ************************************************************************************************
 _gis2ifc::_gis2ifc(const wstring& strRootFolder, _log_callback pLogCallback)
 	: m_strRootFolder(strRootFolder)
@@ -1076,6 +1095,22 @@ SdaiInstance _exporter_base::buildProjectedCRS(const string& strEPSG)
 	sdaiPutAttrBN(iProjectedCRSInstance, "Name", sdaiSTRING, strEPSG.c_str());
 
 	return iProjectedCRSInstance;
+}
+
+string _exporter_base::getEPSG(const wstring& strSrsName)
+{
+	assert(!strSrsName.empty());
+
+	// Case 1: http://www.opengis.net/def/crs/EPSG/0/25830
+	if (strSrsName.find(L"/EPSG/") != -1)
+	{
+		size_t iIndex = strSrsName.rfind(L"/");
+		wstring strEPSG = L"EPSG:";
+		strEPSG += strSrsName.substr(iIndex + 1).c_str();
+		return wstring_to_utf8(strEPSG.c_str());
+	}
+
+	return "";
 }
 
 void _exporter_base::createStyledItemInstance(OwlInstance iOwlInstance, SdaiInstance iSdaiInstance)
@@ -2905,10 +2940,13 @@ void _citygml_exporter::createBoundaryRepresentation(OwlInstance iInstance, vect
 
 		// CRS
 		const wchar_t* szSrsName = getStringAttributeValue(m_iCurrentOwlBuildingElementInstance, "srsName");
-		if ((szSrsName != nullptr) && (wstring(szSrsName).find(L"EPSG") != string::npos))
+		if ((szSrsName != nullptr) && (wstring(szSrsName).find(L"EPSG") != string::npos))			
 		{
-			SdaiInstance iSourceCRS = buildProjectedCRS("EPSG:25830"); // #todo
-			SdaiInstance iTargetCRS = buildProjectedCRS("EPSG:25830"); // #todo
+			string strEPSG = getEPSG(szSrsName);
+			assert(!strEPSG.empty());
+
+			SdaiInstance iSourceCRS = buildProjectedCRS(strEPSG);
+			SdaiInstance iTargetCRS = buildProjectedCRS(strEPSG);
 			SdaiInstance iMapConversion = buildMapConversion(iSourceCRS, iTargetCRS);
 
 			double dOrthogonalHeight = 10000; // #todo
@@ -2973,8 +3011,11 @@ void _citygml_exporter::createPoint3D(OwlInstance iInstance, vector<SdaiInstance
 		const wchar_t* szSrsName = getStringAttributeValue(iInstance, "srsName");
 		if ((szSrsName != nullptr) && (wstring(szSrsName).find(L"EPSG") != string::npos))
 		{
-			SdaiInstance iSourceCRS = buildProjectedCRS("EPSG:25830"); // #todo
-			SdaiInstance iTargetCRS = buildProjectedCRS("EPSG:25830"); // #todo
+			string strEPSG = getEPSG(szSrsName);
+			assert(!strEPSG.empty());
+
+			SdaiInstance iSourceCRS = buildProjectedCRS(strEPSG);
+			SdaiInstance iTargetCRS = buildProjectedCRS(strEPSG);
 			SdaiInstance iMapConversion = buildMapConversion(iSourceCRS, iTargetCRS);
 
 			double dOrthogonalHeight = 10000; // #todo
@@ -3042,8 +3083,11 @@ void _citygml_exporter::createPoint3DSet(OwlInstance iInstance, vector<SdaiInsta
 		const wchar_t* szSrsName = getStringAttributeValue(iInstance, "srsName");
 		if ((szSrsName != nullptr) && (wstring(szSrsName).find(L"EPSG") != string::npos))
 		{
-			SdaiInstance iSourceCRS = buildProjectedCRS("EPSG:25830"); // #todo
-			SdaiInstance iTargetCRS = buildProjectedCRS("EPSG:25830"); // #todo
+			string strEPSG = getEPSG(szSrsName);
+			assert(!strEPSG.empty());
+
+			SdaiInstance iSourceCRS = buildProjectedCRS(strEPSG);
+			SdaiInstance iTargetCRS = buildProjectedCRS(strEPSG);
 			SdaiInstance iMapConversion = buildMapConversion(iSourceCRS, iTargetCRS);
 
 			double dOrthogonalHeight = 10000; // #todo
@@ -3128,8 +3172,11 @@ void _citygml_exporter::createPolyLine3D(OwlInstance iInstance, vector<SdaiInsta
 		const wchar_t* szSrsName = getStringAttributeValue(iInstance, "srsName");
 		if ((szSrsName != nullptr) && (wstring(szSrsName).find(L"EPSG") != string::npos))
 		{
-			SdaiInstance iSourceCRS = buildProjectedCRS("EPSG:25830"); // #todo
-			SdaiInstance iTargetCRS = buildProjectedCRS("EPSG:25830"); // #todo
+			string strEPSG = getEPSG(szSrsName);
+			assert(!strEPSG.empty());
+
+			SdaiInstance iSourceCRS = buildProjectedCRS(strEPSG);
+			SdaiInstance iTargetCRS = buildProjectedCRS(strEPSG);
 			SdaiInstance iMapConversion = buildMapConversion(iSourceCRS, iTargetCRS);
 
 			double dOrthogonalHeight = 10000; // #todo

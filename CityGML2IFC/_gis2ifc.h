@@ -255,6 +255,7 @@ protected: // Methods
 	/* CRS */
 	SdaiInstance buildMapConversion(OwlInstance iSourceCRSInstance, OwlInstance iTargetCRSInstance);
 	SdaiInstance buildProjectedCRS(const string& strEPSG);
+	string getEPSG(const wstring& strSrsName);
 
 	/* Style */
 	void createStyledItemInstance(OwlInstance iOwlInstance, SdaiInstance iSdaiInstance);
