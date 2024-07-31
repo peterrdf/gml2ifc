@@ -1608,6 +1608,9 @@ _citygml_exporter::_citygml_exporter(_gis2ifc* pSite)
 	, m_iCollectionClass(0)
 	, m_iTransformationClass(0)
 	, m_mapMappedItems()
+	, m_iCityModelClass(0)
+	, m_iBoundingShapeClass(0)
+	, m_iEnvelopeClass(0)
 	, m_iCityObjectGroupMemberClass(0)
 	, m_iGeometryMemberClass(0)
 	, m_iBuildingClass(0)
@@ -1641,6 +1644,11 @@ _citygml_exporter::_citygml_exporter(_gis2ifc* pSite)
 	m_iCollectionClass = GetClassByName(getSite()->getOwlModel(), "Collection");
 	m_iTransformationClass = GetClassByName(getSite()->getOwlModel(), "Transformation");
 
+	// CRS
+	m_iCityModelClass = GetClassByName(getSite()->getOwlModel(), "class:CityModelType");
+	m_iBoundingShapeClass = GetClassByName(getSite()->getOwlModel(), "class:BoundingShapeType");
+	m_iEnvelopeClass = GetClassByName(getSite()->getOwlModel(), "class:EnvelopeType");
+
 	// CityObjectGroup
 	m_iCityObjectGroupMemberClass = GetClassByName(getSite()->getOwlModel(), "class:CityObjectGroupMemberType");
 
@@ -1670,6 +1678,50 @@ _citygml_exporter::_citygml_exporter(_gis2ifc* pSite)
 
 /*virtual*/ _citygml_exporter::~_citygml_exporter()
 {}
+
+/*virtual*/ void _citygml_exporter::preProcessing() /*override*/
+{
+	OwlClass iSchemasClass = GetClassByName(getSite()->getOwlModel(), "class:Schemas");
+	assert(iSchemasClass != 0);
+
+	OwlInstance iInstance = GetInstancesByIterator(getSite()->getOwlModel(), 0);
+	while (iInstance != 0)
+	{
+		OwlClass iInstanceClass = GetInstanceClass(iInstance);
+		assert(iInstanceClass != 0);
+
+		if (isEnvelopeClass(iInstanceClass))
+		{
+			OwlInstance iParentInstance = GetInstanceInverseReferencesByIterator(iInstance, 0);
+			if (iParentInstance != 0)
+			{
+				OwlClass iParentInstanceClass = GetInstanceClass(iParentInstance);
+				assert(iParentInstanceClass != 0);
+
+				char* szClassName = nullptr;
+				GetNameOfClass(iParentInstanceClass, &szClassName);
+				assert(szClassName != nullptr);
+
+				if (isBoundingShapeClass(iParentInstanceClass))
+				{
+					iParentInstance = GetInstanceInverseReferencesByIterator(iParentInstance, 0);
+					if (iParentInstance != 0)
+					{
+						iParentInstanceClass = GetInstanceClass(iParentInstance);
+						assert(iParentInstanceClass != 0);
+
+						if (isCityModelClass(iParentInstanceClass))
+						{
+							cout << "";
+						}
+					} // if (iParentInstance != 0)	
+				} // if (isBoundingShapeClass(iParentInstanceClass))
+			} // if (iParentInstance != 0)
+		} // if (isEnvelopeClass(iInstanceClass))
+
+		iInstance = GetInstancesByIterator(getSite()->getOwlModel(), iInstance);
+	} // while (iInstance != 0)
+}
 
 /*virtual*/ void _citygml_exporter::executeCore(OwlInstance iRootInstance, const wstring& strOuputFile)
 {
@@ -3403,6 +3455,21 @@ bool _citygml_exporter::isTransformationClass(OwlClass iInstanceClass) const
 	assert(iInstanceClass != 0);
 
 	return (iInstanceClass == m_iTransformationClass) || IsClassAncestor(iInstanceClass, m_iTransformationClass);
+}
+
+OwlClass _citygml_exporter::isCityModelClass(OwlClass iInstanceClass) const
+{
+	return (iInstanceClass == m_iCityModelClass) || IsClassAncestor(iInstanceClass, m_iCityModelClass);
+}
+
+OwlClass _citygml_exporter::isBoundingShapeClass(OwlClass iInstanceClass) const
+{
+	return (iInstanceClass == m_iBoundingShapeClass) || IsClassAncestor(iInstanceClass, m_iBoundingShapeClass);
+}
+
+OwlClass _citygml_exporter::isEnvelopeClass(OwlClass iInstanceClass) const
+{
+	return (iInstanceClass == m_iEnvelopeClass) || IsClassAncestor(iInstanceClass, m_iEnvelopeClass);
 }
 
 bool _citygml_exporter::isBuildingElement(OwlInstance iInstance) const

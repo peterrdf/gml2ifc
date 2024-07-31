@@ -306,6 +306,11 @@ private: // Members
 	OwlClass m_iTransformationClass;
 	map<OwlInstance, vector<SdaiInstance>> m_mapMappedItems; // OwlInstance : Geometries
 
+	// CRS
+	OwlClass m_iCityModelClass;
+	OwlClass m_iBoundingShapeClass;
+	OwlClass m_iEnvelopeClass;
+
 	// CityObjectGroup
 	OwlClass m_iCityObjectGroupMemberClass;
 
@@ -353,6 +358,7 @@ public: // Methods
 
 protected:  // Methods	
 
+	virtual void preProcessing() override;
 	virtual void executeCore(OwlInstance iRootInstance, const wstring& strOuputFile) override;
 
 	virtual void createDefaultStyledItemInstance(SdaiInstance iSdaiInstance) override;
@@ -394,6 +400,11 @@ protected:  // Methods
 	// Geometry Kernel
 	bool isCollectionClass(OwlClass iInstanceClass) const;
 	bool isTransformationClass(OwlClass iInstanceClass) const;
+
+	// CRS
+	OwlClass isCityModelClass(OwlClass iInstanceClass) const;
+	OwlClass isBoundingShapeClass(OwlClass iInstanceClass) const;
+	OwlClass isEnvelopeClass(OwlClass iInstanceClass) const;
 	
 	// Building
 	bool isBuildingElement(OwlInstance iInstance) const;
