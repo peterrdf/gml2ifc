@@ -1101,12 +1101,31 @@ string _exporter_base::getEPSG(const wstring& strSrsName)
 {
 	assert(!strSrsName.empty());
 
-	// Case 1: http://www.opengis.net/def/crs/EPSG/0/25830
+	size_t iIndex = string::npos;
+
+	// EPSG:3763
+	if (strSrsName.find(L"EPSG:") == 0)
+	{
+		return wstring_to_utf8(strSrsName.c_str());
+	}
+
+	// srsName="urn:ogc:def:crs,crs:EPSG::31256"
+	if ((iIndex = strSrsName.find(L"EPSG::")) != string::npos)
+	{
+		wstring strEPSG = strSrsName.substr(iIndex).c_str();
+		iIndex = strEPSG.find(L"::");
+		strEPSG.replace(iIndex, 2, L":");
+
+		return wstring_to_utf8(strEPSG.c_str());
+	}
+
+	// http://www.opengis.net/def/crs/EPSG/0/25830
 	if (strSrsName.find(L"/EPSG/") != -1)
 	{
-		size_t iIndex = strSrsName.rfind(L"/");
+		iIndex = strSrsName.rfind(L"/");
 		wstring strEPSG = L"EPSG:";
 		strEPSG += strSrsName.substr(iIndex + 1).c_str();
+
 		return wstring_to_utf8(strEPSG.c_str());
 	}
 
