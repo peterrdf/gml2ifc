@@ -1635,6 +1635,12 @@ bool _exporter_base::hasObjectProperty(OwlInstance iInstance, const string& strP
 // ************************************************************************************************
 _citygml_exporter::_citygml_exporter(_gis2ifc* pSite)
 	: _exporter_base(pSite)
+	, m_fXmin(FLT_MAX)
+	, m_fXmax(-FLT_MAX)
+	, m_fYmin(FLT_MAX)
+	, m_fYmax(-FLT_MAX)
+	, m_fZmin(FLT_MAX)
+	, m_fZmax(-FLT_MAX)
 	, m_iCollectionClass(0)
 	, m_iTransformationClass(0)
 	, m_mapMappedItems()
@@ -1721,6 +1727,7 @@ _citygml_exporter::_citygml_exporter(_gis2ifc* pSite)
 		OwlClass iInstanceClass = GetInstanceClass(iInstance);
 		assert(iInstanceClass != 0);
 
+		// CRS
 		if (isEnvelopeClass(iInstanceClass))
 		{
 			OwlInstance iEnvelopeInstance = iInstance;
@@ -1751,6 +1758,23 @@ _citygml_exporter::_citygml_exporter(_gis2ifc* pSite)
 				} // if (isBoundingShapeClass(iParentInstanceClass))
 			} // if (iParentInstance != 0)
 		} // if (isEnvelopeClass(iInstanceClass))
+
+		// World
+		_vector3d vecBBMin;
+		_vector3d vecBBMax;
+		if (GetInstanceGeometryClass(iInstance) &&
+			GetBoundingBox(
+				iInstance,
+				(double*)&vecBBMin,
+				(double*)&vecBBMax))
+		{
+			m_fXmin = (float)fmin(m_fXmin, vecBBMin.x);
+			m_fXmax = (float)fmax(m_fXmax, vecBBMax.x);
+			m_fYmin = (float)fmin(m_fYmin, vecBBMin.y);
+			m_fYmax = (float)fmax(m_fYmax, vecBBMax.y);
+			m_fZmin = (float)fmin(m_fZmin, vecBBMin.z);
+			m_fZmax = (float)fmax(m_fZmax, vecBBMax.z);
+		}
 
 		iInstance = GetInstancesByIterator(getSite()->getOwlModel(), iInstance);
 	} // while (iInstance != 0)
@@ -1796,6 +1820,10 @@ _citygml_exporter::_citygml_exporter(_gis2ifc* pSite)
 	createFeatures(iSiteInstance, iSiteInstancePlacement);
 
 	saveIfcFile(strOuputFile.c_str());
+}
+
+/*virtual*/ void _citygml_exporter::postProcessing() /*override*/
+{
 }
 
 /*virtual*/ OwlInstance _citygml_exporter::getModelEnvelopeInstance() /*override*/
@@ -2903,7 +2931,7 @@ void _citygml_exporter::createSurfaceMember(OwlInstance iInstance, vector<SdaiIn
 void _citygml_exporter::createBoundaryRepresentation(OwlInstance iInstance, vector<SdaiInstance>& vecGeometryInstances, bool bCreateIfcShapeRepresentation)
 {
 	assert(iInstance != 0);
-
+		
 	// Indices
 	int64_t* piIndices = nullptr;
 	int64_t iIndicesCount = 0;

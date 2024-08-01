@@ -81,6 +81,14 @@ public: // Methods
 };
 
 // ************************************************************************************************
+struct _vector3d
+{
+	double x;
+	double y;
+	double z;
+};
+
+// ************************************************************************************************
 class _matrix
 {
 
@@ -302,6 +310,14 @@ class _citygml_exporter : public _exporter_base
 
 private: // Members
 
+	// World
+	float m_fXmin;
+	float m_fXmax;
+	float m_fYmin;
+	float m_fYmax;
+	float m_fZmin;
+	float m_fZmax;
+
 	// Geometry Kernel
 	OwlClass m_iCollectionClass;
 	OwlClass m_iTransformationClass;
@@ -362,6 +378,7 @@ protected:  // Methods
 
 	virtual void preProcessing() override;
 	virtual void executeCore(OwlInstance iRootInstance, const wstring& strOuputFile) override;
+	virtual void postProcessing() override;
 	virtual OwlInstance getModelEnvelopeInstance() override;
 
 	virtual void createDefaultStyledItemInstance(SdaiInstance iSdaiInstance) override;
