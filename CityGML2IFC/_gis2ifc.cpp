@@ -3180,7 +3180,7 @@ void _citygml_exporter::createReferencePointIndicator(OwlInstance iInstance, vec
 		pdValues[9] + fCubeLength, pdValues[10] + fCubeLength, pdValues[11], // X3
 		pdValues[9], pdValues[10] + fCubeLength, pdValues[11], // X4
 		// back
-		pdValues[9], pdValues[10] + fCubeLength, pdValues[11] + fCubeLength, // X5
+		pdValues[9], pdValues[10], pdValues[11] + fCubeLength, // X5
 		pdValues[9] + fCubeLength, pdValues[10], pdValues[11] + fCubeLength, // X6
 		pdValues[9] + fCubeLength, pdValues[10] + fCubeLength, pdValues[11] + fCubeLength, // X7
 		pdValues[9], pdValues[10] + fCubeLength, pdValues[11] + fCubeLength, // X8
