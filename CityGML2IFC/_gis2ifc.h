@@ -138,7 +138,7 @@ private: // Members
 
 	RdfProperty m_iTagProperty;
 
-	SdaiModel m_iIfcModel;	
+	SdaiModel m_iSdaiModel;	
 	SdaiInstance m_iSiteInstance;
 	SdaiInstance m_iPersonInstance;
 	SdaiInstance m_iOrganizationInstance;
@@ -159,7 +159,7 @@ public: // Methods
 	void execute(OwlInstance iRootInstance, const wstring& strOuputFile);
 
 	_gis2ifc* getSite() const { return m_pSite; }
-	SdaiModel getIfcModel() const { return m_iIfcModel; }
+	SdaiModel getSdaiModel() const { return m_iSdaiModel; }
 	SdaiInstance getPersonInstance();
 	SdaiInstance getOrganizationInstance();
 	SdaiInstance getPersonAndOrganizationInstance();
