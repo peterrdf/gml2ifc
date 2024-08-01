@@ -3161,22 +3161,51 @@ void _citygml_exporter::createReferencePointIndicator(OwlInstance iInstance, vec
 	fBoundingSphereDiameter = max(fBoundingSphereDiameter, m_fZmax - m_fZmin);
 	float fCubeLength = fBoundingSphereDiameter / 150.f;
 
+	/*
+	Front
+	X4 -- X3
+	 |    |	
+	X1 -- X2
+
+	Back
+	X8 -- X7
+	 |    |
+	X5 -- X6
+	*/
 	vector<double> vecVertices
 	{
 		// front
-		pdValues[9], pdValues[10], pdValues[11], // bottom left
-		pdValues[9] + fCubeLength, pdValues[10], pdValues[11], // bottom right
-		pdValues[9] + fCubeLength, pdValues[10] + fCubeLength, pdValues[11], // top right
-		pdValues[9], pdValues[10] + fCubeLength, pdValues[11] // top left
+		pdValues[9], pdValues[10], pdValues[11], // X1
+		pdValues[9] + fCubeLength, pdValues[10], pdValues[11], // X2
+		pdValues[9] + fCubeLength, pdValues[10] + fCubeLength, pdValues[11], // X3
+		pdValues[9], pdValues[10] + fCubeLength, pdValues[11], // X4
 		// back
+		pdValues[9], pdValues[10] + fCubeLength, pdValues[11] + fCubeLength, // X5
+		pdValues[9] + fCubeLength, pdValues[10], pdValues[11] + fCubeLength, // X6
+		pdValues[9] + fCubeLength, pdValues[10] + fCubeLength, pdValues[11] + fCubeLength, // X7
+		pdValues[9], pdValues[10] + fCubeLength, pdValues[11] + fCubeLength, // X8
+		// left
+		pdValues[9], pdValues[10] + fCubeLength, pdValues[11] + fCubeLength, // X5
+		pdValues[9], pdValues[10], pdValues[11], // X1
+		pdValues[9], pdValues[10] + fCubeLength, pdValues[11], // X4
+		pdValues[9], pdValues[10] + fCubeLength, pdValues[11] + fCubeLength, // X8
+		// right
+		pdValues[9] + fCubeLength, pdValues[10], pdValues[11], // X2
+		pdValues[9] + fCubeLength, pdValues[10], pdValues[11] + fCubeLength, // X6
+		pdValues[9] + fCubeLength, pdValues[10] + fCubeLength, pdValues[11] + fCubeLength, // X7
+		pdValues[9] + fCubeLength, pdValues[10] + fCubeLength, pdValues[11], // X3
 	};
 
 	vector<int32_t> vecIndices
 	{
 		// front
-		0, 1, 2, 3, -1
+		0, 1, 2, 3, -1,
 		// back
-
+		4, 5, 6, 7, -1,
+		// left
+		8, 9, 10, 11, -1,
+		// right
+		12, 13, 14, 15, -1
 	};
 
 #pragma endregion // Geometry
