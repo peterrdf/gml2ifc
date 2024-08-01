@@ -321,6 +321,7 @@ private: // Members
 	// Geometry Kernel
 	OwlClass m_iCollectionClass;
 	OwlClass m_iTransformationClass;
+	OwlClass m_iReferencePointIndicatorClass;
 	map<OwlInstance, vector<SdaiInstance>> m_mapMappedItems; // OwlInstance : Geometries
 
 	// CRS
@@ -420,6 +421,7 @@ protected:  // Methods
 	// Geometry Kernel
 	bool isCollectionClass(OwlClass iInstanceClass) const;
 	bool isTransformationClass(OwlClass iInstanceClass) const;
+	bool isReferencePointIndicatorClass(OwlClass iInstanceClass) const;
 
 	// CRS
 	OwlClass isCityModelClass(OwlClass iInstanceClass) const;

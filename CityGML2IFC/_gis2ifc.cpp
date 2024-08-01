@@ -1643,6 +1643,7 @@ _citygml_exporter::_citygml_exporter(_gis2ifc* pSite)
 	, m_fZmax(-FLT_MAX)
 	, m_iCollectionClass(0)
 	, m_iTransformationClass(0)
+	, m_iReferencePointIndicatorClass(0)
 	, m_mapMappedItems()
 	, m_iCityModelClass(0)
 	, m_iBoundingShapeClass(0)
@@ -1680,6 +1681,7 @@ _citygml_exporter::_citygml_exporter(_gis2ifc* pSite)
 	// Geometry Kernel
 	m_iCollectionClass = GetClassByName(getSite()->getOwlModel(), "Collection");
 	m_iTransformationClass = GetClassByName(getSite()->getOwlModel(), "Transformation");
+	m_iReferencePointIndicatorClass = GetClassByName(getSite()->getOwlModel(), "ReferencePointIndicator");
 
 	// CRS
 	m_iCityModelClass = GetClassByName(getSite()->getOwlModel(), "class:CityModelType");
@@ -3523,6 +3525,12 @@ bool _citygml_exporter::isTransformationClass(OwlClass iInstanceClass) const
 	return (iInstanceClass == m_iTransformationClass) || IsClassAncestor(iInstanceClass, m_iTransformationClass);
 }
 
+bool _citygml_exporter::isReferencePointIndicatorClass(OwlClass iInstanceClass) const
+{
+	assert(iInstanceClass != 0);
+
+	return (iInstanceClass == m_iReferencePointIndicatorClass) || IsClassAncestor(iInstanceClass, m_iReferencePointIndicatorClass);
+}
 OwlClass _citygml_exporter::isCityModelClass(OwlClass iInstanceClass) const
 {
 	return (iInstanceClass == m_iCityModelClass) || IsClassAncestor(iInstanceClass, m_iCityModelClass);
