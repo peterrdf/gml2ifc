@@ -1644,6 +1644,7 @@ _citygml_exporter::_citygml_exporter(_gis2ifc* pSite)
 	, m_iCollectionClass(0)
 	, m_iTransformationClass(0)
 	, m_iReferencePointIndicatorClass(0)
+	, m_mapInstanceDefaultState()
 	, m_mapMappedItems()
 	, m_iCityModelClass(0)
 	, m_iBoundingShapeClass(0)
@@ -1720,8 +1721,7 @@ _citygml_exporter::_citygml_exporter(_gis2ifc* pSite)
 
 /*virtual*/ void _citygml_exporter::preProcessing() /*override*/
 {
-	OwlClass iSchemasClass = GetClassByName(getSite()->getOwlModel(), "class:Schemas");
-	assert(iSchemasClass != 0);
+	getInstancesDefaultState();
 
 	OwlInstance iInstance = GetInstancesByIterator(getSite()->getOwlModel(), 0);
 	while (iInstance != 0)
@@ -1764,7 +1764,8 @@ _citygml_exporter::_citygml_exporter(_gis2ifc* pSite)
 		// World
 		_vector3d vecBBMin;
 		_vector3d vecBBMax;
-		if (GetInstanceGeometryClass(iInstance) &&
+		if (m_mapInstanceDefaultState.at(iInstance) &&
+			GetInstanceGeometryClass(iInstance) &&
 			GetBoundingBox(
 				iInstance,
 				(double*)&vecBBMin,
@@ -2592,6 +2593,10 @@ void _citygml_exporter::createGeometry(OwlInstance iInstance, vector<SdaiInstanc
 			createGeometry(piInstances[iInstanceIndex], vecGeometryInstances, bCreateIfcShapeRepresentation);
 		}
 	}
+	else if (isReferencePointIndicatorClass(iInstanceClass))
+	{
+		createReferencePointIndicator(iInstance, vecGeometryInstances, bCreateIfcShapeRepresentation);
+	}
 	else if (isTransformationClass(iInstanceClass))
 	{
 		// Reference Point (Anchor) Transformation
@@ -3110,6 +3115,183 @@ void _citygml_exporter::createBoundaryRepresentation(OwlInstance iInstance, vect
 	}	
 }
 
+void _citygml_exporter::createReferencePointIndicator(OwlInstance iInstance, vector<SdaiInstance>& vecGeometryInstances, bool bCreateIfcShapeRepresentation)
+{
+	assert(iInstance != 0);
+
+#pragma region Geometry
+
+	// Matrix
+	OwlInstance* piInstances = nullptr;
+	int64_t iInstancesCount = 0;
+	GetObjectProperty(
+		iInstance,
+		GetPropertyByName(getSite()->getOwlModel(), "matrix"),
+		&piInstances,
+		&iInstancesCount);
+	assert(iInstancesCount == 1);
+
+	OwlInstance iMatrixInstance = piInstances[0];
+	assert(iMatrixInstance != 0);
+
+	int64_t iValuesCount = 0;
+	double* pdValues = nullptr;
+	GetDatatypeProperty(
+		iMatrixInstance,
+		GetPropertyByName(getSite()->getOwlModel(), "coordinates"),
+		(void**)&pdValues,
+		&iValuesCount);
+	assert(iValuesCount == 12);
+
+	// Cube
+	piInstances = nullptr;
+	iInstancesCount = 0;
+	GetObjectProperty(
+		iInstance,
+		GetPropertyByName(getSite()->getOwlModel(), "object"),
+		&piInstances,
+		&iInstancesCount);
+	assert(iInstancesCount == 1);
+
+	OwlInstance iCubeInstance = piInstances[0];
+	assert(iCubeInstance != 0);
+
+	float fBoundingSphereDiameter = m_fXmax - m_fXmin;
+	fBoundingSphereDiameter = max(fBoundingSphereDiameter, m_fYmax - m_fYmin);
+	fBoundingSphereDiameter = max(fBoundingSphereDiameter, m_fZmax - m_fZmin);
+	float fCubeLength = fBoundingSphereDiameter / 150.f;
+
+	vector<double> vecVertices
+	{
+		// front
+		pdValues[9], pdValues[10], pdValues[11], // bottom left
+		pdValues[9] + fCubeLength, pdValues[10], pdValues[11], // bottom right
+		pdValues[9] + fCubeLength, pdValues[10] + fCubeLength, pdValues[11], // top right
+		pdValues[9], pdValues[10] + fCubeLength, pdValues[11] // top left
+		// back
+	};
+
+	vector<int32_t> vecIndices
+	{
+		// front
+		0, 1, 2, 3, -1
+		// back
+
+	};
+
+#pragma endregion // Geometry
+
+	vector<SdaiInstance> vecOuterPolygons;
+	map<SdaiInstance, vector<SdaiInstance>> mapOuter2InnerPolygons;
+	vector<int64_t> vecPolygonIndices;
+	map<int64_t, SdaiInstance> mapIndex2Instance;
+	for (size_t iIndex = 0; iIndex < vecIndices.size(); iIndex++)
+	{
+		if (vecIndices[iIndex] == -1)
+		{
+			SdaiInstance iPolyLoopInstance = sdaiCreateInstanceBN(getSdaiModel(), "IfcPolyLoop");
+			assert(iPolyLoopInstance != 0);
+
+			SdaiAggr pPolygon = sdaiCreateAggrBN(iPolyLoopInstance, "Polygon");
+			assert(pPolygon != nullptr);
+
+			for (auto iIndex : vecPolygonIndices)
+			{
+				assert(mapIndex2Instance.find(iIndex) != mapIndex2Instance.end());
+
+				sdaiAppend(pPolygon, sdaiINSTANCE, (void*)mapIndex2Instance.at(iIndex));
+			}
+
+			vecOuterPolygons.push_back(iPolyLoopInstance);
+
+			vecPolygonIndices.clear();
+
+			continue;
+		}
+
+		vecPolygonIndices.push_back(vecIndices[iIndex]);
+
+		if (mapIndex2Instance.find(vecIndices[iIndex]) == mapIndex2Instance.end())
+		{
+			mapIndex2Instance[vecIndices[iIndex]] = buildCartesianPointInstance(
+				vecVertices[(vecIndices[iIndex] * 3) + 0],
+				vecVertices[(vecIndices[iIndex] * 3) + 1],
+				vecVertices[(vecIndices[iIndex] * 3) + 2]);
+		}
+	} // for (size_t iIndex = ...
+
+	assert(vecPolygonIndices.empty());
+	assert(!vecOuterPolygons.empty());
+
+	SdaiInstance iClosedShellInstance = sdaiCreateInstanceBN(getSdaiModel(), "IfcClosedShell");
+	assert(iClosedShellInstance != 0);
+
+	SdaiAggr pCfsFaces = sdaiCreateAggrBN(iClosedShellInstance, "CfsFaces");
+	assert(pCfsFaces != nullptr);
+
+	for (auto iOuterPolygon : vecOuterPolygons)
+	{
+		// Outer Polygon
+		SdaiInstance iFaceOuterBoundInstance = sdaiCreateInstanceBN(getSdaiModel(), "IfcFaceOuterBound");
+		assert(iFaceOuterBoundInstance != 0);
+
+		sdaiPutAttrBN(iFaceOuterBoundInstance, "Bound", sdaiINSTANCE, (void*)iOuterPolygon);
+		sdaiPutAttrBN(iFaceOuterBoundInstance, "Orientation", sdaiENUM, "T");
+
+		SdaiInstance iFaceInstance = sdaiCreateInstanceBN(getSdaiModel(), "IfcFace");
+		assert(iFaceInstance != 0);
+
+		SdaiAggr pBounds = sdaiCreateAggrBN(iFaceInstance, "Bounds");
+		sdaiAppend(pCfsFaces, sdaiINSTANCE, (void*)iFaceInstance);
+
+		sdaiAppend(pBounds, sdaiINSTANCE, (void*)iFaceOuterBoundInstance);
+
+		// Inner Polygons
+		auto itOuter2InnerPolygons = mapOuter2InnerPolygons.find(iOuterPolygon);
+		if (itOuter2InnerPolygons != mapOuter2InnerPolygons.end())
+		{
+			for (auto iInnerPolygon : itOuter2InnerPolygons->second)
+			{
+				SdaiInstance iFaceBoundInstance = sdaiCreateInstanceBN(getSdaiModel(), "IfcFaceBound");
+				assert(iFaceBoundInstance != 0);
+
+				sdaiPutAttrBN(iFaceBoundInstance, "Bound", sdaiINSTANCE, (void*)iInnerPolygon);
+				sdaiPutAttrBN(iFaceBoundInstance, "Orientation", sdaiENUM, "T");
+
+				sdaiAppend(pBounds, sdaiINSTANCE, (void*)iFaceBoundInstance);
+			}
+		}
+	} // auto iOuterPolygon : ...
+
+	SdaiInstance iFacetedBrepInstance = sdaiCreateInstanceBN(getSdaiModel(), "IfcFacetedBrep");
+	assert(iFacetedBrepInstance != 0);
+
+	sdaiPutAttrBN(iFacetedBrepInstance, "Outer", sdaiINSTANCE, (void*)iClosedShellInstance);
+
+	createStyledItemInstance(iCubeInstance, iFacetedBrepInstance);
+
+	if (bCreateIfcShapeRepresentation)
+	{
+		SdaiInstance iShapeRepresentationInstance = sdaiCreateInstanceBN(getSdaiModel(), "IfcShapeRepresentation");
+		assert(iShapeRepresentationInstance != 0);
+
+		SdaiAggr pItems = sdaiCreateAggrBN(iShapeRepresentationInstance, "Items");
+		assert(pItems != 0);
+
+		sdaiAppend(pItems, sdaiINSTANCE, (void*)iFacetedBrepInstance);
+
+		sdaiPutAttrBN(iShapeRepresentationInstance, "RepresentationIdentifier", sdaiSTRING, "Body");
+		sdaiPutAttrBN(iShapeRepresentationInstance, "RepresentationType", sdaiSTRING, "Brep");
+		sdaiPutAttrBN(iShapeRepresentationInstance, "ContextOfItems", sdaiINSTANCE, (void*)buildGeometricRepresentationContextInstance());
+
+		vecGeometryInstances.push_back(iShapeRepresentationInstance);
+	}
+	else
+	{
+		vecGeometryInstances.push_back(iFacetedBrepInstance);
+	}
+}
+
 void _citygml_exporter::createPoint3D(OwlInstance iInstance, vector<SdaiInstance>& vecGeometryInstances, bool bCreateIfcShapeRepresentation)
 {
 	assert(iInstance != 0);
@@ -3531,6 +3713,78 @@ bool _citygml_exporter::isReferencePointIndicatorClass(OwlClass iInstanceClass) 
 
 	return (iInstanceClass == m_iReferencePointIndicatorClass) || IsClassAncestor(iInstanceClass, m_iReferencePointIndicatorClass);
 }
+
+void _citygml_exporter::getInstancesDefaultState()
+{
+	m_mapInstanceDefaultState.clear();
+
+	// Enable only unreferenced instances
+	OwlInstance iInstance = GetInstancesByIterator(getSite()->getOwlModel(), 0);
+	while (iInstance != 0)
+	{
+		m_mapInstanceDefaultState[iInstance] = GetInstanceInverseReferencesByIterator(iInstance, 0) == 0;
+
+		iInstance = GetInstancesByIterator(getSite()->getOwlModel(), iInstance);
+	}
+
+	// Enable children/descendants with geometry
+	for (auto& itInstanceDefaultState : m_mapInstanceDefaultState)
+	{
+		if (!itInstanceDefaultState.second)
+		{
+			continue;
+		}
+
+		if (!GetInstanceGeometryClass(itInstanceDefaultState.first) ||
+			!GetBoundingBox(itInstanceDefaultState.first, nullptr, nullptr))
+		{
+			OwlClass iNillClass = GetClassByName(getSite()->getOwlModel(), "Nill");
+
+			OwlClass iInstanceClass = GetInstanceClass(itInstanceDefaultState.first);
+			assert(iInstanceClass != 0);
+
+			if ((iInstanceClass != iNillClass) && !IsClassAncestor(iInstanceClass, iNillClass))
+			{
+				getInstanceDefaultStateRecursive(itInstanceDefaultState.first);
+			}
+		}
+	}
+}
+
+void _citygml_exporter::getInstanceDefaultStateRecursive(OwlInstance iInstance)
+{
+	assert(iInstance != 0);
+
+	RdfProperty iProperty = GetInstancePropertyByIterator(iInstance, 0);
+	while (iProperty != 0)
+	{
+		if (GetPropertyType(iProperty) == OBJECTPROPERTY_TYPE)
+		{
+			int64_t iValuesCount = 0;
+			OwlInstance* piValues = nullptr;
+			GetObjectProperty(iInstance, iProperty, &piValues, &iValuesCount);
+
+			for (int64_t iValue = 0; iValue < iValuesCount; iValue++)
+			{
+				if ((piValues[iValue] != 0) &&
+					!m_mapInstanceDefaultState.at(piValues[iValue]))
+				{
+					// Enable to avoid infinity recursion
+					m_mapInstanceDefaultState.at(piValues[iValue]) = true;
+
+					if (!GetInstanceGeometryClass(piValues[iValue]) ||
+						!GetBoundingBox(piValues[iValue], nullptr, nullptr))
+					{
+						getInstanceDefaultStateRecursive(piValues[iValue]);
+					}
+				}
+			}
+		}
+
+		iProperty = GetInstancePropertyByIterator(iInstance, iProperty);
+	}
+}
+
 OwlClass _citygml_exporter::isCityModelClass(OwlClass iInstanceClass) const
 {
 	return (iInstanceClass == m_iCityModelClass) || IsClassAncestor(iInstanceClass, m_iCityModelClass);
@@ -3625,6 +3879,7 @@ bool _citygml_exporter::isFeatureClass(OwlInstance iInstanceClass) const
 		isFurnitureObjectClass(iInstanceClass) ||
 		isReliefObjectClass(iInstanceClass) ||
 		isLandUseClass(iInstanceClass) ||
+		isReferencePointIndicatorClass(iInstanceClass) ||
 		isUnknownClass(iInstanceClass))
 	{
 		return true;

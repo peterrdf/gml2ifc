@@ -322,6 +322,7 @@ private: // Members
 	OwlClass m_iCollectionClass;
 	OwlClass m_iTransformationClass;
 	OwlClass m_iReferencePointIndicatorClass;
+	map<OwlInstance, bool> m_mapInstanceDefaultState;
 	map<OwlInstance, vector<SdaiInstance>> m_mapMappedItems; // OwlInstance : Geometries
 
 	// CRS
@@ -405,6 +406,7 @@ protected:  // Methods
 	void createCompositeSurface(OwlInstance iInstance, vector<SdaiInstance>& vecGeometryInstances, bool bCreateIfcShapeRepresentation);
 	void createSurfaceMember(OwlInstance iInstance, vector<SdaiInstance>& vecGeometryInstances, bool bCreateIfcShapeRepresentation);
 	void createBoundaryRepresentation(OwlInstance iInstance, vector<SdaiInstance>& vecGeometryInstances, bool bCreateIfcShapeRepresentation);
+	void createReferencePointIndicator(OwlInstance iInstance, vector<SdaiInstance>& vecGeometryInstances, bool bCreateIfcShapeRepresentation);
 	void createPoint3D(OwlInstance iInstance, vector<SdaiInstance>& vecGeometryInstances, bool bCreateIfcShapeRepresentation);
 	void createPoint3DSet(OwlInstance iInstance, vector<SdaiInstance>& vecGeometryInstances, bool bCreateIfcShapeRepresentation);
 	void createPolyLine3D(OwlInstance iInstance, vector<SdaiInstance>& vecGeometryInstances, bool bCreateIfcShapeRepresentation);	
@@ -422,6 +424,8 @@ protected:  // Methods
 	bool isCollectionClass(OwlClass iInstanceClass) const;
 	bool isTransformationClass(OwlClass iInstanceClass) const;
 	bool isReferencePointIndicatorClass(OwlClass iInstanceClass) const;
+	void getInstancesDefaultState();
+	void getInstanceDefaultStateRecursive(OwlInstance iInstance);
 
 	// CRS
 	OwlClass isCityModelClass(OwlClass iInstanceClass) const;
