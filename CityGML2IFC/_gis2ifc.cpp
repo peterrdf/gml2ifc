@@ -647,7 +647,7 @@ SdaiInstance _exporter_base::buildSiteInstance(
 	double dRefElevation = 10;  //#tbd
 	sdaiPutAttrBN(iSiteInstance, "RefElevation", sdaiREAL, &dRefElevation);
 
-	return	iSiteInstance;
+	return iSiteInstance;
 }
 
 SdaiInstance _exporter_base::buildLocalPlacementInstance(_matrix* pMatrix, SdaiInstance iPlacementRelativeTo)
@@ -3203,9 +3203,9 @@ void _citygml_exporter::createReferencePointIndicator(OwlInstance iInstance, vec
 		// back
 		4, 5, 6, 7, -1,
 		// left
-		8, 9, 10, 11, -1,
-		// right
-		12, 13, 14, 15, -1
+		//8, 9, 10, 11, -1, #todo
+		//// right
+		//12, 13, 14, 15, -1
 	};
 
 #pragma endregion // Geometry
