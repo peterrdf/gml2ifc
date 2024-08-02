@@ -635,6 +635,7 @@ SdaiInstance _exporter_base::buildSiteInstance(
 	sdaiAppend(pRefLatitude, sdaiINTEGER, &refLat_x);
 	sdaiAppend(pRefLatitude, sdaiINTEGER, &refLat_y);
 	sdaiAppend(pRefLatitude, sdaiINTEGER, &refLat_z);
+	sdaiAppend(pRefLatitude, sdaiINTEGER, &refLat_z);
 
 	SdaiAggr pRefLongitude = sdaiCreateAggrBN(iSiteInstance, "RefLongitude");
 	assert(pRefLongitude != nullptr);
@@ -642,6 +643,7 @@ SdaiInstance _exporter_base::buildSiteInstance(
 	int_t refLong_x = 54, refLong_y = 25, refLong_z = 0; //#tbd
 	sdaiAppend(pRefLongitude, sdaiINTEGER, &refLong_x);
 	sdaiAppend(pRefLongitude, sdaiINTEGER, &refLong_y);
+	sdaiAppend(pRefLongitude, sdaiINTEGER, &refLong_z);
 	sdaiAppend(pRefLongitude, sdaiINTEGER, &refLong_z);
 
 	double dRefElevation = 10;  //#tbd
