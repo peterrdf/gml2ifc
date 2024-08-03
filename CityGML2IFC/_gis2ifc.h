@@ -320,8 +320,7 @@ private: // Members
 
 	// Geometry Kernel
 	OwlClass m_iCollectionClass;
-	OwlClass m_iTransformationClass;
-	OwlClass m_iReferencePointIndicatorClass;
+	OwlClass m_iTransformationClass;	
 	map<OwlInstance, bool> m_mapInstanceDefaultState;
 	map<OwlInstance, vector<SdaiInstance>> m_mapMappedItems; // OwlInstance : Geometries
 
@@ -345,6 +344,10 @@ private: // Members
 	OwlClass m_iWindowClass;
 	map<OwlInstance, vector<OwlInstance>> m_mapBuildings; // Building : Supported Elements
 	map<OwlInstance, vector<OwlInstance>> m_mapBuildingElements; // Building (Supported) Element : Geometries
+
+	// Parcel
+	OwlClass m_iCadastralParcelClass;
+	OwlClass m_iReferencePointIndicatorClass;
 
 	// Feature
 	OwlClass m_iVegetationObjectClass;
@@ -421,9 +424,8 @@ protected:  // Methods
 		const vector<SdaiInstance>& vecRepresentations);
 
 	// Geometry Kernel
-	bool isCollectionClass(OwlClass iInstanceClass) const;
-	bool isTransformationClass(OwlClass iInstanceClass) const;
-	bool isReferencePointIndicatorClass(OwlClass iInstanceClass) const;
+	bool isCollectionClass(OwlClass iInstanceClass) const;	
+	bool isTransformationClass(OwlClass iInstanceClass) const;	
 	void getInstancesDefaultState();
 	void getInstanceDefaultStateRecursive(OwlInstance iInstance);
 
@@ -439,6 +441,10 @@ protected:  // Methods
 	bool isRoofSurfaceClass(OwlInstance iInstanceClass) const;
 	bool isDoorClass(OwlInstance iInstanceClass) const;
 	bool isWindowClass(OwlInstance iInstanceClass) const;
+
+	// Parcel	
+	bool isCadastralParcelClass(OwlClass iInstanceClass) const;
+	bool isReferencePointIndicatorClass(OwlClass iInstanceClass) const;
 
 	// Feature
 	bool isFeatureClass(OwlInstance iInstanceClass) const;

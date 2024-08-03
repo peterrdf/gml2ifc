@@ -1645,7 +1645,6 @@ _citygml_exporter::_citygml_exporter(_gis2ifc* pSite)
 	, m_fZmax(-FLT_MAX)
 	, m_iCollectionClass(0)
 	, m_iTransformationClass(0)
-	, m_iReferencePointIndicatorClass(0)
 	, m_mapInstanceDefaultState()
 	, m_mapMappedItems()
 	, m_iCityModelClass(0)
@@ -1661,6 +1660,8 @@ _citygml_exporter::_citygml_exporter(_gis2ifc* pSite)
 	, m_iWindowClass(0)
 	, m_mapBuildings()
 	, m_mapBuildingElements()
+	, m_iCadastralParcelClass(0)
+	, m_iReferencePointIndicatorClass(0)
 	, m_iVegetationObjectClass(0)
 	, m_iWaterObjectClass(0)
 	, m_iBridgeObjectClass(0)
@@ -1683,8 +1684,7 @@ _citygml_exporter::_citygml_exporter(_gis2ifc* pSite)
 {
 	// Geometry Kernel
 	m_iCollectionClass = GetClassByName(getSite()->getOwlModel(), "Collection");
-	m_iTransformationClass = GetClassByName(getSite()->getOwlModel(), "Transformation");
-	m_iReferencePointIndicatorClass = GetClassByName(getSite()->getOwlModel(), "ReferencePointIndicator");
+	m_iTransformationClass = GetClassByName(getSite()->getOwlModel(), "Transformation");	
 
 	// CRS
 	m_iCityModelClass = GetClassByName(getSite()->getOwlModel(), "class:CityModelType");
@@ -1703,6 +1703,10 @@ _citygml_exporter::_citygml_exporter(_gis2ifc* pSite)
 	m_iRoofSurfaceClass = GetClassByName(getSite()->getOwlModel(), "class:RoofSurface");
 	m_iDoorClass = GetClassByName(getSite()->getOwlModel(), "class:Door");
 	m_iWindowClass = GetClassByName(getSite()->getOwlModel(), "class:Window");
+
+	// Parcel
+	m_iCadastralParcelClass = GetClassByName(getSite()->getOwlModel(), "class:CadastralParcelType");
+	m_iReferencePointIndicatorClass = GetClassByName(getSite()->getOwlModel(), "ReferencePointIndicator");
 
 	// Feature
 	m_iVegetationObjectClass = GetClassByName(getSite()->getOwlModel(), "class:_VegetationObject");
@@ -3738,13 +3742,6 @@ bool _citygml_exporter::isTransformationClass(OwlClass iInstanceClass) const
 	return (iInstanceClass == m_iTransformationClass) || IsClassAncestor(iInstanceClass, m_iTransformationClass);
 }
 
-bool _citygml_exporter::isReferencePointIndicatorClass(OwlClass iInstanceClass) const
-{
-	assert(iInstanceClass != 0);
-
-	return (iInstanceClass == m_iReferencePointIndicatorClass) || IsClassAncestor(iInstanceClass, m_iReferencePointIndicatorClass);
-}
-
 void _citygml_exporter::getInstancesDefaultState()
 {
 	m_mapInstanceDefaultState.clear();
@@ -3896,6 +3893,20 @@ bool _citygml_exporter::isWindowClass(OwlInstance iInstanceClass) const
 	return (iInstanceClass == m_iWindowClass) || IsClassAncestor(iInstanceClass, m_iWindowClass);
 }
 
+bool _citygml_exporter::isCadastralParcelClass(OwlClass iInstanceClass) const
+{
+	assert(iInstanceClass != 0);
+
+	return (iInstanceClass == m_iCadastralParcelClass) || IsClassAncestor(iInstanceClass, m_iCadastralParcelClass);
+}
+
+bool _citygml_exporter::isReferencePointIndicatorClass(OwlClass iInstanceClass) const
+{
+	assert(iInstanceClass != 0);
+
+	return (iInstanceClass == m_iReferencePointIndicatorClass) || IsClassAncestor(iInstanceClass, m_iReferencePointIndicatorClass);
+}
+
 bool _citygml_exporter::isFeatureClass(OwlInstance iInstanceClass) const
 {
 	assert(iInstanceClass != 0);
@@ -3910,8 +3921,8 @@ bool _citygml_exporter::isFeatureClass(OwlInstance iInstanceClass) const
 		isFurnitureObjectClass(iInstanceClass) ||
 		isReliefObjectClass(iInstanceClass) ||
 		isLandUseClass(iInstanceClass) ||
-		isReferencePointIndicatorClass(iInstanceClass) ||
-		isUnknownClass(iInstanceClass))
+		isCadastralParcelClass(iInstanceClass) ||
+		isReferencePointIndicatorClass(iInstanceClass))
 	{
 		return true;
 	}
