@@ -3262,6 +3262,46 @@ void _citygml_exporter::createReferencePointIndicator(OwlInstance iInstance, vec
 	sdaiAppend(pPolygon, sdaiINSTANCE, (void*)mapIndex2Instance.at(6));
 	sdaiAppend(pPolygon, sdaiINSTANCE, (void*)mapIndex2Instance.at(7));
 
+	// Left
+	// 4, 0, 3, 7
+	vecPolyLoopInstances.push_back(sdaiCreateInstanceBN(getSdaiModel(), "IfcPolyLoop"));
+
+	pPolygon = sdaiCreateAggrBN(vecPolyLoopInstances.back(), "Polygon");
+	sdaiAppend(pPolygon, sdaiINSTANCE, (void*)mapIndex2Instance.at(4));
+	sdaiAppend(pPolygon, sdaiINSTANCE, (void*)mapIndex2Instance.at(0));
+	sdaiAppend(pPolygon, sdaiINSTANCE, (void*)mapIndex2Instance.at(3));
+	sdaiAppend(pPolygon, sdaiINSTANCE, (void*)mapIndex2Instance.at(7));
+
+	// Right
+	// 1, 5, 6, 2
+	vecPolyLoopInstances.push_back(sdaiCreateInstanceBN(getSdaiModel(), "IfcPolyLoop"));
+
+	pPolygon = sdaiCreateAggrBN(vecPolyLoopInstances.back(), "Polygon");
+	sdaiAppend(pPolygon, sdaiINSTANCE, (void*)mapIndex2Instance.at(1));
+	sdaiAppend(pPolygon, sdaiINSTANCE, (void*)mapIndex2Instance.at(5));
+	sdaiAppend(pPolygon, sdaiINSTANCE, (void*)mapIndex2Instance.at(6));
+	sdaiAppend(pPolygon, sdaiINSTANCE, (void*)mapIndex2Instance.at(2));
+
+	// Top
+	// 3, 2, 6, 7
+	vecPolyLoopInstances.push_back(sdaiCreateInstanceBN(getSdaiModel(), "IfcPolyLoop"));
+
+	pPolygon = sdaiCreateAggrBN(vecPolyLoopInstances.back(), "Polygon");
+	sdaiAppend(pPolygon, sdaiINSTANCE, (void*)mapIndex2Instance.at(3));
+	sdaiAppend(pPolygon, sdaiINSTANCE, (void*)mapIndex2Instance.at(2));
+	sdaiAppend(pPolygon, sdaiINSTANCE, (void*)mapIndex2Instance.at(6));
+	sdaiAppend(pPolygon, sdaiINSTANCE, (void*)mapIndex2Instance.at(7));
+
+	// Bottom
+	// 0, 1, 5, 4
+	vecPolyLoopInstances.push_back(sdaiCreateInstanceBN(getSdaiModel(), "IfcPolyLoop"));
+
+	pPolygon = sdaiCreateAggrBN(vecPolyLoopInstances.back(), "Polygon");
+	sdaiAppend(pPolygon, sdaiINSTANCE, (void*)mapIndex2Instance.at(0));
+	sdaiAppend(pPolygon, sdaiINSTANCE, (void*)mapIndex2Instance.at(1));
+	sdaiAppend(pPolygon, sdaiINSTANCE, (void*)mapIndex2Instance.at(5));
+	sdaiAppend(pPolygon, sdaiINSTANCE, (void*)mapIndex2Instance.at(4));
+
 	SdaiInstance iClosedShellInstance = sdaiCreateInstanceBN(getSdaiModel(), "IfcClosedShell");
 	assert(iClosedShellInstance != 0);
 
