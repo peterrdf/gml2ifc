@@ -2507,14 +2507,39 @@ void _citygml_exporter::searchForFeatureElements(OwlInstance iFeatureInstance, O
 				if (GetInstanceGeometryClass(piValues[iValue]) &&
 					GetBoundingBox(piValues[iValue], nullptr, nullptr))
 				{
-					auto itFeature = m_mapFeatures.find(iFeatureInstance);
-					if (itFeature != m_mapFeatures.end())
+					if (isReferencePointIndicatorClass(GetInstanceClass(piValues[iValue])))
 					{
-						itFeature->second.push_back(piValues[iValue]);
+						auto itFeature = m_mapFeatures.find(piValues[iValue]);
+						if (itFeature != m_mapFeatures.end())
+						{
+							assert(false); // Internal error!
+						}
+
+						m_mapFeatures[piValues[iValue]] = vector<SdaiInstance>{ piValues[iValue] };
+
+						auto itFeatureElement = m_mapFeatureElements.find(piValues[iValue]);
+						if (itFeatureElement == m_mapFeatureElements.end())
+						{
+							m_mapFeatureElements[piValues[iValue]] = vector<OwlInstance>{ piValues[iValue] };
+						}
+						else
+						{
+							assert(false);
+						}
+
+						continue;
 					}
 					else
 					{
-						assert(false); // Internal error!
+						auto itFeature = m_mapFeatures.find(iFeatureInstance);
+						if (itFeature != m_mapFeatures.end())
+						{
+							itFeature->second.push_back(piValues[iValue]);
+						}
+						else
+						{
+							assert(false); // Internal error!
+						}
 					}
 
 					auto itFeatureElement = m_mapFeatureElements.find(piValues[iValue]);
