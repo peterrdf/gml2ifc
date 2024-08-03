@@ -3165,98 +3165,102 @@ void _citygml_exporter::createReferencePointIndicator(OwlInstance iInstance, vec
 	float fBoundingSphereDiameter = m_fXmax - m_fXmin;
 	fBoundingSphereDiameter = max(fBoundingSphereDiameter, m_fYmax - m_fYmin);
 	fBoundingSphereDiameter = max(fBoundingSphereDiameter, m_fZmax - m_fZmin);
-	float fCubeLength = fBoundingSphereDiameter / 150.f;
+	float fCubeLength = fBoundingSphereDiameter / 150.f;	
 
 	/*
 	Front
-	X4 -- X3
+	X3 -- X2
 	 |    |	
-	X1 -- X2
+	X0 -- X1
 
 	Back
-	X8 -- X7
+	X7 -- X6
 	 |    |
-	X5 -- X6
+	X4 -- X5
 	*/
 	vector<double> vecVertices
 	{
 		// front
-		pdValues[9], pdValues[10], pdValues[11], // X1
-		pdValues[9] + fCubeLength, pdValues[10], pdValues[11], // X2
-		pdValues[9] + fCubeLength, pdValues[10] + fCubeLength, pdValues[11], // X3
-		pdValues[9], pdValues[10] + fCubeLength, pdValues[11], // X4
+		pdValues[9], pdValues[10], pdValues[11], // X0
+		pdValues[9] + fCubeLength, pdValues[10], pdValues[11], // X1
+		pdValues[9] + fCubeLength, pdValues[10] + fCubeLength, pdValues[11], // X2
+		pdValues[9], pdValues[10] + fCubeLength, pdValues[11], // X3
 		// back
-		pdValues[9], pdValues[10], pdValues[11] + fCubeLength, // X5
-		pdValues[9] + fCubeLength, pdValues[10], pdValues[11] + fCubeLength, // X6
-		pdValues[9] + fCubeLength, pdValues[10] + fCubeLength, pdValues[11] + fCubeLength, // X7
-		pdValues[9], pdValues[10] + fCubeLength, pdValues[11] + fCubeLength, // X8
-		// left
-		pdValues[9], pdValues[10] + fCubeLength, pdValues[11] + fCubeLength, // X5
-		pdValues[9], pdValues[10], pdValues[11], // X1
-		pdValues[9], pdValues[10] + fCubeLength, pdValues[11], // X4
-		pdValues[9], pdValues[10] + fCubeLength, pdValues[11] + fCubeLength, // X8
-		// right
-		pdValues[9] + fCubeLength, pdValues[10], pdValues[11], // X2
-		pdValues[9] + fCubeLength, pdValues[10], pdValues[11] + fCubeLength, // X6
-		pdValues[9] + fCubeLength, pdValues[10] + fCubeLength, pdValues[11] + fCubeLength, // X7
-		pdValues[9] + fCubeLength, pdValues[10] + fCubeLength, pdValues[11], // X3
+		pdValues[9], pdValues[10], pdValues[11] + fCubeLength, // X4
+		pdValues[9] + fCubeLength, pdValues[10], pdValues[11] + fCubeLength, // X5
+		pdValues[9] + fCubeLength, pdValues[10] + fCubeLength, pdValues[11] + fCubeLength, // X6
+		pdValues[9], pdValues[10] + fCubeLength, pdValues[11] + fCubeLength, // X7
 	};
 
-	vector<int32_t> vecIndices
-	{
-		// front
-		0, 1, 2, 3, -1,
-		// back
-		4, 5, 6, 7, -1,
-		// left
-		//8, 9, 10, 11, -1, #todo
-		//// right
-		//12, 13, 14, 15, -1
-	};
+	map<int64_t, SdaiInstance> mapIndex2Instance;
+
+	// Front
+	// 0
+	mapIndex2Instance[0] = buildCartesianPointInstance(
+		vecVertices[(0 * 3) + 0],
+		vecVertices[(0 * 3) + 1],
+		vecVertices[(0 * 3) + 2]);
+	// 1
+	mapIndex2Instance[1] = buildCartesianPointInstance(
+		vecVertices[(1 * 3) + 0],
+		vecVertices[(1 * 3) + 1],
+		vecVertices[(1 * 3) + 2]);
+	// 2
+	mapIndex2Instance[2] = buildCartesianPointInstance(
+		vecVertices[(2 * 3) + 0],
+		vecVertices[(2 * 3) + 1],
+		vecVertices[(2 * 3) + 2]);
+	// 3
+	mapIndex2Instance[3] = buildCartesianPointInstance(
+		vecVertices[(3 * 3) + 0],
+		vecVertices[(3 * 3) + 1],
+		vecVertices[(3 * 3) + 2]);
+		
+	// Back
+	// 4
+	mapIndex2Instance[4] = buildCartesianPointInstance(
+		vecVertices[(4 * 3) + 0],
+		vecVertices[(4 * 3) + 1],
+		vecVertices[(4 * 3) + 2]);
+	// 5
+	mapIndex2Instance[5] = buildCartesianPointInstance(
+		vecVertices[(5 * 3) + 0],
+		vecVertices[(5 * 3) + 1],
+		vecVertices[(5 * 3) + 2]);
+	// 6
+	mapIndex2Instance[6] = buildCartesianPointInstance(
+		vecVertices[(6 * 3) + 0],
+		vecVertices[(6 * 3) + 1],
+		vecVertices[(6 * 3) + 2]);
+	// 7
+	mapIndex2Instance[7] = buildCartesianPointInstance(
+		vecVertices[(7 * 3) + 0],
+		vecVertices[(7 * 3) + 1],
+		vecVertices[(7 * 3) + 2]);
 
 #pragma endregion // Geometry
 
-	vector<SdaiInstance> vecOuterPolygons;
-	map<SdaiInstance, vector<SdaiInstance>> mapOuter2InnerPolygons;
-	vector<int64_t> vecPolygonIndices;
-	map<int64_t, SdaiInstance> mapIndex2Instance;
-	for (size_t iIndex = 0; iIndex < vecIndices.size(); iIndex++)
-	{
-		if (vecIndices[iIndex] == -1)
-		{
-			SdaiInstance iPolyLoopInstance = sdaiCreateInstanceBN(getSdaiModel(), "IfcPolyLoop");
-			assert(iPolyLoopInstance != 0);
+	vector<SdaiInstance> vecPolyLoopInstances;
 
-			SdaiAggr pPolygon = sdaiCreateAggrBN(iPolyLoopInstance, "Polygon");
-			assert(pPolygon != nullptr);
+	// Front
+	// 0, 1, 2, 3
+	vecPolyLoopInstances.push_back(sdaiCreateInstanceBN(getSdaiModel(), "IfcPolyLoop"));
 
-			for (auto iIndex : vecPolygonIndices)
-			{
-				assert(mapIndex2Instance.find(iIndex) != mapIndex2Instance.end());
+	SdaiAggr pPolygon = sdaiCreateAggrBN(vecPolyLoopInstances.back(), "Polygon");
+	sdaiAppend(pPolygon, sdaiINSTANCE, (void*)mapIndex2Instance.at(0));
+	sdaiAppend(pPolygon, sdaiINSTANCE, (void*)mapIndex2Instance.at(1));
+	sdaiAppend(pPolygon, sdaiINSTANCE, (void*)mapIndex2Instance.at(2));
+	sdaiAppend(pPolygon, sdaiINSTANCE, (void*)mapIndex2Instance.at(3));
 
-				sdaiAppend(pPolygon, sdaiINSTANCE, (void*)mapIndex2Instance.at(iIndex));
-			}
+	// Front
+	// 4, 5, 6, 7
+	vecPolyLoopInstances.push_back(sdaiCreateInstanceBN(getSdaiModel(), "IfcPolyLoop"));
 
-			vecOuterPolygons.push_back(iPolyLoopInstance);
-
-			vecPolygonIndices.clear();
-
-			continue;
-		}
-
-		vecPolygonIndices.push_back(vecIndices[iIndex]);
-
-		if (mapIndex2Instance.find(vecIndices[iIndex]) == mapIndex2Instance.end())
-		{
-			mapIndex2Instance[vecIndices[iIndex]] = buildCartesianPointInstance(
-				vecVertices[(vecIndices[iIndex] * 3) + 0],
-				vecVertices[(vecIndices[iIndex] * 3) + 1],
-				vecVertices[(vecIndices[iIndex] * 3) + 2]);
-		}
-	} // for (size_t iIndex = ...
-
-	assert(vecPolygonIndices.empty());
-	assert(!vecOuterPolygons.empty());
+	pPolygon = sdaiCreateAggrBN(vecPolyLoopInstances.back(), "Polygon");
+	sdaiAppend(pPolygon, sdaiINSTANCE, (void*)mapIndex2Instance.at(4));
+	sdaiAppend(pPolygon, sdaiINSTANCE, (void*)mapIndex2Instance.at(5));
+	sdaiAppend(pPolygon, sdaiINSTANCE, (void*)mapIndex2Instance.at(6));
+	sdaiAppend(pPolygon, sdaiINSTANCE, (void*)mapIndex2Instance.at(7));
 
 	SdaiInstance iClosedShellInstance = sdaiCreateInstanceBN(getSdaiModel(), "IfcClosedShell");
 	assert(iClosedShellInstance != 0);
@@ -3264,13 +3268,13 @@ void _citygml_exporter::createReferencePointIndicator(OwlInstance iInstance, vec
 	SdaiAggr pCfsFaces = sdaiCreateAggrBN(iClosedShellInstance, "CfsFaces");
 	assert(pCfsFaces != nullptr);
 
-	for (auto iOuterPolygon : vecOuterPolygons)
+	for (auto iPolyLoopInstance : vecPolyLoopInstances)
 	{
 		// Outer Polygon
 		SdaiInstance iFaceOuterBoundInstance = sdaiCreateInstanceBN(getSdaiModel(), "IfcFaceOuterBound");
 		assert(iFaceOuterBoundInstance != 0);
 
-		sdaiPutAttrBN(iFaceOuterBoundInstance, "Bound", sdaiINSTANCE, (void*)iOuterPolygon);
+		sdaiPutAttrBN(iFaceOuterBoundInstance, "Bound", sdaiINSTANCE, (void*)iPolyLoopInstance);
 		sdaiPutAttrBN(iFaceOuterBoundInstance, "Orientation", sdaiENUM, "T");
 
 		SdaiInstance iFaceInstance = sdaiCreateInstanceBN(getSdaiModel(), "IfcFace");
@@ -3280,23 +3284,7 @@ void _citygml_exporter::createReferencePointIndicator(OwlInstance iInstance, vec
 		sdaiAppend(pCfsFaces, sdaiINSTANCE, (void*)iFaceInstance);
 
 		sdaiAppend(pBounds, sdaiINSTANCE, (void*)iFaceOuterBoundInstance);
-
-		// Inner Polygons
-		auto itOuter2InnerPolygons = mapOuter2InnerPolygons.find(iOuterPolygon);
-		if (itOuter2InnerPolygons != mapOuter2InnerPolygons.end())
-		{
-			for (auto iInnerPolygon : itOuter2InnerPolygons->second)
-			{
-				SdaiInstance iFaceBoundInstance = sdaiCreateInstanceBN(getSdaiModel(), "IfcFaceBound");
-				assert(iFaceBoundInstance != 0);
-
-				sdaiPutAttrBN(iFaceBoundInstance, "Bound", sdaiINSTANCE, (void*)iInnerPolygon);
-				sdaiPutAttrBN(iFaceBoundInstance, "Orientation", sdaiENUM, "T");
-
-				sdaiAppend(pBounds, sdaiINSTANCE, (void*)iFaceBoundInstance);
-			}
-		}
-	} // auto iOuterPolygon : ...
+	} // auto iPolyLoopInstance : ...
 
 	SdaiInstance iFacetedBrepInstance = sdaiCreateInstanceBN(getSdaiModel(), "IfcFacetedBrep");
 	assert(iFacetedBrepInstance != 0);
