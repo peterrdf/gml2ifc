@@ -1906,11 +1906,11 @@ void _citygml_exporter::createBuildings(SdaiInstance iSiteInstance, SdaiInstance
 	OwlInstance iInstance = GetInstancesByIterator(getSite()->getOwlModel(), 0);
 	while (iInstance != 0)
 	{
+		OwlClass iInstanceClass = GetInstanceClass(iInstance);
+		assert(iInstanceClass != 0);
+
 		if (GetInstanceInverseReferencesByIterator(iInstance, 0) == 0)
 		{
-			OwlClass iInstanceClass = GetInstanceClass(iInstance);
-			assert(iInstanceClass != 0);
-
 			if (iInstanceClass != iSchemasClass)
 			{
 				if (isBuildingClass(iInstanceClass))
@@ -1932,6 +1932,23 @@ void _citygml_exporter::createBuildings(SdaiInstance iSiteInstance, SdaiInstance
 				}
 			}
 		} // if (GetInstanceInverseReferencesByIterator(iInstance, 0) == 0)
+		else
+		{
+			/*Patch for GML*/
+			if (isCadastralParcelClass(iInstanceClass))
+			{
+				if (m_mapBuildings.find(iInstance) == m_mapBuildings.end())
+				{
+					m_mapBuildings[iInstance] = vector<OwlInstance>();
+
+					searchForBuildingElements(iInstance, iInstance);
+				}
+				else
+				{
+					assert(false); // Internal error!
+				}
+			}
+		}
 
 		iInstance = GetInstancesByIterator(getSite()->getOwlModel(), iInstance);
 	} // while (iInstance != 0)
@@ -2507,39 +2524,14 @@ void _citygml_exporter::searchForFeatureElements(OwlInstance iFeatureInstance, O
 				if (GetInstanceGeometryClass(piValues[iValue]) &&
 					GetBoundingBox(piValues[iValue], nullptr, nullptr))
 				{
-					if (isReferencePointIndicatorClass(GetInstanceClass(piValues[iValue])))
+					auto itFeature = m_mapFeatures.find(iFeatureInstance);
+					if (itFeature != m_mapFeatures.end())
 					{
-						auto itFeature = m_mapFeatures.find(piValues[iValue]);
-						if (itFeature != m_mapFeatures.end())
-						{
-							assert(false); // Internal error!
-						}
-
-						m_mapFeatures[piValues[iValue]] = vector<SdaiInstance>{ piValues[iValue] };
-
-						auto itFeatureElement = m_mapFeatureElements.find(piValues[iValue]);
-						if (itFeatureElement == m_mapFeatureElements.end())
-						{
-							m_mapFeatureElements[piValues[iValue]] = vector<OwlInstance>{ piValues[iValue] };
-						}
-						else
-						{
-							assert(false);
-						}
-
-						continue;
+						itFeature->second.push_back(piValues[iValue]);
 					}
 					else
 					{
-						auto itFeature = m_mapFeatures.find(iFeatureInstance);
-						if (itFeature != m_mapFeatures.end())
-						{
-							itFeature->second.push_back(piValues[iValue]);
-						}
-						else
-						{
-							assert(false); // Internal error!
-						}
+						assert(false); // Internal error!
 					}
 
 					auto itFeatureElement = m_mapFeatureElements.find(piValues[iValue]);
@@ -3973,9 +3965,7 @@ bool _citygml_exporter::isFeatureClass(OwlInstance iInstanceClass) const
 		isTrafficAreaClass(iInstanceClass) ||
 		isFurnitureObjectClass(iInstanceClass) ||
 		isReliefObjectClass(iInstanceClass) ||
-		isLandUseClass(iInstanceClass) ||
-		isCadastralParcelClass(iInstanceClass) ||
-		isReferencePointIndicatorClass(iInstanceClass))
+		isLandUseClass(iInstanceClass))
 	{
 		return true;
 	}
