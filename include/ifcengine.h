@@ -175,12 +175,409 @@ enum class enum_validation_status : unsigned char
 
 
 //
-//  File IO API Calls
+//  Instance Header API Calls
 //
 
 #ifdef __cplusplus
 	extern "C" {
 #endif
+
+//
+//		SetSPFFHeader                                           (http://rdf.bg/ifcdoc/CP64/SetSPFFHeader.html)
+//				SdaiModel				model								IN
+//				const char				* description						IN
+//				const char				* implementationLevel				IN
+//				const char				* name								IN
+//				const char				* timeStamp							IN
+//				const char				* author							IN
+//				const char				* organization						IN
+//				const char				* preprocessorVersion				IN
+//				const char				* originatingSystem					IN
+//				const char				* authorization						IN
+//				const char				* fileSchema						IN
+//
+//				void					returns
+//
+//	This call is an aggregate of several SetSPFFHeaderItem calls. In several cases the header can be set easily with this call. In case an argument is zero, this argument will not be updated, i.e. it will not be filled with 0.
+//
+void			DECL STDC	SetSPFFHeader(
+									SdaiModel				model,
+									const char				* description,
+									const char				* implementationLevel,
+									const char				* name,
+									const char				* timeStamp,
+									const char				* author,
+									const char				* organization,
+									const char				* preprocessorVersion,
+									const char				* originatingSystem,
+									const char				* authorization,
+									const char				* fileSchema
+								);
+
+#ifdef __cplusplus
+	}
+#endif
+
+//
+//
+static	inline	void	SetSPFFHeader(
+								SdaiModel				model,
+								char					* description,
+								char					* implementationLevel,
+								char					* name,
+								char					* timeStamp,
+								char					* author,
+								char					* organization,
+								char					* preprocessorVersion,
+								char					* originatingSystem,
+								char					* authorization,
+								char					* fileSchema
+							)
+{
+	return	SetSPFFHeader(
+					model,
+					(const char*) description,
+					(const char*) implementationLevel,
+					(const char*) name,
+					(const char*) timeStamp,
+					(const char*) author,
+					(const char*) organization,
+					(const char*) preprocessorVersion,
+					(const char*) originatingSystem,
+					(const char*) authorization,
+					(const char*) fileSchema
+				);
+}
+
+#ifdef __cplusplus
+	extern "C" {
+#endif
+
+//
+//		SetSPFFHeaderItem                                       (http://rdf.bg/ifcdoc/CP64/SetSPFFHeaderItem.html)
+//				SdaiModel				model								IN
+//				int_t					itemIndex							IN
+//				int_t					itemSubIndex						IN
+//				SdaiPrimitiveType		valueType							IN
+//				const void				* value								IN
+//
+//				int_t					returns								OUT
+//
+//	This call can be used to write a specific header item, the source code example is larger to show and explain how this call can be used.
+//
+int_t			DECL STDC	SetSPFFHeaderItem(
+									SdaiModel				model,
+									int_t					itemIndex,
+									int_t					itemSubIndex,
+									SdaiPrimitiveType		valueType,
+									const void				* value
+								);
+
+#ifdef __cplusplus
+	}
+#endif
+
+//
+//
+static	inline	int_t	SetSPFFHeaderItem(
+								SdaiModel				model,
+								int_t					itemIndex,
+								int_t					itemSubIndex,
+								SdaiPrimitiveType		valueType,
+								const char				* value
+							)
+{
+	return	SetSPFFHeaderItem(
+					model,
+					itemIndex,
+					itemSubIndex,
+					valueType,
+					(const void*) value
+				);
+}
+
+//
+//
+static	inline	int_t	SetSPFFHeaderItem(
+								SdaiModel				model,
+								int_t					itemIndex,
+								int_t					itemSubIndex,
+								SdaiPrimitiveType		valueType,
+								char					* value
+							)
+{
+	return	SetSPFFHeaderItem(
+					model,
+					itemIndex,
+					itemSubIndex,
+					valueType,
+					(const void*) value
+				);
+}
+
+//
+//
+static	inline	int_t	SetSPFFHeaderItem(
+								SdaiModel				model,
+								int_t					itemIndex,
+								int_t					itemSubIndex,
+								SdaiPrimitiveType		valueType,
+								const wchar_t			* value
+							)
+{
+	return	SetSPFFHeaderItem(
+					model,
+					itemIndex,
+					itemSubIndex,
+					valueType,
+					(const void*) value
+				);
+}
+
+//
+//
+static	inline	int_t	SetSPFFHeaderItem(
+								SdaiModel				model,
+								int_t					itemIndex,
+								int_t					itemSubIndex,
+								SdaiPrimitiveType		valueType,
+								wchar_t					* value
+							)
+{
+	return	SetSPFFHeaderItem(
+					model,
+					itemIndex,
+					itemSubIndex,
+					valueType,
+					(const void*) value
+				);
+}
+
+#ifdef __cplusplus
+	extern "C" {
+#endif
+
+//
+//		GetSPFFHeaderItem                                       (http://rdf.bg/ifcdoc/CP64/GetSPFFHeaderItem.html)
+//				SdaiModel				model								IN
+//				int_t					itemIndex							IN
+//				int_t					itemSubIndex						IN
+//				SdaiPrimitiveType		valueType							IN
+//				const void				** value							IN / OUT
+//
+//				int_t					returns								OUT
+//
+//	This call can be used to read a specific header item, the source code example is larger to show and explain how this call can be used.
+//
+int_t			DECL STDC	GetSPFFHeaderItem(
+									SdaiModel				model,
+									int_t					itemIndex,
+									int_t					itemSubIndex,
+									SdaiPrimitiveType		valueType,
+									const void				** value
+								);
+
+#ifdef __cplusplus
+	}
+#endif
+
+//
+//
+static	inline	int_t	GetSPFFHeaderItem(
+								SdaiModel				model,
+								int_t					itemIndex,
+								int_t					itemSubIndex,
+								SdaiPrimitiveType		valueType,
+								const char				** value
+							)
+{
+	return	GetSPFFHeaderItem(
+					model,
+					itemIndex,
+					itemSubIndex,
+					valueType,
+					(const void**) value
+				);
+}
+
+//
+//
+static	inline	int_t	GetSPFFHeaderItem(
+								SdaiModel				model,
+								int_t					itemIndex,
+								int_t					itemSubIndex,
+								SdaiPrimitiveType		valueType,
+								char					** value
+							)
+{
+	return	GetSPFFHeaderItem(
+					model,
+					itemIndex,
+					itemSubIndex,
+					valueType,
+					(const void**) value
+				);
+}
+
+//
+//
+static	inline	int_t	GetSPFFHeaderItem(
+								SdaiModel				model,
+								int_t					itemIndex,
+								int_t					itemSubIndex,
+								SdaiPrimitiveType		valueType,
+								const wchar_t			** value
+							)
+{
+	return	GetSPFFHeaderItem(
+					model,
+					itemIndex,
+					itemSubIndex,
+					valueType,
+					(const void**) value
+				);
+}
+
+//
+//
+static	inline	int_t	GetSPFFHeaderItem(
+								SdaiModel				model,
+								int_t					itemIndex,
+								int_t					itemSubIndex,
+								SdaiPrimitiveType		valueType,
+								wchar_t					** value
+							)
+{
+	return	GetSPFFHeaderItem(
+					model,
+					itemIndex,
+					itemSubIndex,
+					valueType,
+					(const void**) value
+				);
+}
+
+#ifdef __cplusplus
+	extern "C" {
+#endif
+
+//
+//		GetLibraryIdentifier                                    (http://rdf.bg/ifcdoc/CP64/GetLibraryIdentifier.html)
+//				const char				** libraryIdentifier				IN / OUT
+//
+//				const char				* returns							OUT
+//
+//	Returns an identifier for the current instance of this library including date stamp and revision number.
+//
+const char		DECL * STDC	GetLibraryIdentifier(
+									const char				** libraryIdentifier
+								);
+
+#ifdef __cplusplus
+	}
+#endif
+
+//
+//
+static	inline	const char	* GetLibraryIdentifier(
+									char					** libraryIdentifier
+								)
+{
+	return	GetLibraryIdentifier(
+					(const char**) libraryIdentifier
+				);
+}
+
+//
+//
+static	inline	const char	* GetLibraryIdentifier(
+								)
+{
+	return	GetLibraryIdentifier(
+					(const char**) nullptr				//	libraryIdentifier
+				);
+}
+
+#ifdef __cplusplus
+	extern "C" {
+#endif
+
+//
+//		GetSchemaName                                           (http://rdf.bg/ifcdoc/CP64/GetSchemaName.html)
+//				SdaiModel				model								IN
+//				const char				** schemaName						IN / OUT
+//
+//				const char				* returns							OUT
+//
+//	Returns the value as defined by SCHEMA in the loaded EXPRESS schema.
+//
+const char		DECL * STDC	GetSchemaName(
+									SdaiModel				model,
+									const char				** schemaName
+								);
+
+#ifdef __cplusplus
+	}
+#endif
+
+//
+//
+static	inline	const char	* GetSchemaName(
+									SdaiModel				model,
+									char					** schemaName
+								)
+{
+	return	GetSchemaName(
+					model,
+					(const char**) schemaName
+				);
+}
+
+//
+//
+static	inline	const char	* GetSchemaName(
+									SdaiModel				model
+								)
+{
+	return	GetSchemaName(
+					model,
+					(const char**) nullptr				//	schemaName
+				);
+}
+
+#ifdef __cplusplus
+	extern "C" {
+#endif
+
+//
+//		engiSetMappingSupport                                 (http://rdf.bg/ifcdoc/CP64/engiSetMappingSupport.html)
+//				SdaiEntity				entity								IN
+//				bool					enable								IN
+//
+//				bool					returns								OUT
+//
+//	...
+//
+bool			DECL STDC	engiSetMappingSupport(
+									SdaiEntity				entity,
+									bool					enable
+								);
+
+//
+//		engiGetMappingSupport                                 (http://rdf.bg/ifcdoc/CP64/engiGetMappingSupport.html)
+//				SdaiEntity				entity								IN
+//
+//				bool					returns								OUT
+//
+//	...
+//
+bool			DECL STDC	engiGetMappingSupport(
+									SdaiEntity				entity
+								);
+
+//
+//  File IO API Calls
+//
 
 //
 //		sdaiCreateModelBN                                       (http://rdf.bg/ifcdoc/CP64/sdaiCreateModelBN.html)
@@ -215,6 +612,38 @@ static	inline	SdaiModel	sdaiCreateModelBN(
 	return	sdaiCreateModelBN(
 					repository,
 					(const char*) fileName,
+					(const char*) schemaName
+				);
+}
+
+//
+//
+static	inline	SdaiModel	sdaiCreateModelBN(
+									const char				* schemaName
+								)
+{
+	SdaiModel	model = sdaiCreateModelBN(
+								0,
+								nullptr,
+								schemaName
+							);
+
+	//	set Preprocessor Version
+	SetSPFFHeaderItem(model, 6, 0, sdaiSTRING, GetLibraryIdentifier());
+
+	//	set File Schema
+	SetSPFFHeaderItem(model, 9, 0, sdaiSTRING, GetSchemaName(model));
+
+	return	model;
+}
+
+//
+//
+static	inline	SdaiModel	sdaiCreateModelBN(
+									char					* schemaName
+								)
+{
+	return	sdaiCreateModelBN(
 					(const char*) schemaName
 				);
 }
@@ -256,6 +685,38 @@ static	inline	SdaiModel	sdaiCreateModelBNUnicode(
 	return	sdaiCreateModelBNUnicode(
 					repository,
 					(const wchar_t*) fileName,
+					(const wchar_t*) schemaName
+				);
+}
+
+//
+//
+static	inline	SdaiModel	sdaiCreateModelBNUnicode(
+									const wchar_t			* schemaName
+								)
+{
+	SdaiModel	model = sdaiCreateModelBNUnicode(
+								0,
+								nullptr,
+								schemaName
+							);
+
+	//	set Preprocessor Version
+	SetSPFFHeaderItem(model, 6, 0, sdaiSTRING, GetLibraryIdentifier());
+
+	//	set File Schema
+	SetSPFFHeaderItem(model, 9, 0, sdaiSTRING, GetSchemaName(model));
+
+	return	model;
+}
+
+//
+//
+static	inline	SdaiModel	sdaiCreateModelBNUnicode(
+									wchar_t					* schemaName
+								)
+{
+	return	sdaiCreateModelBNUnicode(
 					(const wchar_t*) schemaName
 				);
 }
@@ -1792,7 +2253,6 @@ SdaiAttr		DECL STDC	engiGetEntityAttributeByIndex(
 //				SdaiEntity				* domainEntity						IN / OUT
 //				SchemaAggr				* aggregationDescriptor				IN / OUT
 //				bool					* optional							IN / OUT
-//				bool					* unique							IN / OUT
 //
 //				void					returns
 //
@@ -1806,8 +2266,7 @@ void			DECL STDC	engiGetAttributeTraits(
 									enum_express_attr_type	* attrType,
 									SdaiEntity				* domainEntity,
 									SchemaAggr				* aggregationDescriptor,
-									bool					* optional,
-									bool					* unique
+									bool					* optional
 								);
 
 #ifdef __cplusplus
@@ -1824,8 +2283,7 @@ static	inline	void	engiGetAttributeTraits(
 								enum_express_attr_type	* attrType,
 								SdaiEntity				* domainEntity,
 								SchemaAggr				* aggregationDescriptor,
-								bool					* optional,
-								bool					* unique
+								bool					* optional
 							)
 {
 	return	engiGetAttributeTraits(
@@ -1836,8 +2294,7 @@ static	inline	void	engiGetAttributeTraits(
 					attrType,
 					domainEntity,
 					aggregationDescriptor,
-					optional,
-					unique
+					optional
 				);
 }
 
@@ -1851,6 +2308,8 @@ static	inline	void	engiGetAttributeTraits(
 //				enum_express_aggr		* aggrType							IN / OUT
 //				int_t					* cardinalityMin					IN / OUT
 //				int_t					* cardinalityMax					IN / OUT
+//				bool					* optional							IN / OUT
+//				bool					* unique							IN / OUT
 //				SchemaAggr				* nextAggregationLevelDescriptor	IN / OUT
 //
 //				void					returns
@@ -1862,295 +2321,14 @@ void			DECL STDC	engiGetAggregation(
 									enum_express_aggr		* aggrType,
 									int_t					* cardinalityMin,
 									int_t					* cardinalityMax,
+									bool					* optional,
+									bool					* unique,
 									SchemaAggr				* nextAggregationLevelDescriptor
 								);
 
 //
-//  Instance Header API Calls
-//
-
-//
-//		SetSPFFHeader                                           (http://rdf.bg/ifcdoc/CP64/SetSPFFHeader.html)
-//				SdaiModel				model								IN
-//				const char				* description						IN
-//				const char				* implementationLevel				IN
-//				const char				* name								IN
-//				const char				* timeStamp							IN
-//				const char				* author							IN
-//				const char				* organization						IN
-//				const char				* preprocessorVersion				IN
-//				const char				* originatingSystem					IN
-//				const char				* authorization						IN
-//				const char				* fileSchema						IN
-//
-//				void					returns
-//
-//	This call is an aggregate of several SetSPFFHeaderItem calls. In several cases the header can be set easily with this call. In case an argument is zero, this argument will not be updated, i.e. it will not be filled with 0.
-//
-void			DECL STDC	SetSPFFHeader(
-									SdaiModel				model,
-									const char				* description,
-									const char				* implementationLevel,
-									const char				* name,
-									const char				* timeStamp,
-									const char				* author,
-									const char				* organization,
-									const char				* preprocessorVersion,
-									const char				* originatingSystem,
-									const char				* authorization,
-									const char				* fileSchema
-								);
-
-#ifdef __cplusplus
-	}
-#endif
-
-//
-//
-static	inline	void	SetSPFFHeader(
-								SdaiModel				model,
-								char					* description,
-								char					* implementationLevel,
-								char					* name,
-								char					* timeStamp,
-								char					* author,
-								char					* organization,
-								char					* preprocessorVersion,
-								char					* originatingSystem,
-								char					* authorization,
-								char					* fileSchema
-							)
-{
-	return	SetSPFFHeader(
-					model,
-					(const char*) description,
-					(const char*) implementationLevel,
-					(const char*) name,
-					(const char*) timeStamp,
-					(const char*) author,
-					(const char*) organization,
-					(const char*) preprocessorVersion,
-					(const char*) originatingSystem,
-					(const char*) authorization,
-					(const char*) fileSchema
-				);
-}
-
-#ifdef __cplusplus
-	extern "C" {
-#endif
-
-//
-//		SetSPFFHeaderItem                                       (http://rdf.bg/ifcdoc/CP64/SetSPFFHeaderItem.html)
-//				SdaiModel				model								IN
-//				int_t					itemIndex							IN
-//				int_t					itemSubIndex						IN
-//				SdaiPrimitiveType		valueType							IN
-//				const void				* value								IN
-//
-//				int_t					returns								OUT
-//
-//	This call can be used to write a specific header item, the source code example is larger to show and explain how this call can be used.
-//
-int_t			DECL STDC	SetSPFFHeaderItem(
-									SdaiModel				model,
-									int_t					itemIndex,
-									int_t					itemSubIndex,
-									SdaiPrimitiveType		valueType,
-									const void				* value
-								);
-
-#ifdef __cplusplus
-	}
-#endif
-
-//
-//
-static	inline	int_t	SetSPFFHeaderItem(
-								SdaiModel				model,
-								int_t					itemIndex,
-								int_t					itemSubIndex,
-								SdaiPrimitiveType		valueType,
-								const char				* value
-							)
-{
-	return	SetSPFFHeaderItem(
-					model,
-					itemIndex,
-					itemSubIndex,
-					valueType,
-					(const void*) value
-				);
-}
-
-//
-//
-static	inline	int_t	SetSPFFHeaderItem(
-								SdaiModel				model,
-								int_t					itemIndex,
-								int_t					itemSubIndex,
-								SdaiPrimitiveType		valueType,
-								char					* value
-							)
-{
-	return	SetSPFFHeaderItem(
-					model,
-					itemIndex,
-					itemSubIndex,
-					valueType,
-					(const void*) value
-				);
-}
-
-//
-//
-static	inline	int_t	SetSPFFHeaderItem(
-								SdaiModel				model,
-								int_t					itemIndex,
-								int_t					itemSubIndex,
-								SdaiPrimitiveType		valueType,
-								const wchar_t			* value
-							)
-{
-	return	SetSPFFHeaderItem(
-					model,
-					itemIndex,
-					itemSubIndex,
-					valueType,
-					(const void*) value
-				);
-}
-
-//
-//
-static	inline	int_t	SetSPFFHeaderItem(
-								SdaiModel				model,
-								int_t					itemIndex,
-								int_t					itemSubIndex,
-								SdaiPrimitiveType		valueType,
-								wchar_t					* value
-							)
-{
-	return	SetSPFFHeaderItem(
-					model,
-					itemIndex,
-					itemSubIndex,
-					valueType,
-					(const void*) value
-				);
-}
-
-#ifdef __cplusplus
-	extern "C" {
-#endif
-
-//
-//		GetSPFFHeaderItem                                       (http://rdf.bg/ifcdoc/CP64/GetSPFFHeaderItem.html)
-//				SdaiModel				model								IN
-//				int_t					itemIndex							IN
-//				int_t					itemSubIndex						IN
-//				SdaiPrimitiveType		valueType							IN
-//				const void				** value							IN / OUT
-//
-//				int_t					returns								OUT
-//
-//	This call can be used to read a specific header item, the source code example is larger to show and explain how this call can be used.
-//
-int_t			DECL STDC	GetSPFFHeaderItem(
-									SdaiModel				model,
-									int_t					itemIndex,
-									int_t					itemSubIndex,
-									SdaiPrimitiveType		valueType,
-									const void				** value
-								);
-
-#ifdef __cplusplus
-	}
-#endif
-
-//
-//
-static	inline	int_t	GetSPFFHeaderItem(
-								SdaiModel				model,
-								int_t					itemIndex,
-								int_t					itemSubIndex,
-								SdaiPrimitiveType		valueType,
-								const char				** value
-							)
-{
-	return	GetSPFFHeaderItem(
-					model,
-					itemIndex,
-					itemSubIndex,
-					valueType,
-					(const void**) value
-				);
-}
-
-//
-//
-static	inline	int_t	GetSPFFHeaderItem(
-								SdaiModel				model,
-								int_t					itemIndex,
-								int_t					itemSubIndex,
-								SdaiPrimitiveType		valueType,
-								char					** value
-							)
-{
-	return	GetSPFFHeaderItem(
-					model,
-					itemIndex,
-					itemSubIndex,
-					valueType,
-					(const void**) value
-				);
-}
-
-//
-//
-static	inline	int_t	GetSPFFHeaderItem(
-								SdaiModel				model,
-								int_t					itemIndex,
-								int_t					itemSubIndex,
-								SdaiPrimitiveType		valueType,
-								const wchar_t			** value
-							)
-{
-	return	GetSPFFHeaderItem(
-					model,
-					itemIndex,
-					itemSubIndex,
-					valueType,
-					(const void**) value
-				);
-}
-
-//
-//
-static	inline	int_t	GetSPFFHeaderItem(
-								SdaiModel				model,
-								int_t					itemIndex,
-								int_t					itemSubIndex,
-								SdaiPrimitiveType		valueType,
-								wchar_t					** value
-							)
-{
-	return	GetSPFFHeaderItem(
-					model,
-					itemIndex,
-					itemSubIndex,
-					valueType,
-					(const void**) value
-				);
-}
-
-//
 //  Instance Reading API Calls
 //
-
-#ifdef __cplusplus
-	extern "C" {
-#endif
 
 //
 //		sdaiGetADBType                                          (http://rdf.bg/ifcdoc/CP64/sdaiGetADBType.html)
@@ -2225,7 +2403,7 @@ const char		DECL * STDC	sdaiGetADBTypePath(
 //							sdaiGetADBValue (ADB, sdaiSTRING, &val);			ifcengine.sdaiGetADBValue (ADB, ifcengine.sdaiSTRING, out val);
 //
 //	sdaiUNICODE				const wchar_t* val;									string val;
-//							sdaiGetADBValue (ADB, sdaiUNICODE, &val);			ifcengine.sdaiGetADBValue (ADB, ifcengine.sdaiSTRING, out val);
+//							sdaiGetADBValue (ADB, sdaiUNICODE, &val);			ifcengine.sdaiGetADBValue (ADB, ifcengine.sdaiUNICODE, out val);
 //
 //	sdaiEXPRESSSTRING		const char* val;									string val;
 //							sdaiGetADBValue (ADB, sdaiEXPRESSSTRING, &val);		ifcengine.sdaiGetADBValue (ADB, ifcengine.sdaiEXPRESSSTRING, out val);
@@ -2234,7 +2412,7 @@ const char		DECL * STDC	sdaiGetADBTypePath(
 //							sdaiGetADBValue (ADB, sdaiINSTANCE, &val);			ifcengine.sdaiGetADBValue (ADB, ifcengine.sdaiINSTANCE, out val);
 //
 //	sdaiAGGR				SdaiAggr aggr;										int_t aggr;
-//							sdaiGetADBValue (ADB, sdaiAGGR, &aggr);				ifcengine.sdaiGetADBValue (ADB, ifcengine.sdaiINSTANCE, out aggr);
+//							sdaiGetADBValue (ADB, sdaiAGGR, &aggr);				ifcengine.sdaiGetADBValue (ADB, ifcengine.sdaiAGGR, out aggr);
 //
 //	sdaiADB					SdaiADB adb = sdaiCreateEmptyADB();					int_t adb = 0;	//	it is important to initialize
 //							sdaiGetADBValue (ADB, sdaiADB, adb);				ifcengine.sdaiGetADBValue (ADB, ifcengine.sdaiADB, out adb);		
@@ -2343,7 +2521,7 @@ void			DECL STDC	sdaiDeleteADB(
 //							sdaiGetAggrByIndex (aggr, index, sdaiSTRING, &val);				ifcengine.sdaiGetAggrByIndex (aggr, index, ifcengine.sdaiSTRING, out val);
 //
 //	sdaiUNICODE				const wchar_t* val;												string val;
-//							sdaiGetAggrByIndex (aggr, index, sdaiUNICODE, &val);			ifcengine.sdaiGetAggrByIndex (aggr, index, ifcengine.sdaiSTRING, out val);
+//							sdaiGetAggrByIndex (aggr, index, sdaiUNICODE, &val);			ifcengine.sdaiGetAggrByIndex (aggr, index, ifcengine.sdaiUNICODE, out val);
 //
 //	sdaiEXPRESSSTRING		const char* val;												string val;
 //							sdaiGetAggrByIndex (aggr, index, sdaiEXPRESSSTRING, &val);		ifcengine.sdaiGetAggrByIndex (aggr, index, ifcengine.sdaiEXPRESSSTRING, out val);
@@ -2352,7 +2530,7 @@ void			DECL STDC	sdaiDeleteADB(
 //							sdaiGetAggrByIndex (aggr, index, sdaiINSTANCE, &val);			ifcengine.sdaiGetAggrByIndex (aggr, index, ifcengine.sdaiINSTANCE, out val);
 //
 //	sdaiAGGR				SdaiAggr aggr;													int_t aggr;
-//							sdaiGetAggrByIndex (aggr, index, sdaiAGGR, &aggr);				ifcengine.sdaiGetAggrByIndex (aggr, index, ifcengine.sdaiINSTANCE, out aggr);
+//							sdaiGetAggrByIndex (aggr, index, sdaiAGGR, &aggr);				ifcengine.sdaiGetAggrByIndex (aggr, index, ifcengine.sdaiAGGR, out aggr);
 //
 //	sdaiADB					SdaiADB adb = sdaiCreateEmptyADB();								int_t adb = 0;	//	it is important to initialize
 //							sdaiGetAggrByIndex (aggr, index, sdaiADB, adb);					ifcengine.sdaiGetAggrByIndex (aggr, index, ifcengine.sdaiADB, out adb);		
@@ -2469,7 +2647,7 @@ void			DECL STDC	engiGetAggrTypex(
 //							sdaiGetAttr (inst, attr, sdaiSTRING, &val);				ifcengine.sdaiGetAttr (inst, attr, ifcengine.sdaiSTRING, out val);
 //
 //	sdaiUNICODE				const wchar_t* val;										string val;
-//							sdaiGetAttr (inst, attr, sdaiUNICODE, &val);			ifcengine.sdaiGetAttr (inst, attr, ifcengine.sdaiSTRING, out val);
+//							sdaiGetAttr (inst, attr, sdaiUNICODE, &val);			ifcengine.sdaiGetAttr (inst, attr, ifcengine.sdaiUNICODE, out val);
 //
 //	sdaiEXPRESSSTRING		const char* val;										string val;
 //							sdaiGetAttr (inst, attr, sdaiEXPRESSSTRING, &val);		ifcengine.sdaiGetAttr (inst, attr, ifcengine.sdaiEXPRESSSTRING, out val);
@@ -2478,7 +2656,7 @@ void			DECL STDC	engiGetAggrTypex(
 //							sdaiGetAttr (inst, attr, sdaiINSTANCE, &val);			ifcengine.sdaiGetAttr (inst, attr, ifcengine.sdaiINSTANCE, out val);
 //
 //	sdaiAGGR				SdaiAggr aggr;											int_t aggr;
-//							sdaiGetAttr (inst, attr, sdaiAGGR, &aggr);				ifcengine.sdaiGetAttr (inst, attr, ifcengine.sdaiINSTANCE, out aggr);
+//							sdaiGetAttr (inst, attr, sdaiAGGR, &aggr);				ifcengine.sdaiGetAttr (inst, attr, ifcengine.sdaiAGGR, out aggr);
 //
 //	sdaiADB					SdaiADB adb = sdaiCreateEmptyADB();						int_t adb = 0;	//	it is important to initialize
 //							sdaiGetAttr (inst, attr, sdaiADB, adb);					ifcengine.sdaiGetAttr (inst, attr, ifcengine.sdaiADB, out adb);		
@@ -2567,7 +2745,7 @@ void			DECL * STDC	sdaiGetAttr(
 //							sdaiGetAttrBN (inst, "attrName", sdaiSTRING, &val);			ifcengine.sdaiGetAttrBN (inst, "attrName", ifcengine.sdaiSTRING, out val);
 //
 //	sdaiUNICODE				const wchar_t* val;											string val;
-//							sdaiGetAttrBN (inst, "attrName", sdaiUNICODE, &val);		ifcengine.sdaiGetAttrBN (inst, "attrName", ifcengine.sdaiSTRING, out val);
+//							sdaiGetAttrBN (inst, "attrName", sdaiUNICODE, &val);		ifcengine.sdaiGetAttrBN (inst, "attrName", ifcengine.sdaiUNICODE, out val);
 //
 //	sdaiEXPRESSSTRING		const char* val;											string val;
 //							sdaiGetAttrBN (inst, "attrName", sdaiEXPRESSSTRING, &val);	ifcengine.sdaiGetAttrBN (inst, "attrName", ifcengine.sdaiEXPRESSSTRING, out val);
@@ -2576,7 +2754,7 @@ void			DECL * STDC	sdaiGetAttr(
 //							sdaiGetAttrBN (inst, "attrName", sdaiINSTANCE, &val);		ifcengine.sdaiGetAttrBN (inst, "attrName", ifcengine.sdaiINSTANCE, out val);
 //
 //	sdaiAGGR				SdaiAggr aggr;												int_t aggr;
-//							sdaiGetAttrBN (inst, "attrName", sdaiAGGR, &aggr);			ifcengine.sdaiGetAttrBN (inst, "attrName", ifcengine.sdaiINSTANCE, out aggr);
+//							sdaiGetAttrBN (inst, "attrName", sdaiAGGR, &aggr);			ifcengine.sdaiGetAttrBN (inst, "attrName", ifcengine.sdaiAGGR, out aggr);
 //
 //	sdaiADB					SdaiADB adb = sdaiCreateEmptyADB();							int_t adb = 0;	//	it is important to initialize
 //							sdaiGetAttrBN (inst, "attrName", sdaiADB, adb);				ifcengine.sdaiGetAttrBN (inst, "attrName", ifcengine.sdaiADB, out adb);		
@@ -2810,7 +2988,7 @@ static	inline	SdaiInstance	sdaiGetInstanceAttrBN(
 //				SdaiAggr				returns								OUT
 //
 //	This function is a specific version of sdaiGetAttrBN(..), where the valueType is sdaiAGGR.
-//	This call can be usefull in case of specific programming languages that cannot map towards sdaiGetAttrBN(..) directly,
+//	This call can be useful in case of specific programming languages that cannot map towards sdaiGetAttrBN(..) directly,
 //	this function is useless for languages as C, C++, C#, JAVA, VB.NET, Delphi and similar as they are able to map sdaiGetAttrBN(..) directly.
 //
 //	Technically sdaiGetAggregationAttrBN will transform into the following call
@@ -3415,7 +3593,7 @@ static	inline	int_t	sdaiFindInstanceUsedInBN(
 //							sdaiPrepend (aggr, sdaiSTRING, val);						ifcengine.sdaiPrepend (aggr, ifcengine.sdaiSTRING, val);
 //
 //	sdaiUNICODE				const wchar_t* val = L"Any Unicode String";					string val = "Any Unicode String";
-//							sdaiPrepend (aggr, sdaiUNICODE, val);						ifcengine.sdaiPrepend (aggr, ifcengine.sdaiSTRING, val);
+//							sdaiPrepend (aggr, sdaiUNICODE, val);						ifcengine.sdaiPrepend (aggr, ifcengine.sdaiUNICODE, val);
 //
 //	sdaiEXPRESSSTRING		const char* val = "EXPRESS format, i.e. \\X2\\00FC\\X0\\";	string val = "EXPRESS format, i.e. \\X2\\00FC\\X0\\";
 //							sdaiPrepend (aggr, sdaiEXPRESSSTRING, val);					ifcengine.sdaiPrepend (aggr, ifcengine.sdaiEXPRESSSTRING, val);
@@ -3525,7 +3703,7 @@ static	inline	void	sdaiPrepend(
 //							sdaiAppend (aggr, sdaiSTRING, val);							ifcengine.sdaiAppend (aggr, ifcengine.sdaiSTRING, val);
 //
 //	sdaiUNICODE				const wchar_t* val = L"Any Unicode String";					string val = "Any Unicode String";
-//							sdaiAppend (aggr, sdaiUNICODE, val);						ifcengine.sdaiAppend (aggr, ifcengine.sdaiSTRING, val);
+//							sdaiAppend (aggr, sdaiUNICODE, val);						ifcengine.sdaiAppend (aggr, ifcengine.sdaiUNICODE, val);
 //
 //	sdaiEXPRESSSTRING		const char* val = "EXPRESS format, i.e. \\X2\\00FC\\X0\\";	string val = "EXPRESS format, i.e. \\X2\\00FC\\X0\\";
 //							sdaiAppend (aggr, sdaiEXPRESSSTRING, val);					ifcengine.sdaiAppend (aggr, ifcengine.sdaiEXPRESSSTRING, val);
@@ -3635,7 +3813,7 @@ static	inline	void	sdaiAppend(
 //							sdaiAdd (aggr, sdaiSTRING, val);							ifcengine.sdaiAdd (aggr, ifcengine.sdaiSTRING, val);
 //
 //	sdaiUNICODE				const wchar_t* val = L"Any Unicode String";					string val = "Any Unicode String";
-//							sdaiAdd (aggr, sdaiUNICODE, val);							ifcengine.sdaiAdd (aggr, ifcengine.sdaiSTRING, val);
+//							sdaiAdd (aggr, sdaiUNICODE, val);							ifcengine.sdaiAdd (aggr, ifcengine.sdaiUNICODE, val);
 //
 //	sdaiEXPRESSSTRING		const char* val = "EXPRESS format, i.e. \\X2\\00FC\\X0\\";	string val = "EXPRESS format, i.e. \\X2\\00FC\\X0\\";
 //							sdaiAdd (aggr, sdaiEXPRESSSTRING, val);						ifcengine.sdaiAdd (aggr, ifcengine.sdaiEXPRESSSTRING, val);
@@ -3746,7 +3924,7 @@ static	inline	void	sdaiAdd(
 //							sdaiInsertByIndex (aggr, sdaiSTRING, val);					ifcengine.sdaiInsertByIndex (aggr, ifcengine.sdaiSTRING, val);
 //
 //	sdaiUNICODE				const wchar_t* val = L"Any Unicode String";					string val = "Any Unicode String";
-//							sdaiInsertByIndex (aggr, sdaiUNICODE, val);					ifcengine.sdaiInsertByIndex (aggr, ifcengine.sdaiSTRING, val);
+//							sdaiInsertByIndex (aggr, sdaiUNICODE, val);					ifcengine.sdaiInsertByIndex (aggr, ifcengine.sdaiUNICODE, val);
 //
 //	sdaiEXPRESSSTRING		const char* val = "EXPRESS format, i.e. \\X2\\00FC\\X0\\";	string val = "EXPRESS format, i.e. \\X2\\00FC\\X0\\";
 //							sdaiInsertByIndex (aggr, sdaiEXPRESSSTRING, val);			ifcengine.sdaiInsertByIndex (aggr, ifcengine.sdaiEXPRESSSTRING, val);
@@ -3858,7 +4036,7 @@ static	inline	void	sdaiInsertByIndex(
 //							SdaiADB adb = sdaiCreateADB (sdaiSTRING, val);				int_t adb = ifcengine.sdaiCreateADB (ifcengine.sdaiSTRING, val);
 //
 //	sdaiUNICODE				const wchar_t* val = L"Any Unicode String";					string val = "Any Unicode String";
-//							SdaiADB adb = sdaiCreateADB (sdaiUNICODE, val);				int_t adb = ifcengine.sdaiCreateADB (ifcengine.sdaiSTRING, val);
+//							SdaiADB adb = sdaiCreateADB (sdaiUNICODE, val);				int_t adb = ifcengine.sdaiCreateADB (ifcengine.sdaiUNICODE, val);
 //
 //	sdaiEXPRESSSTRING		const char* val = "EXPRESS format, i.e. \\X2\\00FC\\X0\\";	string val = "EXPRESS format, i.e. \\X2\\00FC\\X0\\";
 //							SdaiADB adb = sdaiCreateADB (sdaiEXPRESSSTRING, val);		int_t adb = ifcengine.sdaiCreateADB (ifcengine.sdaiEXPRESSSTRING, val);
@@ -3931,7 +4109,7 @@ static	inline	SdaiADB	sdaiCreateADB(
 //	This call creates an aggregation.
 //	The instance has to be present,
 //	the attribute argument can be empty (0) in case the aggregation is an nested aggregation for this specific instance,
-//	prefered use would be use of sdaiCreateNestedAggr in such a case.
+//	preferred use would be use of sdaiCreateNestedAggr in such a case.
 //
 SdaiAggr		DECL STDC	sdaiCreateAggr(
 									SdaiInstance			instance,
@@ -4175,7 +4353,7 @@ static	inline	void	sdaiPutADBTypePath(
 //							sdaiPutAttr (inst, attr, sdaiSTRING, val);					ifcengine.sdaiPutAttr (inst, attr, ifcengine.sdaiSTRING, val);
 //
 //	sdaiUNICODE				const wchar_t* val = L"Any Unicode String";					string val = "Any Unicode String";
-//							sdaiPutAttr (inst, attr, sdaiUNICODE, val);					ifcengine.sdaiPutAttr (inst, attr, ifcengine.sdaiSTRING, val);
+//							sdaiPutAttr (inst, attr, sdaiUNICODE, val);					ifcengine.sdaiPutAttr (inst, attr, ifcengine.sdaiUNICODE, val);
 //
 //	sdaiEXPRESSSTRING		const char* val = "EXPRESS format, i.e. \\X2\\00FC\\X0\\";	string val = "EXPRESS format, i.e. \\X2\\00FC\\X0\\";
 //							sdaiPutAttr (inst, attr, sdaiEXPRESSSTRING, val);			ifcengine.sdaiPutAttr (inst, attr, ifcengine.sdaiEXPRESSSTRING, val);
@@ -4289,7 +4467,7 @@ static	inline	void	sdaiPutAttr(
 //							sdaiPutAttrBN (inst, "attrName", sdaiSTRING, val);			ifcengine.sdaiPutAttrBN (inst, "attrName", ifcengine.sdaiSTRING, val);
 //
 //	sdaiUNICODE				const wchar_t* val = L"Any Unicode String";					string val = "Any Unicode String";
-//							sdaiPutAttrBN (inst, "attrName", sdaiUNICODE, val);			ifcengine.sdaiPutAttrBN (inst, "attrName", ifcengine.sdaiSTRING, val);
+//							sdaiPutAttrBN (inst, "attrName", sdaiUNICODE, val);			ifcengine.sdaiPutAttrBN (inst, "attrName", ifcengine.sdaiUNICODE, val);
 //
 //	sdaiEXPRESSSTRING		const char* val = "EXPRESS format, i.e. \\X2\\00FC\\X0\\";	string val = "EXPRESS format, i.e. \\X2\\00FC\\X0\\";
 //							sdaiPutAttrBN (inst, "attrName", sdaiEXPRESSSTRING, val);	ifcengine.sdaiPutAttrBN (inst, "attrName", ifcengine.sdaiEXPRESSSTRING, val);
@@ -5200,7 +5378,7 @@ static	inline	const char	* xxxxGetAttrNameByIndex(
 //
 //				SdaiInstance			returns								OUT
 //
-//	This function interate's over all available instances loaded in memory, it is the fastest way to find all instances.
+//	This function iterates over all available instances loaded in memory, it is the fastest way to find all instances.
 //	Argument entity and entityName are both optional and if non-zero are filled with respectively the entity handle and entity name as char array.
 //
 SdaiInstance	DECL STDC	iterateOverInstances(
@@ -5306,7 +5484,7 @@ void			DECL * STDC	sdaiGetAggrByIterator(
 //							sdaiPutAggrByIterator (iter, sdaiSTRING, val);				ifcengine.sdaiPutAggrByIterator (iter, ifcengine.sdaiSTRING, val);
 //
 //	sdaiUNICODE				const wchar_t* val = L"Any Unicode String";					string val = "Any Unicode String";
-//							sdaiPutAggrByIterator (iter, sdaiUNICODE, val);				ifcengine.sdaiPutAggrByIterator (iter, ifcengine.sdaiSTRING, val);
+//							sdaiPutAggrByIterator (iter, sdaiUNICODE, val);				ifcengine.sdaiPutAggrByIterator (iter, ifcengine.sdaiUNICODE, val);
 //
 //	sdaiEXPRESSSTRING		const char* val = "EXPRESS format, i.e. \\X2\\00FC\\X0\\";	string val = "EXPRESS format, i.e. \\X2\\00FC\\X0\\";
 //							sdaiPutAggrByIterator (iter, sdaiEXPRESSSTRING, val);		ifcengine.sdaiPutAggrByIterator (iter, ifcengine.sdaiEXPRESSSTRING, val);
@@ -6348,22 +6526,23 @@ int_t			DECL STDC	GetSPFFHeaderItemUnicode(
 //	Allows to set a count limit, setting to 0 means no count limit.
 //	Allows to hide redundant issues.
 //
-//		bit 0:	(__NO_OF_ARGUMENTS)					number of arguments
-//		bit 1:	(__ARGUMENT_EXPRESS_TYPE)			argument value is correct entity, defined type or enumeration value
-//		bit 2:	(__ARGUMENT_PRIM_TYPE)				argument value has correct primitive type
-//		bit 3:	(__REQUIRED_ARGUMENTS)				non-optional arguments values are provided
-//		bit 4:	(__ARRGEGATION_EXPECTED)			aggregation is provided when expected
-//		bit 5:	(__AGGREGATION_NOT_EXPECTED)		aggregation is not used when not expected
-//		bit 6:	(__AGGREGATION_SIZE)				aggregation size
-//		bit 7:	(__AGGREGATION_UNIQUE)				elements in aggregations are unique when required
-//		bit 8:	(__COMPLEX_INSTANCE)				complex instances contains full parent chains
-//		bit 9:	(__REFERENCE_EXISTS)				referenced instance exists
-//		bit 10:	(__ABSTRACT_ENTITY)					abstract entity should not instantiate
-//		bit 11:	(__WHERE_RULE)						where-rule check
-//		bit 12:	(__UNIQUE_RULE)						unique-rule check
-//		bit 13:	(__STAR_USAGE)						* is used only for derived arguments
-//		bit 14:	(__CALL_ARGUMENT)					validateModel/validateInstance function argument should be model/instance
-//		bit 15:	(__INTERNAL_ERROR)					unspecified error
+//		bit 0:	(__KNOWN_ENTITY)					entity is defined in the schema
+//		bit 1:	(__NO_OF_ARGUMENTS)					number of arguments
+//		bit 2:	(__ARGUMENT_EXPRESS_TYPE)			argument value is correct entity, defined type or enumeration value
+//		bit 3:	(__ARGUMENT_PRIM_TYPE)				argument value has correct primitive type
+//		bit 4:	(__REQUIRED_ARGUMENTS)				non-optional arguments values are provided
+//		bit 5:	(__ARRGEGATION_EXPECTED)			aggregation is provided when expected
+//		bit 6:	(__AGGREGATION_NOT_EXPECTED)		aggregation is not used when not expected
+//		bit 7:	(__AGGREGATION_SIZE)				aggregation size
+//		bit 8:	(__AGGREGATION_UNIQUE)				elements in aggregations are unique when required
+//		bit 9:	(__COMPLEX_INSTANCE)				complex instances contains full parent chains
+//		bit 10:	(__REFERENCE_EXISTS)				referenced instance exists
+//		bit 11:	(__ABSTRACT_ENTITY)					abstract entity should not instantiate
+//		bit 12:	(__WHERE_RULE)						where-rule check
+//		bit 13:	(__UNIQUE_RULE)						unique-rule check
+//		bit 14:	(__STAR_USAGE)						* is used only for derived arguments
+//		bit 15:	(__CALL_ARGUMENT)					validateModel / validateInstance function argument should be model / instance
+//		bit 63:	(__INTERNAL_ERROR)					unspecified error
 //
 void			DECL STDC	validateSetOptions(
 									int_t					timeLimitSeconds,
@@ -6387,22 +6566,23 @@ void			DECL STDC	validateSetOptions(
 //	Allows to get hide redundant issues, input can be left to NULL if not relevant.
 //	Return value is the issueTypes enabled according to the mask given.
 //
-//		bit 0:	(__NO_OF_ARGUMENTS)					number of arguments
-//		bit 1:	(__ARGUMENT_EXPRESS_TYPE)			argument value is correct entity, defined type or enumeration value
-//		bit 2:	(__ARGUMENT_PRIM_TYPE)				argument value has correct primitive type
-//		bit 3:	(__REQUIRED_ARGUMENTS)				non-optional arguments values are provided
-//		bit 4:	(__ARRGEGATION_EXPECTED)			aggregation is provided when expected
-//		bit 5:	(__AGGREGATION_NOT_EXPECTED)		aggregation is not used when not expected
-//		bit 6:	(__AGGREGATION_SIZE)				aggregation size
-//		bit 7:	(__AGGREGATION_UNIQUE)				elements in aggregations are unique when required
-//		bit 8:	(__COMPLEX_INSTANCE)				complex instances contains full parent chains
-//		bit 9:	(__REFERENCE_EXISTS)				referenced instance exists
-//		bit 10:	(__ABSTRACT_ENTITY)					abstract entity should not instantiate
-//		bit 11:	(__WHERE_RULE)						where-rule check
-//		bit 12:	(__UNIQUE_RULE)						unique-rule check
-//		bit 13:	(__STAR_USAGE)						* is used only for derived arguments
-//		bit 14:	(__CALL_ARGUMENT)					validateModel/validateInstance function argument should be model/instance
-//		bit 15:	(__INTERNAL_ERROR)					unspecified error
+//		bit 0:	(__KNOWN_ENTITY)					entity is defined in the schema
+//		bit 1:	(__NO_OF_ARGUMENTS)					number of arguments
+//		bit 2:	(__ARGUMENT_EXPRESS_TYPE)			argument value is correct entity, defined type or enumeration value
+//		bit 3:	(__ARGUMENT_PRIM_TYPE)				argument value has correct primitive type
+//		bit 4:	(__REQUIRED_ARGUMENTS)				non-optional arguments values are provided
+//		bit 5:	(__ARRGEGATION_EXPECTED)			aggregation is provided when expected
+//		bit 6:	(__AGGREGATION_NOT_EXPECTED)		aggregation is not used when not expected
+//		bit 7:	(__AGGREGATION_SIZE)				aggregation size
+//		bit 8:	(__AGGREGATION_UNIQUE)				elements in aggregations are unique when required
+//		bit 9:	(__COMPLEX_INSTANCE)				complex instances contains full parent chains
+//		bit 10:	(__REFERENCE_EXISTS)				referenced instance exists
+//		bit 11:	(__ABSTRACT_ENTITY)					abstract entity should not instantiate
+//		bit 12:	(__WHERE_RULE)						where-rule check
+//		bit 13:	(__UNIQUE_RULE)						unique-rule check
+//		bit 14:	(__STAR_USAGE)						* is used only for derived arguments
+//		bit 15:	(__CALL_ARGUMENT)					validateModel / validateInstance function argument should be model / instance
+//		bit 63:	(__INTERNAL_ERROR)					unspecified error
 //
 uint64_t		DECL STDC	validateGetOptions(
 									int_t					* timeLimitSeconds,
@@ -6499,22 +6679,23 @@ enum_validation_status	DECL STDC	validateGetStatus(
 //
 //	Return value is the issueType (enum_validation_type):
 //
-//		bit 0:	(__NO_OF_ARGUMENTS)					number of arguments
-//		bit 1:	(__ARGUMENT_EXPRESS_TYPE)			argument value is correct entity, defined type or enumeration value
-//		bit 2:	(__ARGUMENT_PRIM_TYPE)				argument value has correct primitive type
-//		bit 3:	(__REQUIRED_ARGUMENTS)				non-optional arguments values are provided
-//		bit 4:	(__ARRGEGATION_EXPECTED)			aggregation is provided when expected
-//		bit 5:	(__AGGREGATION_NOT_EXPECTED)		aggregation is not used when not expected
-//		bit 6:	(__AGGREGATION_SIZE)				aggregation size
-//		bit 7:	(__AGGREGATION_UNIQUE)				elements in aggregations are unique when required
-//		bit 8:	(__COMPLEX_INSTANCE)				complex instances contains full parent chains
-//		bit 9:	(__REFERENCE_EXISTS)				referenced instance exists
-//		bit 10:	(__ABSTRACT_ENTITY)					abstract entity should not instantiate
-//		bit 11:	(__WHERE_RULE)						where-rule check
-//		bit 12:	(__UNIQUE_RULE)						unique-rule check
-//		bit 13:	(__STAR_USAGE)						* is used only for derived arguments
-//		bit 14:	(__CALL_ARGUMENT)					validateModel/validateInstance function argument should be model/instance
-//		bit 15:	(__INTERNAL_ERROR)					unspecified error
+//		bit 0:	(__KNOWN_ENTITY)					entity is defined in the schema
+//		bit 1:	(__NO_OF_ARGUMENTS)					number of arguments
+//		bit 2:	(__ARGUMENT_EXPRESS_TYPE)			argument value is correct entity, defined type or enumeration value
+//		bit 3:	(__ARGUMENT_PRIM_TYPE)				argument value has correct primitive type
+//		bit 4:	(__REQUIRED_ARGUMENTS)				non-optional arguments values are provided
+//		bit 5:	(__ARRGEGATION_EXPECTED)			aggregation is provided when expected
+//		bit 6:	(__AGGREGATION_NOT_EXPECTED)		aggregation is not used when not expected
+//		bit 7:	(__AGGREGATION_SIZE)				aggregation size
+//		bit 8:	(__AGGREGATION_UNIQUE)				elements in aggregations are unique when required
+//		bit 9:	(__COMPLEX_INSTANCE)				complex instances contains full parent chains
+//		bit 10:	(__REFERENCE_EXISTS)				referenced instance exists
+//		bit 11:	(__ABSTRACT_ENTITY)					abstract entity should not instantiate
+//		bit 12:	(__WHERE_RULE)						where-rule check
+//		bit 13:	(__UNIQUE_RULE)						unique-rule check
+//		bit 14:	(__STAR_USAGE)						* is used only for derived arguments
+//		bit 15:	(__CALL_ARGUMENT)					validateModel / validateInstance function argument should be model / instance
+//		bit 63:	(__INTERNAL_ERROR)					unspecified error
 //
 enum_validation_type	DECL STDC	validateGetIssueType(
 									ValidationIssue			issue
@@ -6780,7 +6961,7 @@ void			DECL STDC	createGeometryConversion(
 //
 //				void					returns
 //
-//	This call is deprecated, please use call ... .
+//	This call is deprecated, please use call owlBuildInstance.
 //
 void			DECL STDC	convertInstance(
 									SdaiInstance			instance
