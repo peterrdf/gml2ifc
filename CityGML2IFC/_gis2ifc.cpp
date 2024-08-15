@@ -1932,23 +1932,6 @@ void _citygml_exporter::createBuildings(SdaiInstance iSiteInstance, SdaiInstance
 				}
 			}
 		} // if (GetInstanceInverseReferencesByIterator(iInstance, 0) == 0)
-		else
-		{
-			/*Patch for GML*/
-			if (isCadastralParcelClass(iInstanceClass))
-			{
-				if (m_mapBuildings.find(iInstance) == m_mapBuildings.end())
-				{
-					m_mapBuildings[iInstance] = vector<OwlInstance>();
-
-					searchForBuildingElements(iInstance, iInstance);
-				}
-				else
-				{
-					assert(false); // Internal error!
-				}
-			}
-		}
 
 		iInstance = GetInstancesByIterator(getSite()->getOwlModel(), iInstance);
 	} // while (iInstance != 0)
@@ -3965,7 +3948,8 @@ bool _citygml_exporter::isFeatureClass(OwlInstance iInstanceClass) const
 		isTrafficAreaClass(iInstanceClass) ||
 		isFurnitureObjectClass(iInstanceClass) ||
 		isReliefObjectClass(iInstanceClass) ||
-		isLandUseClass(iInstanceClass))
+		isLandUseClass(iInstanceClass) ||
+		isCadastralParcelClass(iInstanceClass))
 	{
 		return true;
 	}
