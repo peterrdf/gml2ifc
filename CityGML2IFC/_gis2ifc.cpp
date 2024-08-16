@@ -1,10 +1,11 @@
 #include "pch.h"
 #include "_gis2ifc.h"
 
+#include <float.h>
 #include <locale>
 #include <codecvt>
 
-// ************************************************************************************************
+#ifdef _WINDOWS
 static wstring utf8_to_wstring(const char* szInput)
 {
 	assert(szInput != nullptr);
@@ -12,13 +13,13 @@ static wstring utf8_to_wstring(const char* szInput)
 	return wstring_convert<codecvt_utf8_utf16<wchar_t>>().from_bytes(szInput);
 }
 
-// ************************************************************************************************
 static string wstring_to_utf8(const wchar_t* szInput)
 {
 	assert(szInput != nullptr);
 
 	return wstring_convert<codecvt_utf8_utf16<wchar_t>>().to_bytes(szInput);
 }
+#endif // _WINDOWS
 
 // ************************************************************************************************
 _gis2ifc::_gis2ifc(const wstring& strRootFolder, _log_callback pLogCallback)
