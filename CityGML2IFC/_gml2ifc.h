@@ -110,11 +110,15 @@ public: // Methods
 	virtual ~_gml2ifc_exporter();
 
 	// pre-processing
-	bool retrieveSRSData(const wstring& strInputFile);
+	void retrieveSRSData(const wstring& strInputFile);
 
 	// export
 	void execute(const wstring& strInputFile, const wstring& strOuputFile);
 	void execute(unsigned char* szData, size_t iSize, const wstring& strOuputFile);
+
+	// SRS
+	void toWGS84Async(int iCRS, float fX, float fY, float fZ);
+	const char* getWGS84LatLong(int iCRS, float fX, float fY, float fZ);
 
 	// Log
 	static string dateTimeStamp();
@@ -129,7 +133,7 @@ public: // Methods
 private: // Methods
 
 	void setFormatSettings(OwlModel iOwlModel);
-	bool retrieveSRSDataCore(OwlInstance iRootInstance);
+	void retrieveSRSDataCore(OwlInstance iRootInstance);
 	void executeCore(OwlInstance iRootInstance, const wstring& strOuputFile);	
 };
 
@@ -162,7 +166,7 @@ public: // Methods
 	virtual ~_exporter_base();
 
 	// pre-processing
-	virtual bool retrieveSRSData(OwlInstance iRootInstance) { return false; }
+	virtual void retrieveSRSData(OwlInstance iRootInstance) {}
 
 	// export
 	void execute(OwlInstance iRootInstance, const wstring& strOuputFile);
@@ -273,6 +277,7 @@ protected: // Methods
 	/* CRS */
 	SdaiInstance buildMapConversion(OwlInstance iSourceCRSInstance, OwlInstance iTargetCRSInstance);
 	SdaiInstance buildProjectedCRS(const string& strEPSG);
+	string getEPSGCode(const wstring& strSrsName);
 	string getEPSG(const wstring& strSrsName);
 
 	/* Style */
@@ -311,6 +316,7 @@ protected: // Methods
 	const wchar_t* getStringAttributeValue(OwlInstance iInstance, const string& strAttributeName) const;
 	OwlInstance* getObjectProperty(OwlInstance iInstance, const string& strPropertyName, int64_t& iInstancesCount) const;
 	bool hasObjectProperty(OwlInstance iInstance, const string& strPropertyName);
+	void getPosValues(const wstring& strContent, vector<double>& vecValues) const;
 };
 
 // ************************************************************************************************
@@ -386,7 +392,9 @@ private: // Members
 public: // Methods
 
 	_citygml_exporter(_gml2ifc_exporter* pSite);
-	virtual ~_citygml_exporter();	
+	virtual ~_citygml_exporter();
+
+	virtual void retrieveSRSData(OwlInstance iRootInstance) override;
 
 protected:  // Methods	
 
