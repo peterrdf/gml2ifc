@@ -626,29 +626,30 @@ SdaiInstance _exporter_base::buildSiteInstance(
 	iSiteInstancePlacement = buildLocalPlacementInstance(pMatrix, 0);
 	assert(iSiteInstancePlacement != 0);
 
-	sdaiPutAttrBN(iSiteInstance, "ObjectPlacement", sdaiINSTANCE, (void*)iSiteInstancePlacement);
-	sdaiPutAttrBN(iSiteInstance, "CompositionType", sdaiENUM, "ELEMENT");
+	// #todo!!!
+	//sdaiPutAttrBN(iSiteInstance, "ObjectPlacement", sdaiINSTANCE, (void*)iSiteInstancePlacement);
+	//sdaiPutAttrBN(iSiteInstance, "CompositionType", sdaiENUM, "ELEMENT");
 
-	SdaiAggr pRefLatitude = sdaiCreateAggrBN(iSiteInstance, "RefLatitude");
-	assert(pRefLatitude != nullptr);
+	//SdaiAggr pRefLatitude = sdaiCreateAggrBN(iSiteInstance, "RefLatitude");
+	//assert(pRefLatitude != nullptr);
 
-	int_t refLat_x = 24, refLat_y = 28, refLat_z = 0; //#tbd
-	sdaiAppend(pRefLatitude, sdaiINTEGER, &refLat_x);
-	sdaiAppend(pRefLatitude, sdaiINTEGER, &refLat_y);
-	sdaiAppend(pRefLatitude, sdaiINTEGER, &refLat_z);
-	sdaiAppend(pRefLatitude, sdaiINTEGER, &refLat_z);
+	//int_t refLat_x = 24, refLat_y = 28, refLat_z = 0; //#tbd
+	//sdaiAppend(pRefLatitude, sdaiINTEGER, &refLat_x);
+	//sdaiAppend(pRefLatitude, sdaiINTEGER, &refLat_y);
+	//sdaiAppend(pRefLatitude, sdaiINTEGER, &refLat_z);
+	//sdaiAppend(pRefLatitude, sdaiINTEGER, &refLat_z);
 
-	SdaiAggr pRefLongitude = sdaiCreateAggrBN(iSiteInstance, "RefLongitude");
-	assert(pRefLongitude != nullptr);
+	//SdaiAggr pRefLongitude = sdaiCreateAggrBN(iSiteInstance, "RefLongitude");
+	//assert(pRefLongitude != nullptr);
 
-	int_t refLong_x = 54, refLong_y = 25, refLong_z = 0; //#tbd
-	sdaiAppend(pRefLongitude, sdaiINTEGER, &refLong_x);
-	sdaiAppend(pRefLongitude, sdaiINTEGER, &refLong_y);
-	sdaiAppend(pRefLongitude, sdaiINTEGER, &refLong_z);
-	sdaiAppend(pRefLongitude, sdaiINTEGER, &refLong_z);
+	//int_t refLong_x = 54, refLong_y = 25, refLong_z = 0; //#tbd
+	//sdaiAppend(pRefLongitude, sdaiINTEGER, &refLong_x);
+	//sdaiAppend(pRefLongitude, sdaiINTEGER, &refLong_y);
+	//sdaiAppend(pRefLongitude, sdaiINTEGER, &refLong_z);
+	//sdaiAppend(pRefLongitude, sdaiINTEGER, &refLong_z);
 
-	double dRefElevation = 10;  //#tbd
-	sdaiPutAttrBN(iSiteInstance, "RefElevation", sdaiREAL, &dRefElevation);
+	//double dRefElevation = 10;  //#tbd
+	//sdaiPutAttrBN(iSiteInstance, "RefElevation", sdaiREAL, &dRefElevation);
 
 	return iSiteInstance;
 }
