@@ -1574,28 +1574,29 @@ const wchar_t* _exporter_base::getStringAttributeValue(OwlInstance iInstance, co
 	assert(iInstance != 0);
 	assert(!strAttributeName.empty());
 
-	int64_t iPropertyInstance = GetInstancePropertyByIterator(iInstance, 0);
-	while (iPropertyInstance != 0)
-	{
-		char* szPropertyName = nullptr;
-		GetNameOfProperty(iPropertyInstance, &szPropertyName);
+	// #todo!!!
+	//int64_t iPropertyInstance = GetInstancePropertyByIterator(iInstance, 0);
+	//while (iPropertyInstance != 0)
+	//{
+	//	char* szPropertyName = nullptr;
+	//	GetNameOfProperty(iPropertyInstance, &szPropertyName);
 
-		string strPropertyName = szPropertyName;
-		if (strPropertyName == "attr:str:" + strAttributeName)
-		{
-			assert(GetPropertyType(iPropertyInstance) == DATATYPEPROPERTY_TYPE_WCHAR_T_ARRAY);
+	//	string strPropertyName = szPropertyName;
+	//	if (strPropertyName == "attr:str:" + strAttributeName)
+	//	{
+	//		assert(GetPropertyType(iPropertyInstance) == DATATYPEPROPERTY_TYPE_WCHAR_T_ARRAY);
 
-			wchar_t** szValue = nullptr;
-			int64_t iValuesCount = 0;
-			GetDatatypeProperty(iInstance, iPropertyInstance, (void**)&szValue, &iValuesCount);
+	//		wchar_t** szValue = nullptr;
+	//		int64_t iValuesCount = 0;
+	//		GetDatatypeProperty(iInstance, iPropertyInstance, (void**)&szValue, &iValuesCount);
 
-			assert(iValuesCount == 1);
+	//		assert(iValuesCount == 1);
 
-			return szValue[0];
-		} // if (strPropertyName == ...
+	//		return szValue[0];
+	//	} // if (strPropertyName == ...
 
-		iPropertyInstance = GetInstancePropertyByIterator(iInstance, iPropertyInstance);
-	} // while (iPropertyInstance != 0)
+	//	iPropertyInstance = GetInstancePropertyByIterator(iInstance, iPropertyInstance);
+	//} // while (iPropertyInstance != 0)
 
 	return nullptr;
 }
