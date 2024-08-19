@@ -8,7 +8,7 @@
 #include "CityGML2IFCDlg.h"
 #include "afxdialogex.h"
 
-#include "_gis2ifc.h"
+#include "_gml2ifc.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

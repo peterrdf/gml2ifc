@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "_gis2ifc.h"
+#include "_gml2ifc.h"
 
 #include <float.h>
 #include <locale>
