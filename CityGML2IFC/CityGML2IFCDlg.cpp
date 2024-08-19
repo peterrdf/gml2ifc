@@ -91,7 +91,7 @@ void CCityGML2IFCDlg::ExportFile(const wstring& strInputFile)
 	wstring strOutputFile = strInputFile;
 	strOutputFile += L".ifc";
 
-	_gis2ifc exporter(m_strRootFolder, LogCallbackImpl);
+	_gml2ifc_exporter exporter(m_strRootFolder, LogCallbackImpl);
 	exporter.execute(strInputFile, strOutputFile);
 }
 

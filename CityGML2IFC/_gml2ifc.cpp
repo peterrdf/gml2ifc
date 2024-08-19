@@ -22,7 +22,7 @@ static string wstring_to_utf8(const wchar_t* szInput)
 #endif // _WINDOWS
 
 // ************************************************************************************************
-_gis2ifc::_gis2ifc(const wstring& strRootFolder, _log_callback pLogCallback)
+_gml2ifc_exporter::_gml2ifc_exporter(const wstring& strRootFolder, _log_callback pLogCallback)
 	: m_strRootFolder(strRootFolder)
 	, m_pLogCallback(pLogCallback)
 	, m_iOwlModel(0)
@@ -33,7 +33,7 @@ _gis2ifc::_gis2ifc(const wstring& strRootFolder, _log_callback pLogCallback)
 	SetGISOptionsW(strRootFolder.c_str(), true, m_pLogCallback);
 }
 
-/*virtual*/ _gis2ifc::~_gis2ifc()
+/*virtual*/ _gml2ifc_exporter::~_gml2ifc_exporter()
 {
 	if (m_iOwlModel != 0)
 	{
@@ -42,7 +42,7 @@ _gis2ifc::_gis2ifc(const wstring& strRootFolder, _log_callback pLogCallback)
 	}
 }
 
-void _gis2ifc::execute(const wstring& strInputFile, const wstring& strOuputFile)
+void _gml2ifc_exporter::execute(const wstring& strInputFile, const wstring& strOuputFile)
 {
 	assert(!strInputFile.empty());
 	assert(!strOuputFile.empty());
@@ -70,7 +70,7 @@ void _gis2ifc::execute(const wstring& strInputFile, const wstring& strOuputFile)
 	}
 }
 
-void _gis2ifc::execute(unsigned char* szData, size_t iSize, const wstring& strOuputFile)
+void _gml2ifc_exporter::execute(unsigned char* szData, size_t iSize, const wstring& strOuputFile)
 {
 	assert(szData != nullptr);
 	assert(iSize > 0);
@@ -99,7 +99,7 @@ void _gis2ifc::execute(unsigned char* szData, size_t iSize, const wstring& strOu
 	}
 }
 
-/*static*/ string _gis2ifc::dateTimeStamp()
+/*static*/ string _gml2ifc_exporter::dateTimeStamp()
 {
 	auto timePointNow = chrono::system_clock::now();
 	auto timeNow = chrono::system_clock::to_time_t(timePointNow);
@@ -112,7 +112,7 @@ void _gis2ifc::execute(unsigned char* szData, size_t iSize, const wstring& strOu
 	return ss.str();
 }
 
-/*static*/ string _gis2ifc::addDateTimeStamp(const string& strInput)
+/*static*/ string _gml2ifc_exporter::addDateTimeStamp(const string& strInput)
 {
 	string strInputCopy = dateTimeStamp();
 	strInputCopy += ": ";
@@ -121,12 +121,12 @@ void _gis2ifc::execute(unsigned char* szData, size_t iSize, const wstring& strOu
 	return strInputCopy;
 }
 
-void _gis2ifc::logWrite(enumLogEvent enLogEvent, const string& strEvent)
+void _gml2ifc_exporter::logWrite(enumLogEvent enLogEvent, const string& strEvent)
 {
 	(*m_pLogCallback)(enLogEvent, addDateTimeStamp(strEvent).c_str());
 }
 
-void _gis2ifc::setFormatSettings(OwlModel iOwlModel)
+void _gml2ifc_exporter::setFormatSettings(OwlModel iOwlModel)
 {
 	string strSettings = "111111000000001111000001110001";
 
@@ -142,7 +142,7 @@ void _gis2ifc::setFormatSettings(OwlModel iOwlModel)
 	SetBehavior(iOwlModel, 2048 + 4096, 2048 + 4096);
 }
 
-void _gis2ifc::executeCore(OwlInstance iRootInstance, const wstring& strOuputFile)
+void _gml2ifc_exporter::executeCore(OwlInstance iRootInstance, const wstring& strOuputFile)
 {
 	assert(iRootInstance != 0);
 	assert(!strOuputFile.empty());
@@ -177,7 +177,7 @@ void _gis2ifc::executeCore(OwlInstance iRootInstance, const wstring& strOuputFil
 }
 
 // ************************************************************************************************
-_exporter_base::_exporter_base(_gis2ifc* pSite)
+_exporter_base::_exporter_base(_gml2ifc_exporter* pSite)
 	: m_pSite(pSite)
 	, m_iTagProperty(0)
 	, m_iSdaiModel(0)	
@@ -1638,7 +1638,7 @@ bool _exporter_base::hasObjectProperty(OwlInstance iInstance, const string& strP
 }
 
 // ************************************************************************************************
-_citygml_exporter::_citygml_exporter(_gis2ifc* pSite)
+_citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 	: _exporter_base(pSite)
 	, m_fXmin(FLT_MAX)
 	, m_fXmax(-FLT_MAX)
@@ -4038,7 +4038,7 @@ bool _citygml_exporter::isUnknownClass(OwlClass iInstanceClass) const
 }
 
 // ************************************************************************************************
-_gml_exporter::_gml_exporter(_gis2ifc* pSite)
+_gml_exporter::_gml_exporter(_gml2ifc_exporter* pSite)
 	: _citygml_exporter(pSite)
 {}
 
@@ -4046,7 +4046,7 @@ _gml_exporter::_gml_exporter(_gis2ifc* pSite)
 {}
 
 // ************************************************************************************************
-_cityjson_exporter::_cityjson_exporter(_gis2ifc* pSite)
+_cityjson_exporter::_cityjson_exporter(_gml2ifc_exporter* pSite)
 	: _citygml_exporter(pSite)
 {}
 

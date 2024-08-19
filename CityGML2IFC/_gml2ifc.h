@@ -28,41 +28,7 @@
 using namespace std;
 
 // ************************************************************************************************
-class _gis2ifc
-{
-
-private: // Members
-
-	wstring m_strRootFolder;
-	_log_callback m_pLogCallback;
-	OwlModel m_iOwlModel;
-
-public: // Methods
-
-	_gis2ifc(const wstring& strRootFolder, _log_callback pLogCallback);
-	virtual ~_gis2ifc();
-
-	void execute(const wstring& strInputFile, const wstring& strOuputFile);
-	void execute(unsigned char* szData, size_t iSize, const wstring& strOuputFile);
-
-	// Log
-	static string dateTimeStamp();
-	static string addDateTimeStamp(const string& strInput);
-	void logWrite(enumLogEvent enLogEvent, const string& strEvent);
-	void logInfo(const string& strEvent) { logWrite(enumLogEvent::info, strEvent); }
-	void logWarn(const string& strEvent) { logWrite(enumLogEvent::warning, strEvent); }
-	void logErr(const string& strEvent) { logWrite(enumLogEvent::error, strEvent); }
-
-	OwlModel getOwlModel() const { return m_iOwlModel; }
-
-private: // Methods
-
-	void setFormatSettings(OwlModel iOwlModel);
-	void executeCore(OwlInstance iRootInstance, const wstring& strOuputFile);
-};
-
-// ************************************************************************************************
-class _point3d 
+class _point3d
 {
 
 public: // Members
@@ -129,12 +95,46 @@ public: // Methods
 };
 
 // ************************************************************************************************
+class _gml2ifc_exporter
+{
+
+private: // Members
+
+	wstring m_strRootFolder;
+	_log_callback m_pLogCallback;
+	OwlModel m_iOwlModel;
+
+public: // Methods
+
+	_gml2ifc_exporter(const wstring& strRootFolder, _log_callback pLogCallback);
+	virtual ~_gml2ifc_exporter();
+
+	void execute(const wstring& strInputFile, const wstring& strOuputFile);
+	void execute(unsigned char* szData, size_t iSize, const wstring& strOuputFile);
+
+	// Log
+	static string dateTimeStamp();
+	static string addDateTimeStamp(const string& strInput);
+	void logWrite(enumLogEvent enLogEvent, const string& strEvent);
+	void logInfo(const string& strEvent) { logWrite(enumLogEvent::info, strEvent); }
+	void logWarn(const string& strEvent) { logWrite(enumLogEvent::warning, strEvent); }
+	void logErr(const string& strEvent) { logWrite(enumLogEvent::error, strEvent); }
+
+	OwlModel getOwlModel() const { return m_iOwlModel; }
+
+private: // Methods
+
+	void setFormatSettings(OwlModel iOwlModel);
+	void executeCore(OwlInstance iRootInstance, const wstring& strOuputFile);
+};
+
+// ************************************************************************************************
 class _exporter_base
 {
 
 private: // Members
 
-	_gis2ifc* m_pSite;
+	_gml2ifc_exporter* m_pSite;
 
 	RdfProperty m_iTagProperty;
 
@@ -153,12 +153,12 @@ private: // Members
 
 public: // Methods
 
-	_exporter_base(_gis2ifc* pSite);
+	_exporter_base(_gml2ifc_exporter* pSite);
 	virtual ~_exporter_base();
 
 	void execute(OwlInstance iRootInstance, const wstring& strOuputFile);
 
-	_gis2ifc* getSite() const { return m_pSite; }
+	_gml2ifc_exporter* getSite() const { return m_pSite; }
 	SdaiModel getSdaiModel() const { return m_iSdaiModel; }
 	SdaiInstance getPersonInstance();
 	SdaiInstance getOrganizationInstance();
@@ -376,7 +376,7 @@ private: // Members
 
 public: // Methods
 
-	_citygml_exporter(_gis2ifc* pSite);
+	_citygml_exporter(_gml2ifc_exporter* pSite);
 	virtual ~_citygml_exporter();	
 
 protected:  // Methods	
@@ -466,7 +466,7 @@ class _gml_exporter : public _citygml_exporter
 {
 public: // Methods
 
-	_gml_exporter(_gis2ifc* pSite);
+	_gml_exporter(_gml2ifc_exporter* pSite);
 	virtual ~_gml_exporter();
 };
 
@@ -475,6 +475,6 @@ class _cityjson_exporter : public _citygml_exporter
 {
 public: // Methods
 
-	_cityjson_exporter(_gis2ifc* pSite);
+	_cityjson_exporter(_gml2ifc_exporter* pSite);
 	virtual ~_cityjson_exporter();
 };
