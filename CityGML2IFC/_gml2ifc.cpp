@@ -42,6 +42,33 @@ _gml2ifc_exporter::_gml2ifc_exporter(const wstring& strRootFolder, _log_callback
 	}
 }
 
+bool _gml2ifc_exporter::retrieveSRSData(const wstring& strInputFile)
+{
+	assert(!strInputFile.empty());
+
+	/* Import */
+	if (m_iOwlModel != 0)
+	{
+		CloseModel(m_iOwlModel);
+		m_iOwlModel = 0;
+	}
+
+	m_iOwlModel = CreateModel();
+	assert(m_iOwlModel != 0);
+
+	setFormatSettings(m_iOwlModel);
+
+	OwlInstance iRootInstance = ImportGISModelW(m_iOwlModel, strInputFile.c_str());
+	if (iRootInstance != 0)
+	{
+		return retrieveSRSDataCore(iRootInstance);
+	}
+
+	logErr("Not supported format.");
+
+	return false;
+}
+
 void _gml2ifc_exporter::execute(const wstring& strInputFile, const wstring& strOuputFile)
 {
 	assert(!strInputFile.empty());
@@ -174,6 +201,43 @@ void _gml2ifc_exporter::executeCore(OwlInstance iRootInstance, const wstring& st
 	{
 		logErr("Not supported format.");
 	}
+}
+
+bool _gml2ifc_exporter::retrieveSRSDataCore(OwlInstance iRootInstance)
+{
+	assert(iRootInstance != 0);
+
+	logInfo("Retrieving SRS Data...");
+
+	bool bSuccess = false;
+
+	if (IsGML(m_iOwlModel))
+	{
+		_gml_exporter exporter(this);
+		bSuccess = exporter.retrieveSRSData(iRootInstance);
+
+		logInfo("Done.");
+	}
+	else if (IsCityGML(m_iOwlModel))
+	{
+		_citygml_exporter exporter(this);
+		bSuccess = exporter.retrieveSRSData(iRootInstance);
+
+		logInfo("Done.");
+	}
+	else if (IsCityJSON(m_iOwlModel))
+	{
+		_cityjson_exporter exporter(this);
+		bSuccess = exporter.retrieveSRSData(iRootInstance);
+
+		logInfo("Done.");
+	}
+	else
+	{
+		logErr("Not supported format.");
+	}
+
+	return bSuccess;
 }
 
 // ************************************************************************************************

@@ -109,6 +109,10 @@ public: // Methods
 	_gml2ifc_exporter(const wstring& strRootFolder, _log_callback pLogCallback);
 	virtual ~_gml2ifc_exporter();
 
+	// pre-processing
+	bool retrieveSRSData(const wstring& strInputFile);
+
+	// export
 	void execute(const wstring& strInputFile, const wstring& strOuputFile);
 	void execute(unsigned char* szData, size_t iSize, const wstring& strOuputFile);
 
@@ -125,7 +129,8 @@ public: // Methods
 private: // Methods
 
 	void setFormatSettings(OwlModel iOwlModel);
-	void executeCore(OwlInstance iRootInstance, const wstring& strOuputFile);
+	bool retrieveSRSDataCore(OwlInstance iRootInstance);
+	void executeCore(OwlInstance iRootInstance, const wstring& strOuputFile);	
 };
 
 // ************************************************************************************************
@@ -156,6 +161,10 @@ public: // Methods
 	_exporter_base(_gml2ifc_exporter* pSite);
 	virtual ~_exporter_base();
 
+	// pre-processing
+	virtual bool retrieveSRSData(OwlInstance iRootInstance) { return false; }
+
+	// export
 	void execute(OwlInstance iRootInstance, const wstring& strOuputFile);
 
 	_gml2ifc_exporter* getSite() const { return m_pSite; }
@@ -464,6 +473,7 @@ protected:  // Methods
 // ************************************************************************************************
 class _gml_exporter : public _citygml_exporter
 {
+
 public: // Methods
 
 	_gml_exporter(_gml2ifc_exporter* pSite);
@@ -473,6 +483,7 @@ public: // Methods
 // ************************************************************************************************
 class _cityjson_exporter : public _citygml_exporter
 {
+
 public: // Methods
 
 	_cityjson_exporter(_gml2ifc_exporter* pSite);
