@@ -101,6 +101,7 @@ class CSRSTransformer
 public: // methods
 
 	virtual void toWGS84Async(int iCRS, float fX, float fY, float fZ) = 0;
+	virtual const char* getWGS84(int iCRS, float fX, float fY, float fZ) = 0;
 };
 
 // ************************************************************************************************
@@ -132,7 +133,7 @@ public: // Methods
 
 	// SRS
 	void toWGS84Async(int iCRS, float fX, float fY, float fZ);
-	const char* getWGS84LatLong(int iCRS, float fX, float fY, float fZ);
+	const char* getWGS84(int iCRS, float fX, float fY, float fZ);
 
 	// Log
 	static string dateTimeStamp();

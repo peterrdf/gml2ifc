@@ -172,8 +172,13 @@ void _gml2ifc_exporter::toWGS84Async(int iCRS, float fX, float fY, float fZ)
 	}
 }
 
-const char* _gml2ifc_exporter::getWGS84LatLong(int iCRS, float fX, float fY, float fZ)
+const char* _gml2ifc_exporter::getWGS84(int iCRS, float fX, float fY, float fZ)
 {
+	if (m_pSRSTransformer != nullptr)
+	{
+		m_pSRSTransformer->getWGS84(iCRS, fX, fY, fZ);
+	}
+
 	return nullptr;
 }
 
