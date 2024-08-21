@@ -91,7 +91,7 @@ void CCityGML2IFCDlg::ExportFile(const wstring& strInputFile)
 	wstring strOutputFile = strInputFile;
 	strOutputFile += L".ifc";
 
-	_gml2ifc_exporter exporter(m_strRootFolder, LogCallbackImpl);
+	_gml2ifc_exporter exporter(m_strRootFolder, LogCallbackImpl, nullptr);
 	exporter.execute(strInputFile, strOutputFile);
 }
 

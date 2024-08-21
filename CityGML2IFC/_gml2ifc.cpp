@@ -8,11 +8,19 @@
 #include <float.h>
 #include <locale>
 #include <codecvt>
+#include <cassert>
+#include <cwchar>
+#include <uchar.h>
+
 
 // ************************************************************************************************
-_gml2ifc_exporter::_gml2ifc_exporter(const wstring& strRootFolder, _log_callback pLogCallback)
+_gml2ifc_exporter::_gml2ifc_exporter(
+		const wstring& strRootFolder,
+		_log_callback pLogCallback,
+		CSRSTransformer* pSRSTransformer)
 	: m_strRootFolder(strRootFolder)
 	, m_pLogCallback(pLogCallback)
+	, m_pSRSTransformer(pSRSTransformer)
 	, m_iOwlModel(0)
 {
 	assert(!m_strRootFolder.empty());
@@ -127,19 +135,12 @@ void _gml2ifc_exporter::execute(unsigned char* szData, size_t iSize, const wstri
 	return ss.str();
 }
 
-void _gml2ifc_exporter::toWGS84Async(int iCRS, float fX, float fY, float fZ)
+void _gml2ifc_exporter::toWGS84Async(int iID, int iCRS, float fX, float fY, float fZ)
 {
-	logInfo("toWGS84Async - 1");
-
-#ifdef __EMSCRIPTEN__
-	logInfo("toWGS84Async - 2");
-
-	jsToWGS84Async(iCRS, fX, fY, fZ);
-
-	logInfo("toWGS84Async - 3");
-#endif 
-
-	logInfo("toWGS84Async - 4");
+	if (m_pSRSTransformer != nullptr)
+	{
+		m_pSRSTransformer->toWGS84Async(iID, iCRS, fX, fY, fZ);
+	}
 }
 
 const char* _gml2ifc_exporter::getWGS84LatLong(int iCRS, float fX, float fY, float fZ)
@@ -462,32 +463,32 @@ SdaiInstance _exporter_base::getProjectInstance()
 		SdaiInstance iGeometricRepresentationContextInstance = buildGeometricRepresentationContextInstance();
 		assert(iGeometricRepresentationContextInstance != 0);
 
-		// CRS
-		OwlInstance iModelEnvelopeInstance = getModelEnvelopeInstance();
-		if (iModelEnvelopeInstance != 0)
-		{
-			const wchar_t* szSrsName = getStringAttributeValue(iModelEnvelopeInstance, "srsName");
-			if ((szSrsName != nullptr) && (wstring(szSrsName).find(L"EPSG") != string::npos))
-			{
-				string strEPSG = getEPSG(szSrsName);
-				assert(!strEPSG.empty());
+		// CRS #todo
+		//OwlInstance iModelEnvelopeInstance = getModelEnvelopeInstance();
+		//if (iModelEnvelopeInstance != 0)
+		//{
+		//	const wchar_t* szSrsName = getStringAttributeValue(iModelEnvelopeInstance, "srsName");
+		//	if ((szSrsName != nullptr) && (wstring(szSrsName).find(L"EPSG") != string::npos))
+		//	{
+		//		string strEPSG = getEPSG(szSrsName);
+		//		assert(!strEPSG.empty());
 
-				SdaiInstance iSourceCRS = buildProjectedCRS(strEPSG);
-				SdaiInstance iTargetCRS = buildProjectedCRS(strEPSG);
-				SdaiInstance iMapConversion = buildMapConversion(iSourceCRS, iTargetCRS);
+		//		SdaiInstance iSourceCRS = buildProjectedCRS(strEPSG);
+		//		SdaiInstance iTargetCRS = buildProjectedCRS(strEPSG);
+		//		SdaiInstance iMapConversion = buildMapConversion(iSourceCRS, iTargetCRS);
 
-				double dOrthogonalHeight = 10000; // #todo
-				sdaiPutAttrBN(iMapConversion, "OrthogonalHeight", sdaiREAL, &dOrthogonalHeight);
+		//		double dOrthogonalHeight = 10000; // #todo
+		//		sdaiPutAttrBN(iMapConversion, "OrthogonalHeight", sdaiREAL, &dOrthogonalHeight);
 
-				double dEastings = 0.; // #todo
-				sdaiPutAttrBN(iMapConversion, "Eastings", sdaiREAL, &dEastings);
+		//		double dEastings = 0.; // #todo
+		//		sdaiPutAttrBN(iMapConversion, "Eastings", sdaiREAL, &dEastings);
 
-				double dNorthings = 1.; // #todo
-				sdaiPutAttrBN(iMapConversion, "Northings", sdaiREAL, &dNorthings);
+		//		double dNorthings = 1.; // #todo
+		//		sdaiPutAttrBN(iMapConversion, "Northings", sdaiREAL, &dNorthings);
 
-				sdaiPutAttrBN(iGeometricRepresentationContextInstance, "HasCoordinateOperation", sdaiINSTANCE, (void*)iMapConversion);
-			} // if ((szSrsName != nullptr) && ...
-		} // if (iModelEnvelopeInstance != 0)
+		//		sdaiPutAttrBN(iGeometricRepresentationContextInstance, "HasCoordinateOperation", sdaiINSTANCE, (void*)iMapConversion);
+		//	} // if ((szSrsName != nullptr) && ...
+		//} // if (iModelEnvelopeInstance != 0)
 
 		sdaiAppend(pRepresentationContexts, sdaiINSTANCE, (void*)iGeometricRepresentationContextInstance);
 	}
@@ -1199,24 +1200,24 @@ SdaiInstance _exporter_base::buildProjectedCRS(const string& strEPSG)
 	return iProjectedCRSInstance;
 }
 
-string _exporter_base::getEPSGCode(const wstring& strSrsName)
+string _exporter_base::getEPSGCode(const string& strSrsName)
 {
 	assert(!strSrsName.empty());
 
 	size_t iIndex = string::npos;
 
 	// srsName="urn:ogc:def:crs,crs:EPSG::31256"
-	if ((iIndex = strSrsName.find(L"EPSG::")) != string::npos)
+	if ((iIndex = strSrsName.find("EPSG::")) != string::npos)
 	{
 		assert(false); //#todo
 	}
 
 	// EPSG:3763
-	if (strSrsName.find(L"EPSG:") == 0)
+	if (strSrsName.find("EPSG:") == 0)
 	{
-		wstring strCode = strSrsName.substr(iIndex + 6).c_str();
+		string strCode = strSrsName.substr(iIndex + 6).c_str();
 
-		return wstring_to_utf8(strCode.c_str());
+		return strCode;
 	}
 
 	assert(false);
@@ -1224,36 +1225,36 @@ string _exporter_base::getEPSGCode(const wstring& strSrsName)
 	return "";
 }
 
-string _exporter_base::getEPSG(const wstring& strSrsName)
+string _exporter_base::getEPSG(const string& strSrsName)
 {
 	assert(!strSrsName.empty());
 
 	size_t iIndex = string::npos;
 
 	// srsName="urn:ogc:def:crs,crs:EPSG::31256"
-	if ((iIndex = strSrsName.find(L"EPSG::")) != string::npos)
+	if ((iIndex = strSrsName.find("EPSG::")) != string::npos)
 	{
-		wstring strEPSG = strSrsName.substr(iIndex).c_str();
-		iIndex = strEPSG.find(L"::");
-		strEPSG.replace(iIndex, 2, L":");
+		string strEPSG = strSrsName.substr(iIndex).c_str();
+		iIndex = strEPSG.find("::");
+		strEPSG.replace(iIndex, 2, ":");
 
-		return wstring_to_utf8(strEPSG.c_str());
+		return strEPSG;
 	}
 
 	// EPSG:3763
-	if (strSrsName.find(L"EPSG:") == 0)
+	if (strSrsName.find("EPSG:") == 0)
 	{
-		return wstring_to_utf8(strSrsName.c_str());
+		return strSrsName;
 	}
 
 	// http://www.opengis.net/def/crs/EPSG/0/25830
-	if (strSrsName.find(L"/EPSG/") != -1)
+	if (strSrsName.find("/EPSG/") != -1)
 	{
-		iIndex = strSrsName.rfind(L"/");
-		wstring strEPSG = L"EPSG:";
+		iIndex = strSrsName.rfind("/");
+		string strEPSG = "EPSG:";
 		strEPSG += strSrsName.substr(iIndex + 1).c_str();
 
-		return wstring_to_utf8(strEPSG.c_str());
+		return strEPSG;
 	}
 
 	assert(false);
@@ -1649,23 +1650,14 @@ string _exporter_base::getTag(OwlInstance iInstance) const
 	wchar_t** szValue = nullptr;
 	int64_t iValuesCount = 0;
 	GetDatatypeProperty(iInstance, m_iTagProperty, (void**)&szValue, &iValuesCount);
-
 	assert(iValuesCount == 1);
 
 	SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, true);
 
-#ifdef _WINDOWS
 	return (LPCSTR)CW2A(szValue[0]);
-#else
-#ifdef __EMSCRIPTEN__
-	return (LPCSTR)CW2A(szValue[0]);
-#else
-#error NOT IMPLEMENTED!
-#endif
-#endif
 }
 
-const wchar_t* _exporter_base::getStringAttributeValue(OwlInstance iInstance, const string& strAttributeName) const
+string _exporter_base::getStringAttributeValue(OwlInstance iInstance, const string& strAttributeName) const
 {
 	assert(iInstance != 0);
 	assert(!strAttributeName.empty());
@@ -1681,19 +1673,76 @@ const wchar_t* _exporter_base::getStringAttributeValue(OwlInstance iInstance, co
 		{
 			assert(GetPropertyType(iPropertyInstance) == DATATYPEPROPERTY_TYPE_WCHAR_T_ARRAY);
 
+			int64_t aa = SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, false);
+			printf("### SetCharacterSerialization - 0 %lld\n", aa);
+
 			wchar_t** szValue = nullptr;
 			int64_t iValuesCount = 0;
-			GetDatatypeProperty(iInstance, iPropertyInstance, (void**)&szValue, &iValuesCount);
-
+			GetDatatypeProperty(iInstance,
+				iPropertyInstance,
+				(void**)&szValue, &iValuesCount);
 			assert(iValuesCount == 1);
 
-			return szValue[0];
+			//{
+				//auto sz = wcslen(*szValue);
+				auto sz = std::char_traits<char16_t>::length((char16_t*)*szValue);
+
+				u16string u16Str;
+				u16Str.resize(sz);
+				memcpy((void*)u16Str.data(), szValue[0], sz * sizeof(wchar_t));
+
+				u8string s8_2 = To_UTF8(u16Str);
+				printf("### %d; %s\n", (int)sz, s8_2.c_str());
+			//}
+			
+
+			//aa = SetCharacterSerialization(getSite()->getOwlModel(), 0, 16, false);
+			//printf("### SetCharacterSerialization - 16 %lld\n", aa);
+
+			//szValue = nullptr;
+			//iValuesCount = 0;
+			//GetDatatypeProperty(iInstance,
+			//	iPropertyInstance,
+			//	(void**)&szValue, &iValuesCount);
+			//assert(iValuesCount == 1);
+
+			//{
+			//	//auto sz = wcslen(*szValue);
+			//	auto sz = std::char_traits<char16_t>::length((char16_t*)*szValue);
+
+			//	u16string u16Str;
+			//	u16Str.resize(sz);
+			//	memcpy((void*)u16Str.data(), szValue[0], sz * sizeof(wchar_t));
+
+			//	u8string s8_2 = To_UTF8(u16Str);
+			//	printf("### %d; %s\n", (int)sz, s8_2.c_str());
+			//}
+
+			//aa = SetCharacterSerialization(getSite()->getOwlModel(), 0, 32, false);
+			//printf("### - 32 %lld\n", aa);
+
+			
+
+			/*u32string u32Str = To_UTF32(u16Str);
+			u16string  u16 = To_UTF16(u32Str);
+			u8string s8_1 = To_UTF8(u32Str);
+			u8string s8_2 = To_UTF8(u16);*/
+
+			SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, true);
+
+			//printf("### %s\n", (LPCSTR)CW2A(szValue[0]));
+
+			/*u32string s32 = (*szValue);
+			auto s8 = To_UTF8(s32);
+			printf("### To_UTF8 %s\n", s32.c_str());*/
+
+			return s8_2;
 		} // if (strPropertyName == ...
 
 		iPropertyInstance = GetInstancePropertyByIterator(iInstance, iPropertyInstance);
 	} // while (iPropertyInstance != 0)
 
-	return nullptr;
+	return "";
 }
 
 OwlInstance* _exporter_base::getObjectProperty(OwlInstance iInstance, const string& strPropertyName, int64_t& iInstancesCount) const
@@ -1894,10 +1943,10 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 	// Model
 	if (m_iModelEnvelopeInstance != 0)
 	{
-		const wchar_t* szSrsName = getStringAttributeValue(m_iModelEnvelopeInstance, "srsName");
-		if ((szSrsName != nullptr) && (wstring(szSrsName).find(L"EPSG") != string::npos))
+		string strSrsName = getStringAttributeValue(m_iModelEnvelopeInstance, "srsName");
+		if (!strSrsName.empty() && (strSrsName.find("EPSG") != string::npos))
 		{
-			string strEPSGCode = getEPSGCode(szSrsName);
+			string strEPSGCode = getEPSGCode(strSrsName);
 			assert(!strEPSGCode.empty());
 
 			OwlInstance* piInstances = nullptr;
@@ -1935,6 +1984,7 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 			getPosValues(szValue[0], vecValues2);
 
 			getSite()->toWGS84Async(
+				111, // #todo!!!
 				atoi(strEPSGCode.c_str()),
 				(float)(vecValues1[0] + vecValues2[0]) / 2.f,
 				(float)(vecValues1[1] + vecValues2[1]) / 2.f,
@@ -3273,28 +3323,28 @@ void _citygml_exporter::createBoundaryRepresentation(OwlInstance iInstance, vect
 		SdaiInstance iGeometricRepresentationContextInstance = buildGeometricRepresentationContextInstance();
 		assert(iGeometricRepresentationContextInstance != 0);
 
-		// CRS
-		const wchar_t* szSrsName = getStringAttributeValue(m_iCurrentOwlBuildingElementInstance, "srsName");
-		if ((szSrsName != nullptr) && (wstring(szSrsName).find(L"EPSG") != string::npos))			
-		{
-			string strEPSG = getEPSG(szSrsName);
-			assert(!strEPSG.empty());
+		// CRS #todo
+		//const wchar_t* szSrsName = getStringAttributeValue(m_iCurrentOwlBuildingElementInstance, "srsName");
+		//if ((szSrsName != nullptr) && (wstring(szSrsName).find(L"EPSG") != string::npos))			
+		//{
+		//	string strEPSG = getEPSG(szSrsName);
+		//	assert(!strEPSG.empty());
 
-			SdaiInstance iSourceCRS = buildProjectedCRS(strEPSG);
-			SdaiInstance iTargetCRS = buildProjectedCRS(strEPSG);
-			SdaiInstance iMapConversion = buildMapConversion(iSourceCRS, iTargetCRS);
+		//	SdaiInstance iSourceCRS = buildProjectedCRS(strEPSG);
+		//	SdaiInstance iTargetCRS = buildProjectedCRS(strEPSG);
+		//	SdaiInstance iMapConversion = buildMapConversion(iSourceCRS, iTargetCRS);
 
-			double dOrthogonalHeight = 10000; // #todo
-			sdaiPutAttrBN(iMapConversion, "OrthogonalHeight", sdaiREAL, &dOrthogonalHeight);
+		//	double dOrthogonalHeight = 10000; // #todo
+		//	sdaiPutAttrBN(iMapConversion, "OrthogonalHeight", sdaiREAL, &dOrthogonalHeight);
 
-			double dEastings = 0.; // #todo
-			sdaiPutAttrBN(iMapConversion, "Eastings", sdaiREAL, &dEastings);
+		//	double dEastings = 0.; // #todo
+		//	sdaiPutAttrBN(iMapConversion, "Eastings", sdaiREAL, &dEastings);
 
-			double dNorthings = 1.; // #todo
-			sdaiPutAttrBN(iMapConversion, "Northings", sdaiREAL, &dNorthings);			
+		//	double dNorthings = 1.; // #todo
+		//	sdaiPutAttrBN(iMapConversion, "Northings", sdaiREAL, &dNorthings);			
 
-			sdaiPutAttrBN(iGeometricRepresentationContextInstance, "HasCoordinateOperation", sdaiINSTANCE, (void*)iMapConversion);
-		} // if ((szSrsName != nullptr) && ...		
+		//	sdaiPutAttrBN(iGeometricRepresentationContextInstance, "HasCoordinateOperation", sdaiINSTANCE, (void*)iMapConversion);
+		//} // if ((szSrsName != nullptr) && ...		
 
 		sdaiPutAttrBN(iShapeRepresentationInstance, "ContextOfItems", sdaiINSTANCE, (void*)iGeometricRepresentationContextInstance);
 
@@ -3576,28 +3626,28 @@ void _citygml_exporter::createPoint3D(OwlInstance iInstance, vector<SdaiInstance
 		SdaiInstance iGeometricRepresentationContextInstance = buildGeometricRepresentationContextInstance();
 		assert(iGeometricRepresentationContextInstance != 0);
 
-		// CRS
-		const wchar_t* szSrsName = getStringAttributeValue(iInstance, "srsName");
-		if ((szSrsName != nullptr) && (wstring(szSrsName).find(L"EPSG") != string::npos))
-		{
-			string strEPSG = getEPSG(szSrsName);
-			assert(!strEPSG.empty());
+		// CRS #todo
+		//const wchar_t* szSrsName = getStringAttributeValue(iInstance, "srsName");
+		//if ((szSrsName != nullptr) && (wstring(szSrsName).find(L"EPSG") != string::npos))
+		//{
+		//	string strEPSG = getEPSG(szSrsName);
+		//	assert(!strEPSG.empty());
 
-			SdaiInstance iSourceCRS = buildProjectedCRS(strEPSG);
-			SdaiInstance iTargetCRS = buildProjectedCRS(strEPSG);
-			SdaiInstance iMapConversion = buildMapConversion(iSourceCRS, iTargetCRS);
+		//	SdaiInstance iSourceCRS = buildProjectedCRS(strEPSG);
+		//	SdaiInstance iTargetCRS = buildProjectedCRS(strEPSG);
+		//	SdaiInstance iMapConversion = buildMapConversion(iSourceCRS, iTargetCRS);
 
-			double dOrthogonalHeight = 10000; // #todo
-			sdaiPutAttrBN(iMapConversion, "OrthogonalHeight", sdaiREAL, &dOrthogonalHeight);
+		//	double dOrthogonalHeight = 10000; // #todo
+		//	sdaiPutAttrBN(iMapConversion, "OrthogonalHeight", sdaiREAL, &dOrthogonalHeight);
 
-			double dEastings = 0.; // #todo
-			sdaiPutAttrBN(iMapConversion, "Eastings", sdaiREAL, &dEastings);
+		//	double dEastings = 0.; // #todo
+		//	sdaiPutAttrBN(iMapConversion, "Eastings", sdaiREAL, &dEastings);
 
-			double dNorthings = 1.; // #todo
-			sdaiPutAttrBN(iMapConversion, "Northings", sdaiREAL, &dNorthings);
+		//	double dNorthings = 1.; // #todo
+		//	sdaiPutAttrBN(iMapConversion, "Northings", sdaiREAL, &dNorthings);
 
-			sdaiPutAttrBN(iGeometricRepresentationContextInstance, "HasCoordinateOperation", sdaiINSTANCE, (void*)iMapConversion);
-		} // if ((szSrsName != nullptr) && ...		
+		//	sdaiPutAttrBN(iGeometricRepresentationContextInstance, "HasCoordinateOperation", sdaiINSTANCE, (void*)iMapConversion);
+		//} // if ((szSrsName != nullptr) && ...		
 
 		sdaiPutAttrBN(iShapeRepresentationInstance, "ContextOfItems", sdaiINSTANCE, (void*)iGeometricRepresentationContextInstance);
 
@@ -3648,28 +3698,28 @@ void _citygml_exporter::createPoint3DSet(OwlInstance iInstance, vector<SdaiInsta
 		SdaiInstance iGeometricRepresentationContextInstance = buildGeometricRepresentationContextInstance();
 		assert(iGeometricRepresentationContextInstance != 0);
 
-		// CRS
-		const wchar_t* szSrsName = getStringAttributeValue(iInstance, "srsName");
-		if ((szSrsName != nullptr) && (wstring(szSrsName).find(L"EPSG") != string::npos))
-		{
-			string strEPSG = getEPSG(szSrsName);
-			assert(!strEPSG.empty());
+		// CRS #todo
+		//const wchar_t* szSrsName = getStringAttributeValue(iInstance, "srsName");
+		//if ((szSrsName != nullptr) && (wstring(szSrsName).find(L"EPSG") != string::npos))
+		//{
+		//	string strEPSG = getEPSG(szSrsName);
+		//	assert(!strEPSG.empty());
 
-			SdaiInstance iSourceCRS = buildProjectedCRS(strEPSG);
-			SdaiInstance iTargetCRS = buildProjectedCRS(strEPSG);
-			SdaiInstance iMapConversion = buildMapConversion(iSourceCRS, iTargetCRS);
+		//	SdaiInstance iSourceCRS = buildProjectedCRS(strEPSG);
+		//	SdaiInstance iTargetCRS = buildProjectedCRS(strEPSG);
+		//	SdaiInstance iMapConversion = buildMapConversion(iSourceCRS, iTargetCRS);
 
-			double dOrthogonalHeight = 10000; // #todo
-			sdaiPutAttrBN(iMapConversion, "OrthogonalHeight", sdaiREAL, &dOrthogonalHeight);
+		//	double dOrthogonalHeight = 10000; // #todo
+		//	sdaiPutAttrBN(iMapConversion, "OrthogonalHeight", sdaiREAL, &dOrthogonalHeight);
 
-			double dEastings = 0.; // #todo
-			sdaiPutAttrBN(iMapConversion, "Eastings", sdaiREAL, &dEastings);
+		//	double dEastings = 0.; // #todo
+		//	sdaiPutAttrBN(iMapConversion, "Eastings", sdaiREAL, &dEastings);
 
-			double dNorthings = 1.; // #todo
-			sdaiPutAttrBN(iMapConversion, "Northings", sdaiREAL, &dNorthings);
+		//	double dNorthings = 1.; // #todo
+		//	sdaiPutAttrBN(iMapConversion, "Northings", sdaiREAL, &dNorthings);
 
-			sdaiPutAttrBN(iGeometricRepresentationContextInstance, "HasCoordinateOperation", sdaiINSTANCE, (void*)iMapConversion);
-		} // if ((szSrsName != nullptr) && ...		
+		//	sdaiPutAttrBN(iGeometricRepresentationContextInstance, "HasCoordinateOperation", sdaiINSTANCE, (void*)iMapConversion);
+		//} // if ((szSrsName != nullptr) && ...		
 
 		sdaiPutAttrBN(iShapeRepresentationInstance, "ContextOfItems", sdaiINSTANCE, (void*)iGeometricRepresentationContextInstance);
 
@@ -3737,28 +3787,28 @@ void _citygml_exporter::createPolyLine3D(OwlInstance iInstance, vector<SdaiInsta
 		SdaiInstance iGeometricRepresentationContextInstance = buildGeometricRepresentationContextInstance();
 		assert(iGeometricRepresentationContextInstance != 0);
 
-		// CRS
-		const wchar_t* szSrsName = getStringAttributeValue(iInstance, "srsName");
-		if ((szSrsName != nullptr) && (wstring(szSrsName).find(L"EPSG") != string::npos))
-		{
-			string strEPSG = getEPSG(szSrsName);
-			assert(!strEPSG.empty());
+		// CRS #todo
+		//const wchar_t* szSrsName = getStringAttributeValue(iInstance, "srsName");
+		//if ((szSrsName != nullptr) && (wstring(szSrsName).find(L"EPSG") != string::npos))
+		//{
+		//	string strEPSG = getEPSG(szSrsName);
+		//	assert(!strEPSG.empty());
 
-			SdaiInstance iSourceCRS = buildProjectedCRS(strEPSG);
-			SdaiInstance iTargetCRS = buildProjectedCRS(strEPSG);
-			SdaiInstance iMapConversion = buildMapConversion(iSourceCRS, iTargetCRS);
+		//	SdaiInstance iSourceCRS = buildProjectedCRS(strEPSG);
+		//	SdaiInstance iTargetCRS = buildProjectedCRS(strEPSG);
+		//	SdaiInstance iMapConversion = buildMapConversion(iSourceCRS, iTargetCRS);
 
-			double dOrthogonalHeight = 10000; // #todo
-			sdaiPutAttrBN(iMapConversion, "OrthogonalHeight", sdaiREAL, &dOrthogonalHeight);
+		//	double dOrthogonalHeight = 10000; // #todo
+		//	sdaiPutAttrBN(iMapConversion, "OrthogonalHeight", sdaiREAL, &dOrthogonalHeight);
 
-			double dEastings = 0.; // #todo
-			sdaiPutAttrBN(iMapConversion, "Eastings", sdaiREAL, &dEastings);
+		//	double dEastings = 0.; // #todo
+		//	sdaiPutAttrBN(iMapConversion, "Eastings", sdaiREAL, &dEastings);
 
-			double dNorthings = 1.; // #todo
-			sdaiPutAttrBN(iMapConversion, "Northings", sdaiREAL, &dNorthings);
+		//	double dNorthings = 1.; // #todo
+		//	sdaiPutAttrBN(iMapConversion, "Northings", sdaiREAL, &dNorthings);
 
-			sdaiPutAttrBN(iGeometricRepresentationContextInstance, "HasCoordinateOperation", sdaiINSTANCE, (void*)iMapConversion);
-		} // if ((szSrsName != nullptr) && ...		
+		//	sdaiPutAttrBN(iGeometricRepresentationContextInstance, "HasCoordinateOperation", sdaiINSTANCE, (void*)iMapConversion);
+		//} // if ((szSrsName != nullptr) && ...		
 
 		sdaiPutAttrBN(iShapeRepresentationInstance, "ContextOfItems", sdaiINSTANCE, (void*)iGeometricRepresentationContextInstance);
 
@@ -3815,15 +3865,7 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 					mapProperties[szPropertyName] = buildPropertySingleValueText(
 						strPropertyName.c_str(),
 						"attribute",
-#ifdef _WINDOWS
-						CW2A(szValue[0]),
-#else
-#ifdef __EMSCRIPTEN__
 						(LPCSTR)CW2A(szValue[0]),
-#else
-#error NOT IMPLEMENTED!
-#endif
-#endif
 						"IFCTEXT");
 				}
 				break;
@@ -3855,15 +3897,7 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 			mapProperties[szPropertyName] = buildPropertySingleValueText(
 				strPropertyName.c_str(),
 				"attribute",
-#ifdef _WINDOWS
-				CW2A(szValue[0]),
-#else
-#ifdef __EMSCRIPTEN__
 				(LPCSTR)CW2A(szValue[0]),
-#else
-#error NOT IMPLEMENTED!
-#endif
-#endif				
 				"IFCTEXT");
 		} // attr:
 

@@ -95,6 +95,15 @@ public: // Methods
 };
 
 // ************************************************************************************************
+class CSRSTransformer
+{
+
+public: // methods
+
+	virtual void toWGS84Async(int iID, int iCRS, float fX, float fY, float fZ) = 0;
+};
+
+// ************************************************************************************************
 class _gml2ifc_exporter
 {
 
@@ -102,11 +111,15 @@ private: // Members
 
 	wstring m_strRootFolder;
 	_log_callback m_pLogCallback;
+	CSRSTransformer* m_pSRSTransformer;
 	OwlModel m_iOwlModel;
 
 public: // Methods
 
-	_gml2ifc_exporter(const wstring& strRootFolder, _log_callback pLogCallback);
+	_gml2ifc_exporter(
+		const wstring& strRootFolder, 
+		_log_callback pLogCallback,
+		CSRSTransformer* pSRSTransformer);
 	virtual ~_gml2ifc_exporter();
 
 	// pre-processing
@@ -117,7 +130,7 @@ public: // Methods
 	void execute(unsigned char* szData, size_t iSize, const wstring& strOuputFile);
 
 	// SRS
-	void toWGS84Async(int iCRS, float fX, float fY, float fZ);
+	void toWGS84Async(int iID, int iCRS, float fX, float fY, float fZ);
 	const char* getWGS84LatLong(int iCRS, float fX, float fY, float fZ);
 
 	// Log
@@ -277,8 +290,8 @@ protected: // Methods
 	/* CRS */
 	SdaiInstance buildMapConversion(OwlInstance iSourceCRSInstance, OwlInstance iTargetCRSInstance);
 	SdaiInstance buildProjectedCRS(const string& strEPSG);
-	string getEPSGCode(const wstring& strSrsName);
-	string getEPSG(const wstring& strSrsName);
+	string getEPSGCode(const string& strSrsName);
+	string getEPSG(const string& strSrsName);
 
 	/* Style */
 	void createStyledItemInstance(OwlInstance iOwlInstance, SdaiInstance iSdaiInstance);
@@ -313,7 +326,7 @@ protected: // Methods
 
 	/* Helpers */
 	string getTag(OwlInstance iInstance) const;
-	const wchar_t* getStringAttributeValue(OwlInstance iInstance, const string& strAttributeName) const;
+	string getStringAttributeValue(OwlInstance iInstance, const string& strAttributeName) const;
 	OwlInstance* getObjectProperty(OwlInstance iInstance, const string& strPropertyName, int64_t& iInstancesCount) const;
 	bool hasObjectProperty(OwlInstance iInstance, const string& strPropertyName);
 	void getPosValues(const wstring& strContent, vector<double>& vecValues) const;
