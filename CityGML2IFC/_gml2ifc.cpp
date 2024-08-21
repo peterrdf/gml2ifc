@@ -9,9 +9,6 @@
 #include <locale>
 #include <codecvt>
 #include <cassert>
-#include <cwchar>
-#include <uchar.h>
-
 
 // ************************************************************************************************
 _gml2ifc_exporter::_gml2ifc_exporter(
@@ -1673,8 +1670,7 @@ string _exporter_base::getStringAttributeValue(OwlInstance iInstance, const stri
 		{
 			assert(GetPropertyType(iPropertyInstance) == DATATYPEPROPERTY_TYPE_WCHAR_T_ARRAY);
 
-			int64_t aa = SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, false);
-			printf("### SetCharacterSerialization - 0 %lld\n", aa);
+			SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, false);
 
 			wchar_t** szValue = nullptr;
 			int64_t iValuesCount = 0;
@@ -1683,60 +1679,15 @@ string _exporter_base::getStringAttributeValue(OwlInstance iInstance, const stri
 				(void**)&szValue, &iValuesCount);
 			assert(iValuesCount == 1);
 
-			//{
-				//auto sz = wcslen(*szValue);
-				auto sz = std::char_traits<char16_t>::length((char16_t*)*szValue);
+			auto iLength = std::char_traits<char16_t>::length((char16_t*)*szValue);
 
-				u16string u16Str;
-				u16Str.resize(sz);
-				memcpy((void*)u16Str.data(), szValue[0], sz * sizeof(wchar_t));
-
-				u8string s8_2 = To_UTF8(u16Str);
-				printf("### %d; %s\n", (int)sz, s8_2.c_str());
-			//}
-			
-
-			//aa = SetCharacterSerialization(getSite()->getOwlModel(), 0, 16, false);
-			//printf("### SetCharacterSerialization - 16 %lld\n", aa);
-
-			//szValue = nullptr;
-			//iValuesCount = 0;
-			//GetDatatypeProperty(iInstance,
-			//	iPropertyInstance,
-			//	(void**)&szValue, &iValuesCount);
-			//assert(iValuesCount == 1);
-
-			//{
-			//	//auto sz = wcslen(*szValue);
-			//	auto sz = std::char_traits<char16_t>::length((char16_t*)*szValue);
-
-			//	u16string u16Str;
-			//	u16Str.resize(sz);
-			//	memcpy((void*)u16Str.data(), szValue[0], sz * sizeof(wchar_t));
-
-			//	u8string s8_2 = To_UTF8(u16Str);
-			//	printf("### %d; %s\n", (int)sz, s8_2.c_str());
-			//}
-
-			//aa = SetCharacterSerialization(getSite()->getOwlModel(), 0, 32, false);
-			//printf("### - 32 %lld\n", aa);
-
-			
-
-			/*u32string u32Str = To_UTF32(u16Str);
-			u16string  u16 = To_UTF16(u32Str);
-			u8string s8_1 = To_UTF8(u32Str);
-			u8string s8_2 = To_UTF8(u16);*/
+			u16string strValueU16;
+			strValueU16.resize(iLength);
+			memcpy((void*)strValueU16.data(), szValue[0], iLength * sizeof(wchar_t));
 
 			SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, true);
 
-			//printf("### %s\n", (LPCSTR)CW2A(szValue[0]));
-
-			/*u32string s32 = (*szValue);
-			auto s8 = To_UTF8(s32);
-			printf("### To_UTF8 %s\n", s32.c_str());*/
-
-			return s8_2;
+			return To_UTF8(strValueU16);
 		} // if (strPropertyName == ...
 
 		iPropertyInstance = GetInstancePropertyByIterator(iInstance, iPropertyInstance);
