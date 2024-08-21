@@ -1683,7 +1683,7 @@ string _exporter_base::getStringAttributeValue(OwlInstance iInstance, const stri
 
 			u16string strValueU16;
 			strValueU16.resize(iLength);
-			memcpy((void*)strValueU16.data(), szValue[0], iLength * sizeof(wchar_t));
+			memcpy((void*)strValueU16.data(), szValue[0], iLength * sizeof(char16_t));
 
 			SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, true);
 
