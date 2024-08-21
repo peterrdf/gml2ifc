@@ -132,11 +132,11 @@ void _gml2ifc_exporter::execute(unsigned char* szData, size_t iSize, const wstri
 	return ss.str();
 }
 
-void _gml2ifc_exporter::toWGS84Async(int iID, int iCRS, float fX, float fY, float fZ)
+void _gml2ifc_exporter::toWGS84Async(int iCRS, float fX, float fY, float fZ)
 {
 	if (m_pSRSTransformer != nullptr)
 	{
-		m_pSRSTransformer->toWGS84Async(iID, iCRS, fX, fY, fZ);
+		m_pSRSTransformer->toWGS84Async(iCRS, fX, fY, fZ);
 	}
 }
 
@@ -1935,7 +1935,6 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 			getPosValues(szValue[0], vecValues2);
 
 			getSite()->toWGS84Async(
-				111, // #todo!!!
 				atoi(strEPSGCode.c_str()),
 				(float)(vecValues1[0] + vecValues2[0]) / 2.f,
 				(float)(vecValues1[1] + vecValues2[1]) / 2.f,

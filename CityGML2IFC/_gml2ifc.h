@@ -100,7 +100,7 @@ class CSRSTransformer
 
 public: // methods
 
-	virtual void toWGS84Async(int iID, int iCRS, float fX, float fY, float fZ) = 0;
+	virtual void toWGS84Async(int iCRS, float fX, float fY, float fZ) = 0;
 };
 
 // ************************************************************************************************
@@ -130,7 +130,7 @@ public: // Methods
 	void execute(unsigned char* szData, size_t iSize, const wstring& strOuputFile);
 
 	// SRS
-	void toWGS84Async(int iID, int iCRS, float fX, float fY, float fZ);
+	void toWGS84Async(int iCRS, float fX, float fY, float fZ);
 	const char* getWGS84LatLong(int iCRS, float fX, float fY, float fZ);
 
 	// Log
