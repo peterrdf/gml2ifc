@@ -123,7 +123,8 @@ public: // Methods
 	virtual ~_gml2ifc_exporter();
 
 	// pre-processing
-	void retrieveSRSData(const wstring& strInputFile);
+	int retrieveSRSData(const wstring& strInputFile);
+	int retrieveSRSData(unsigned char* szData, size_t iSize);
 
 	// export
 	void execute(const wstring& strInputFile, const wstring& strOuputFile);
@@ -146,7 +147,7 @@ public: // Methods
 private: // Methods
 
 	void setFormatSettings(OwlModel iOwlModel);
-	void retrieveSRSDataCore(OwlInstance iRootInstance);
+	int retrieveSRSDataCore(OwlInstance iRootInstance);
 	void executeCore(OwlInstance iRootInstance, const wstring& strOuputFile);	
 };
 
@@ -179,7 +180,7 @@ public: // Methods
 	virtual ~_exporter_base();
 
 	// pre-processing
-	virtual void retrieveSRSData(OwlInstance iRootInstance) {}
+	virtual int retrieveSRSData(OwlInstance iRootInstance) { return 0; }
 
 	// export
 	void execute(OwlInstance iRootInstance, const wstring& strOuputFile);
@@ -357,6 +358,7 @@ private: // Members
 	OwlClass m_iBoundingShapeClass;
 	OwlClass m_iEnvelopeClass;
 	OwlInstance m_iModelEnvelopeInstance;
+	map<OwlInstance, OwlInstance> m_mapBuildingEnvelopeInstance;
 
 	// CityObjectGroup
 	OwlClass m_iCityObjectGroupMemberClass;
@@ -407,7 +409,7 @@ public: // Methods
 	_citygml_exporter(_gml2ifc_exporter* pSite);
 	virtual ~_citygml_exporter();
 
-	virtual void retrieveSRSData(OwlInstance iRootInstance) override;
+	virtual int retrieveSRSData(OwlInstance iRootInstance) override;
 
 protected:  // Methods	
 
@@ -489,6 +491,10 @@ protected:  // Methods
 	bool isTrafficSpaceClass(OwlClass iInstanceClass) const;
 	bool isTrafficAreaClass(OwlClass iInstanceClass) const;
 	bool isUnknownClass(OwlClass iInstanceClass) const;
+
+private: // Methods
+
+	bool retrieveEnvelopeSRSData(OwlInstance iEnvelopeInstance);
 };
 
 // ************************************************************************************************

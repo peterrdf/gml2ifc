@@ -35,7 +35,7 @@ _gml2ifc_exporter::_gml2ifc_exporter(
 	}
 }
 
-void _gml2ifc_exporter::retrieveSRSData(const wstring& strInputFile)
+int _gml2ifc_exporter::retrieveSRSData(const wstring& strInputFile)
 {
 	assert(!strInputFile.empty());
 
@@ -60,6 +60,38 @@ void _gml2ifc_exporter::retrieveSRSData(const wstring& strInputFile)
 	{
 		logErr("Not supported format.");
 	}
+
+	return 0;
+}
+
+int _gml2ifc_exporter::retrieveSRSData(unsigned char* szData, size_t iSize)
+{
+	assert(szData != nullptr);
+	assert(iSize > 0);
+
+	/* Import */
+	if (m_iOwlModel != 0)
+	{
+		CloseModel(m_iOwlModel);
+		m_iOwlModel = 0;
+	}
+
+	m_iOwlModel = CreateModel();
+	assert(m_iOwlModel != 0);
+
+	setFormatSettings(m_iOwlModel);
+
+	OwlInstance iRootInstance = ImportGISModelA(m_iOwlModel, szData, iSize);
+	if (iRootInstance != 0)
+	{
+		return retrieveSRSDataCore(iRootInstance);
+	}
+	else
+	{
+		logErr("Not supported format.");
+	}
+
+	return 0;
 }
 
 void _gml2ifc_exporter::execute(const wstring& strInputFile, const wstring& strOuputFile)
@@ -209,30 +241,32 @@ void _gml2ifc_exporter::executeCore(OwlInstance iRootInstance, const wstring& st
 	}
 }
 
-void _gml2ifc_exporter::retrieveSRSDataCore(OwlInstance iRootInstance)
+int _gml2ifc_exporter::retrieveSRSDataCore(OwlInstance iRootInstance)
 {
 	assert(iRootInstance != 0);
 
 	logInfo("Retrieving SRS Data...");
 
+	int iTransformationsCount = 0;
+
 	if (IsGML(m_iOwlModel))
 	{
 		_gml_exporter exporter(this);
-		exporter.retrieveSRSData(iRootInstance);
+		iTransformationsCount = exporter.retrieveSRSData(iRootInstance);
 
 		logInfo("Done.");
 	}
 	else if (IsCityGML(m_iOwlModel))
 	{
 		_citygml_exporter exporter(this);
-		exporter.retrieveSRSData(iRootInstance);
+		iTransformationsCount = exporter.retrieveSRSData(iRootInstance);
 
 		logInfo("Done.");
 	}
 	else if (IsCityJSON(m_iOwlModel))
 	{
 		_cityjson_exporter exporter(this);
-		exporter.retrieveSRSData(iRootInstance);
+		iTransformationsCount = exporter.retrieveSRSData(iRootInstance);
 
 		logInfo("Done.");
 	}
@@ -240,6 +274,8 @@ void _gml2ifc_exporter::retrieveSRSDataCore(OwlInstance iRootInstance)
 	{
 		logErr("Not supported format.");
 	}
+
+	return iTransformationsCount;
 }
 
 // ************************************************************************************************
@@ -1772,6 +1808,7 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 	, m_iBoundingShapeClass(0)
 	, m_iEnvelopeClass(0)
 	, m_iModelEnvelopeInstance(0)
+	, m_mapBuildingEnvelopeInstance()
 	, m_iCityObjectGroupMemberClass(0)
 	, m_iGeometryMemberClass(0)
 	, m_iBuildingClass(0)
@@ -1846,7 +1883,7 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 /*virtual*/ _citygml_exporter::~_citygml_exporter()
 {}
 
-/*virtual*/ void _citygml_exporter::retrieveSRSData(OwlInstance iRootInstance) /*override*/
+/*virtual*/ int _citygml_exporter::retrieveSRSData(OwlInstance iRootInstance) /*override*/
 {
 	assert(iRootInstance != 0);
 
@@ -1881,7 +1918,8 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 						}
 						else if (isBuildingClass(iParentInstanceClass))
 						{
-							//#todo
+							assert(m_mapBuildingEnvelopeInstance.find(iInstance) == m_mapBuildingEnvelopeInstance.end());
+							m_mapBuildingEnvelopeInstance[iInstance] = iEnvelopeInstance;
 						}
 					} // if (iParentInstance != 0)	
 				} // if (isBoundingShapeClass(iParentInstanceClass))
@@ -1891,56 +1929,26 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 		iInstance = GetInstancesByIterator(getSite()->getOwlModel(), iInstance);
 	} // while (iInstance != 0)
 
-	// Model
-	if (m_iModelEnvelopeInstance != 0)
+	int iTransformationsCount = 0;
+	if (!m_mapBuildingEnvelopeInstance.empty())
 	{
-		string strSrsName = getStringAttributeValue(m_iModelEnvelopeInstance, "srsName");
-		if (!strSrsName.empty() && (strSrsName.find("EPSG") != string::npos))
+		for (auto itBuildingEnvelopeInstance : m_mapBuildingEnvelopeInstance)
 		{
-			string strEPSGCode = getEPSGCode(strSrsName);
-			assert(!strEPSGCode.empty());
+			if (retrieveEnvelopeSRSData(itBuildingEnvelopeInstance.second))
+			{
+				iTransformationsCount++;
+			}
+		}
+	}
+	else if (m_iModelEnvelopeInstance != 0)
+	{
+		if (retrieveEnvelopeSRSData(m_iModelEnvelopeInstance))
+		{
+			iTransformationsCount++;
+		}
+	}
 
-			OwlInstance* piInstances = nullptr;
-			int64_t iInstancesCount = 0;
-			GetObjectProperty(
-				m_iModelEnvelopeInstance,
-				GetPropertyByName(getSite()->getOwlModel(), "$relations"),
-				&piInstances,
-				&iInstancesCount);
-			assert(iInstancesCount == 2);
-
-			// lowerCorner/upperCorner
-			wchar_t** szValue = nullptr;
-			int64_t iValuesCount = 0;
-			GetDatatypeProperty(
-				piInstances[0],
-				GetPropertyByName(getSite()->getOwlModel(), "value"),
-				(void**)&szValue,
-				&iValuesCount);
-			assert(iValuesCount == 1);
-
-			vector<double> vecValues1;
-			getPosValues(szValue[0], vecValues1);
-
-			szValue = nullptr;
-			iValuesCount = 0;
-			GetDatatypeProperty(
-				piInstances[1],
-				GetPropertyByName(getSite()->getOwlModel(), "value"),
-				(void**)&szValue,
-				&iValuesCount);
-			assert(iValuesCount == 1);
-
-			vector<double> vecValues2;
-			getPosValues(szValue[0], vecValues2);
-
-			getSite()->toWGS84Async(
-				atoi(strEPSGCode.c_str()),
-				(float)(vecValues1[0] + vecValues2[0]) / 2.f,
-				(float)(vecValues1[1] + vecValues2[1]) / 2.f,
-				(float)(vecValues1[2] + vecValues2[2]) / 2.f);
-		} // if ((szSrsName != nullptr) && ...
-	} // if (m_iModelEnvelopeInstance != 0)
+	return iTransformationsCount;
 }
 
 /*virtual*/ void _citygml_exporter::preProcessing() /*override*/
@@ -4201,6 +4209,62 @@ bool _citygml_exporter::isUnknownClass(OwlClass iInstanceClass) const
 	assert(iInstanceClass != 0);
 
 	return (iInstanceClass == m_iThingClass) || IsClassAncestor(iInstanceClass, m_iThingClass);
+}
+
+bool _citygml_exporter::retrieveEnvelopeSRSData(OwlInstance iEnvelopeInstance)
+{
+	assert(iEnvelopeInstance != 0);
+
+	string strSrsName = getStringAttributeValue(iEnvelopeInstance, "srsName");
+	if (!strSrsName.empty() && (strSrsName.find("EPSG") != string::npos))
+	{
+		string strEPSGCode = getEPSGCode(strSrsName);
+		assert(!strEPSGCode.empty());
+
+		OwlInstance* piInstances = nullptr;
+		int64_t iInstancesCount = 0;
+		GetObjectProperty(
+			iEnvelopeInstance,
+			GetPropertyByName(getSite()->getOwlModel(), "$relations"),
+			&piInstances,
+			&iInstancesCount);
+		assert(iInstancesCount == 2);
+
+		// lowerCorner/upperCorner
+		wchar_t** szValue = nullptr;
+		int64_t iValuesCount = 0;
+		GetDatatypeProperty(
+			piInstances[0],
+			GetPropertyByName(getSite()->getOwlModel(), "value"),
+			(void**)&szValue,
+			&iValuesCount);
+		assert(iValuesCount == 1);
+
+		vector<double> vecValues1;
+		getPosValues(szValue[0], vecValues1);
+
+		szValue = nullptr;
+		iValuesCount = 0;
+		GetDatatypeProperty(
+			piInstances[1],
+			GetPropertyByName(getSite()->getOwlModel(), "value"),
+			(void**)&szValue,
+			&iValuesCount);
+		assert(iValuesCount == 1);
+
+		vector<double> vecValues2;
+		getPosValues(szValue[0], vecValues2);
+
+		getSite()->toWGS84Async(
+			atoi(strEPSGCode.c_str()),
+			(float)(vecValues1[0] + vecValues2[0]) / 2.f,
+			(float)(vecValues1[1] + vecValues2[1]) / 2.f,
+			(float)(vecValues1[2] + vecValues2[2]) / 2.f);
+
+		return true;
+	} // if (!strSrsName.empty() && ...
+
+	return false;
 }
 
 // ************************************************************************************************
