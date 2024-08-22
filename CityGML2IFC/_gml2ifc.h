@@ -495,6 +495,7 @@ protected:  // Methods
 
 private: // Methods
 	
+	void collectSRSData(OwlInstance iRootInstance);
 	bool retrieveEnvelopeSRSData(OwlInstance iEnvelopeInstance, string& strEPSGCode, vector<float>& vecCentroid);
 	bool transformEnvelopeSRSDataAsync(OwlInstance iEnvelopeInstance);
 };

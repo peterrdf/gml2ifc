@@ -1897,47 +1897,7 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 {
 	assert(iRootInstance != 0);
 
-	OwlInstance iInstance = GetInstancesByIterator(getSite()->getOwlModel(), 0);
-	while (iInstance != 0)
-	{
-		OwlClass iInstanceClass = GetInstanceClass(iInstance);
-		assert(iInstanceClass != 0);
-
-		// CRS
-		if (isEnvelopeClass(iInstanceClass))
-		{
-			OwlInstance iEnvelopeInstance = iInstance;
-
-			OwlInstance iParentInstance = GetInstanceInverseReferencesByIterator(iInstance, 0);
-			if (iParentInstance != 0)
-			{
-				OwlClass iParentInstanceClass = GetInstanceClass(iParentInstance);
-				assert(iParentInstanceClass != 0);
-
-				if (isBoundingShapeClass(iParentInstanceClass))
-				{
-					iParentInstance = GetInstanceInverseReferencesByIterator(iParentInstance, 0);
-					if (iParentInstance != 0)
-					{
-						iParentInstanceClass = GetInstanceClass(iParentInstance);
-						assert(iParentInstanceClass != 0);
-
-						if (isCityModelClass(iParentInstanceClass))
-						{
-							m_iModelEnvelopeInstance = iEnvelopeInstance;
-						}
-						else if (isBuildingClass(iParentInstanceClass))
-						{
-							assert(m_mapBuildingEnvelopeInstance.find(iInstance) == m_mapBuildingEnvelopeInstance.end());
-							m_mapBuildingEnvelopeInstance[iInstance] = iEnvelopeInstance;
-						}
-					} // if (iParentInstance != 0)	
-				} // if (isBoundingShapeClass(iParentInstanceClass))
-			} // if (iParentInstance != 0)
-		} // if (isEnvelopeClass(iInstanceClass))
-
-		iInstance = GetInstancesByIterator(getSite()->getOwlModel(), iInstance);
-	} // while (iInstance != 0)
+	collectSRSData(iRootInstance);
 
 	int iTransformationsCount = 0;
 	if (!m_mapBuildingEnvelopeInstance.empty())
@@ -1994,11 +1954,16 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 	assert(iRootInstance != 0);
 	assert(!strOuputFile.empty());
 
-	// #todo!!!
-	retrieveSRSData(iRootInstance);
+	m_iModelEnvelopeInstance = 0;
+	m_mapBuildingEnvelopeInstance.clear();
 
 	m_mapBuildings.clear();
 	m_mapBuildingElements.clear();
+
+	m_mapFeatures.clear();
+	m_mapFeatureElements.clear();
+
+	collectSRSData(iRootInstance);
 
 	createIfcModel(L"IFC4");
 
@@ -4219,6 +4184,50 @@ bool _citygml_exporter::isUnknownClass(OwlClass iInstanceClass) const
 	assert(iInstanceClass != 0);
 
 	return (iInstanceClass == m_iThingClass) || IsClassAncestor(iInstanceClass, m_iThingClass);
+}
+
+void _citygml_exporter::collectSRSData(OwlInstance iRootInstance)
+{
+	OwlInstance iInstance = GetInstancesByIterator(getSite()->getOwlModel(), 0);
+	while (iInstance != 0)
+	{
+		OwlClass iInstanceClass = GetInstanceClass(iInstance);
+		assert(iInstanceClass != 0);
+
+		if (isEnvelopeClass(iInstanceClass))
+		{
+			OwlInstance iEnvelopeInstance = iInstance;
+
+			OwlInstance iParentInstance = GetInstanceInverseReferencesByIterator(iInstance, 0);
+			if (iParentInstance != 0)
+			{
+				OwlClass iParentInstanceClass = GetInstanceClass(iParentInstance);
+				assert(iParentInstanceClass != 0);
+
+				if (isBoundingShapeClass(iParentInstanceClass))
+				{
+					iParentInstance = GetInstanceInverseReferencesByIterator(iParentInstance, 0);
+					if (iParentInstance != 0)
+					{
+						iParentInstanceClass = GetInstanceClass(iParentInstance);
+						assert(iParentInstanceClass != 0);
+
+						if (isCityModelClass(iParentInstanceClass))
+						{
+							m_iModelEnvelopeInstance = iEnvelopeInstance;
+						}
+						else if (isBuildingClass(iParentInstanceClass))
+						{
+							assert(m_mapBuildingEnvelopeInstance.find(iInstance) == m_mapBuildingEnvelopeInstance.end());
+							m_mapBuildingEnvelopeInstance[iInstance] = iEnvelopeInstance;
+						}
+					} // if (iParentInstance != 0)	
+				} // if (isBoundingShapeClass(iParentInstanceClass))
+			} // if (iParentInstance != 0)
+		} // if (isEnvelopeClass(iInstanceClass))
+
+		iInstance = GetInstancesByIterator(getSite()->getOwlModel(), iInstance);
+	} // while (iInstance != 0)
 }
 
 bool _citygml_exporter::retrieveEnvelopeSRSData(OwlInstance iEnvelopeInstance, string& strEPSGCode, vector<float>& vecCentroid)
