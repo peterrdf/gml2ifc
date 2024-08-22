@@ -1913,10 +1913,11 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 
 	for (auto itParcelSRS : m_mapParcelSRS)
 	{
-		if (transformEnvelopeSRSDataAsync(itParcelSRS.second))
+		//#todo
+		/*if (transformEnvelopeSRSDataAsync(itParcelSRS.second))
 		{
 			iTransformationsCount++;
-		}
+		}*/
 	}
 
 	return iTransformationsCount;
@@ -4297,8 +4298,8 @@ void _citygml_exporter::collectSRSData(OwlInstance iRootInstance)
 						}
 						else if (isBuildingClass(iParentInstanceClass))
 						{
-							assert(m_mapBuildingSRS.find(iInstance) == m_mapBuildingSRS.end());
-							m_mapBuildingSRS[iInstance] = iEnvelopeInstance;
+							assert(m_mapBuildingSRS.find(iParentInstance) == m_mapBuildingSRS.end());
+							m_mapBuildingSRS[iParentInstance] = iEnvelopeInstance;
 						}
 					} // if (iParentInstance != 0)	
 				} // if (isBoundingShapeClass(iParentInstanceClass))
@@ -4325,7 +4326,7 @@ void _citygml_exporter::collectSRSData(OwlInstance iRootInstance)
 						if (isCadastralParcelClass(iParentInstanceClass))
 						{
 							assert(m_mapParcelSRS.find(iParentInstance) == m_mapParcelSRS.end());
-							m_mapParcelSRS[iInstance] = iParentInstance;
+							m_mapParcelSRS[iParentInstance] = iReferencePointInstance;
 						}
 					}
 				}
