@@ -743,31 +743,7 @@ SdaiInstance _exporter_base::buildSiteInstance(
 	assert(iSiteInstancePlacement != 0);
 
 	sdaiPutAttrBN(iSiteInstance, "ObjectPlacement", sdaiINSTANCE, (void*)iSiteInstancePlacement);
-
-	//const char* szWGS84 = getSite()->getWGS84();
-	
-	//sdaiPutAttrBN(iSiteInstance, "CompositionType", sdaiENUM, "ELEMENT");
-
-	//SdaiAggr pRefLatitude = sdaiCreateAggrBN(iSiteInstance, "RefLatitude");
-	//assert(pRefLatitude != nullptr);
-
-	//int_t refLat_x = 24, refLat_y = 28, refLat_z = 0; //#tbd
-	//sdaiAppend(pRefLatitude, sdaiINTEGER, &refLat_x);
-	//sdaiAppend(pRefLatitude, sdaiINTEGER, &refLat_y);
-	//sdaiAppend(pRefLatitude, sdaiINTEGER, &refLat_z);
-	//sdaiAppend(pRefLatitude, sdaiINTEGER, &refLat_z);
-
-	//SdaiAggr pRefLongitude = sdaiCreateAggrBN(iSiteInstance, "RefLongitude");
-	//assert(pRefLongitude != nullptr);
-
-	//int_t refLong_x = 54, refLong_y = 25, refLong_z = 0; //#tbd
-	//sdaiAppend(pRefLongitude, sdaiINTEGER, &refLong_x);
-	//sdaiAppend(pRefLongitude, sdaiINTEGER, &refLong_y);
-	//sdaiAppend(pRefLongitude, sdaiINTEGER, &refLong_z);
-	//sdaiAppend(pRefLongitude, sdaiINTEGER, &refLong_z);
-
-	//double dRefElevation = 10;  //#tbd
-	//sdaiPutAttrBN(iSiteInstance, "RefElevation", sdaiREAL, &dRefElevation);
+	sdaiPutAttrBN(iSiteInstance, "CompositionType", sdaiENUM, "ELEMENT");
 
 	return iSiteInstance;
 }
@@ -1783,14 +1759,12 @@ bool _exporter_base::hasObjectProperty(OwlInstance iInstance, const string& strP
 	return getObjectProperty(iInstance, strPropertyName, iInstancesCount) != nullptr;
 }
 
-void _exporter_base::getPosValues(const wstring& strContent, vector<double>& vecValues) const
+void _exporter_base::getPosValues(const string& strContent, vector<double>& vecValues) const
 {
 	assert(!strContent.empty());
 
-	string strContentA = (LPCSTR)CW2A(strContent.c_str());
-
 	vector<string> vecStrValues;
-	_string::split(strContentA, " ", vecStrValues);
+	_string::split(strContent, " ", vecStrValues);
 
 	if (vecStrValues.size() > 3)
 	{
@@ -1805,6 +1779,13 @@ void _exporter_base::getPosValues(const wstring& strContent, vector<double>& vec
 	{
 		vecValues.push_back(atof(strValue.c_str()));
 	}
+}
+
+void _exporter_base::getPosValuesW(const wstring& strContent, vector<double>& vecValues) const
+{
+	assert(!strContent.empty());
+
+	getPosValues((LPCSTR)CW2A(strContent.c_str()), vecValues);	
 }
 
 // ************************************************************************************************
@@ -1975,6 +1956,7 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 
 	if (!m_mapBuildingEnvelopeInstance.empty())
 	{
+		printf("TODO: not implemented.\n");
 		assert(false); //#todo
 	}
 	else if (m_iModelEnvelopeInstance != 0)
@@ -2002,7 +1984,7 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 		vector<double> vecUpperCorner;
 		if (retrieveEnvelopeSRSData(m_iModelEnvelopeInstance, strEPSGCode, vecLowerCorner, vecUpperCorner))
 		{
-			string strCoordinates = "%%%FAILED%%%";
+			string strCoordinates;
 			if (getSite()->getWGS84(
 				atoi(strEPSGCode.c_str()),
 				(float)(vecLowerCorner[0] + vecUpperCorner[0]) / 2.f,
@@ -2010,11 +1992,49 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 				(float)(vecLowerCorner[2] + vecUpperCorner[2]) / 2.f,
 				strCoordinates))
 			{
+				vector<double> vecCoordinates;
+				getPosValues(strCoordinates, vecCoordinates);
 
-			}
+				double dLatitude = vecCoordinates[0];
+				double dLongitude = vecCoordinates[1];
+
+				SdaiAggr pRefLatitude = sdaiCreateAggrBN(iSiteInstance, "RefLatitude");
+				assert(pRefLatitude != nullptr);
+
+				/*
+				  c[1] :=    a;                                           -- -50
+				  c[2] :=   (a - c[1]) * 60;                              -- -58
+				  c[3] :=  ((a - c[1]) * 60 - c[2]) * 60;                 -- -33
+				  c[4] := (((a - c[1]) * 60 - c[2]) * 60 - c[3]) * 1.e6;  -- -110400
+				*/
+				
+				int64_t iRefLatitude1 = (int64_t)dLatitude;
+				int64_t iRefLatitude2 = (int64_t)((dLatitude - iRefLatitude1) * 60.);
+				int64_t iRefLatitude3 = (int64_t)(((dLatitude - iRefLatitude1) * 60. - iRefLatitude2) * 60.);
+				int64_t iRefLatitude4 = 0;
+				sdaiAppend(pRefLatitude, sdaiINTEGER, &iRefLatitude1);
+				sdaiAppend(pRefLatitude, sdaiINTEGER, &iRefLatitude2);
+				sdaiAppend(pRefLatitude, sdaiINTEGER, &iRefLatitude3);
+				sdaiAppend(pRefLatitude, sdaiINTEGER, &iRefLatitude4);
+
+				SdaiAggr pRefLongitude = sdaiCreateAggrBN(iSiteInstance, "RefLongitude");
+				assert(pRefLongitude != nullptr);
+
+				int64_t iRefLongitude1 = (int64_t)dLongitude;
+				int64_t iRefLongitude2 = (int64_t)((dLongitude - iRefLongitude1) * 60.);
+				int64_t iRefLongitude3 = (int64_t)(((dLongitude - iRefLongitude1) * 60. - iRefLongitude2) * 60.);
+				int64_t iRefLongitude4 = 0;
+				sdaiAppend(pRefLongitude, sdaiINTEGER, &iRefLongitude1);
+				sdaiAppend(pRefLongitude, sdaiINTEGER, &iRefLongitude2);
+				sdaiAppend(pRefLongitude, sdaiINTEGER, &iRefLongitude3);
+				sdaiAppend(pRefLongitude, sdaiINTEGER, &iRefLongitude4);
+
+				double dRefElevation = vecLowerCorner[1];
+				sdaiPutAttrBN(iSiteInstance, "RefElevation", sdaiREAL, &dRefElevation);
+			} // if (getSite()->getWGS84( ...
 
 			printf("*** %s\n", strCoordinates.c_str());
-		}
+		} // if (retrieveEnvelopeSRSData( ...
 
 		createProperties(iRootInstance, iSiteInstance);
 
@@ -4338,7 +4358,7 @@ bool _citygml_exporter::retrieveEnvelopeSRSData(OwlInstance iEnvelopeInstance, s
 			&iValuesCount);
 		assert(iValuesCount == 1);
 
-		getPosValues(szValue[0], vecLowerCorner);
+		getPosValuesW(szValue[0], vecLowerCorner);
 
 		// upperCorner
 		szValue = nullptr;
@@ -4350,7 +4370,7 @@ bool _citygml_exporter::retrieveEnvelopeSRSData(OwlInstance iEnvelopeInstance, s
 			&iValuesCount);
 		assert(iValuesCount == 1);
 
-		getPosValues(szValue[0], vecUpperCorner);
+		getPosValuesW(szValue[0], vecUpperCorner);
 
 		return true;
 	} // if (!strSrsName.empty() && ...

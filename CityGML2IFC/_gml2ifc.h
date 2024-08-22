@@ -331,7 +331,8 @@ protected: // Methods
 	string getStringAttributeValue(OwlInstance iInstance, const string& strAttributeName) const;
 	OwlInstance* getObjectProperty(OwlInstance iInstance, const string& strPropertyName, int64_t& iInstancesCount) const;
 	bool hasObjectProperty(OwlInstance iInstance, const string& strPropertyName);
-	void getPosValues(const wstring& strContent, vector<double>& vecValues) const;
+	void getPosValues(const string& strContent, vector<double>& vecValues) const;
+	void getPosValuesW(const wstring& strContent, vector<double>& vecValues) const;
 };
 
 // ************************************************************************************************
