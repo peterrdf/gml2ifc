@@ -1799,6 +1799,7 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 	, m_fYmax(-FLT_MAX)
 	, m_fZmin(FLT_MAX)
 	, m_fZmax(-FLT_MAX)
+	, m_iPoint3DClass(0)
 	, m_iCollectionClass(0)
 	, m_iTransformationClass(0)
 	, m_mapInstanceDefaultState()
@@ -1807,7 +1808,8 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 	, m_iBoundingShapeClass(0)
 	, m_iEnvelopeClass(0)
 	, m_iModelEnvelopeInstance(0)
-	, m_mapBuildingEnvelopeInstance()
+	, m_mapBuildingSRS()
+	, m_mapParcelSRS()
 	, m_iCityObjectGroupMemberClass(0)
 	, m_iGeometryMemberClass(0)
 	, m_iBuildingClass(0)
@@ -1818,6 +1820,7 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 	, m_mapBuildings()
 	, m_mapBuildingElements()
 	, m_iCadastralParcelClass(0)
+	, m_iPointPropertyClass(0)
 	, m_iReferencePointIndicatorClass(0)
 	, m_iVegetationObjectClass(0)
 	, m_iWaterObjectClass(0)
@@ -1840,6 +1843,7 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 	, m_iDefaultColorRgbInstance(0)
 {
 	// Geometry Kernel
+	m_iPoint3DClass = GetClassByName(getSite()->getOwlModel(), "Point3D");
 	m_iCollectionClass = GetClassByName(getSite()->getOwlModel(), "Collection");
 	m_iTransformationClass = GetClassByName(getSite()->getOwlModel(), "Transformation");	
 
@@ -1863,6 +1867,7 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 
 	// Parcel
 	m_iCadastralParcelClass = GetClassByName(getSite()->getOwlModel(), "class:CadastralParcelType");
+	m_iPointPropertyClass = GetClassByName(getSite()->getOwlModel(), "class:PointPropertyType");
 	m_iReferencePointIndicatorClass = GetClassByName(getSite()->getOwlModel(), "ReferencePointIndicator");
 
 	// Feature
@@ -1889,19 +1894,26 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 	collectSRSData(iRootInstance);
 
 	int iTransformationsCount = 0;
-	if (!m_mapBuildingEnvelopeInstance.empty())
-	{
-		for (auto itBuildingEnvelopeInstance : m_mapBuildingEnvelopeInstance)
-		{
-			if (transformEnvelopeSRSDataAsync(itBuildingEnvelopeInstance.second))
-			{
-				iTransformationsCount++;
-			}
-		}
-	}
-	else if (m_iModelEnvelopeInstance != 0)
+
+	if (m_iModelEnvelopeInstance != 0)
 	{
 		if (transformEnvelopeSRSDataAsync(m_iModelEnvelopeInstance))
+		{
+			iTransformationsCount++;
+		}
+	}
+	
+	for (auto itBuildingSRS : m_mapBuildingSRS)
+	{
+		if (transformEnvelopeSRSDataAsync(itBuildingSRS.second))
+		{
+			iTransformationsCount++;
+		}
+	}
+
+	for (auto itParcelSRS : m_mapParcelSRS)
+	{
+		if (transformEnvelopeSRSDataAsync(itParcelSRS.second))
 		{
 			iTransformationsCount++;
 		}
@@ -1944,7 +1956,8 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 	assert(!strOuputFile.empty());
 
 	m_iModelEnvelopeInstance = 0;
-	m_mapBuildingEnvelopeInstance.clear();
+	m_mapBuildingSRS.clear();
+	m_mapParcelSRS.clear();
 
 	m_mapBuildings.clear();
 	m_mapBuildingElements.clear();
@@ -1956,7 +1969,7 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 
 	createIfcModel(L"IFC4");
 
-	if (!m_mapBuildingEnvelopeInstance.empty())
+	if (!m_mapBuildingSRS.empty() || !m_mapParcelSRS.empty())
 	{
 		printf("TODO: not implemented.\n");
 		assert(false); //#todo
@@ -3960,6 +3973,13 @@ SdaiInstance _citygml_exporter::buildBuildingElementInstance(
 		vecRepresentations);
 }
 
+bool _citygml_exporter::IsPoint3DClass(OwlClass iInstanceClass) const
+{
+	assert(iInstanceClass != 0);
+
+	return (iInstanceClass == m_iPoint3DClass) || IsClassAncestor(iInstanceClass, m_iPoint3DClass);
+}
+
 bool _citygml_exporter::isCollectionClass(OwlClass iInstanceClass) const
 {
 	assert(iInstanceClass != 0);
@@ -4132,6 +4152,13 @@ bool _citygml_exporter::isCadastralParcelClass(OwlClass iInstanceClass) const
 	return (iInstanceClass == m_iCadastralParcelClass) || IsClassAncestor(iInstanceClass, m_iCadastralParcelClass);
 }
 
+bool _citygml_exporter::isPointPropertyClass(OwlClass iInstanceClass) const
+{
+	assert(iInstanceClass != 0);
+
+	return (iInstanceClass == m_iPointPropertyClass) || IsClassAncestor(iInstanceClass, m_iPointPropertyClass);
+}
+
 bool _citygml_exporter::isReferencePointIndicatorClass(OwlClass iInstanceClass) const
 {
 	assert(iInstanceClass != 0);
@@ -4270,13 +4297,40 @@ void _citygml_exporter::collectSRSData(OwlInstance iRootInstance)
 						}
 						else if (isBuildingClass(iParentInstanceClass))
 						{
-							assert(m_mapBuildingEnvelopeInstance.find(iInstance) == m_mapBuildingEnvelopeInstance.end());
-							m_mapBuildingEnvelopeInstance[iInstance] = iEnvelopeInstance;
+							assert(m_mapBuildingSRS.find(iInstance) == m_mapBuildingSRS.end());
+							m_mapBuildingSRS[iInstance] = iEnvelopeInstance;
 						}
 					} // if (iParentInstance != 0)	
 				} // if (isBoundingShapeClass(iParentInstanceClass))
 			} // if (iParentInstance != 0)
 		} // if (isEnvelopeClass(iInstanceClass))
+		else if (IsPoint3DClass(iInstanceClass))
+		{
+			OwlInstance iReferencePointInstance = iInstance;
+
+			OwlInstance iParentInstance = GetInstanceInverseReferencesByIterator(iInstance, 0);
+			if (iParentInstance != 0)
+			{
+				OwlClass iParentInstanceClass = GetInstanceClass(iParentInstance);
+				assert(iParentInstanceClass != 0);
+
+				if (isPointPropertyClass(iParentInstanceClass))
+				{
+					iParentInstance = GetInstanceInverseReferencesByIterator(iParentInstance, 0);
+					if (iParentInstance != 0)
+					{
+						iParentInstanceClass = GetInstanceClass(iParentInstance);
+						assert(iParentInstanceClass != 0);
+
+						if (isCadastralParcelClass(iParentInstanceClass))
+						{
+							assert(m_mapParcelSRS.find(iParentInstance) == m_mapParcelSRS.end());
+							m_mapParcelSRS[iInstance] = iParentInstance;
+						}
+					}
+				}
+			}
+		} // if (IsPoint3DClass(iInstanceClass))
 
 		iInstance = GetInstancesByIterator(getSite()->getOwlModel(), iInstance);
 	} // while (iInstance != 0)

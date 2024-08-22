@@ -350,6 +350,7 @@ private: // Members
 	float m_fZmax;
 
 	// Geometry Kernel
+	OwlClass m_iPoint3DClass;
 	OwlClass m_iCollectionClass;
 	OwlClass m_iTransformationClass;	
 	map<OwlInstance, bool> m_mapInstanceDefaultState;
@@ -360,7 +361,8 @@ private: // Members
 	OwlClass m_iBoundingShapeClass;
 	OwlClass m_iEnvelopeClass;
 	OwlInstance m_iModelEnvelopeInstance;
-	map<OwlInstance, OwlInstance> m_mapBuildingEnvelopeInstance;
+	map<OwlInstance, OwlInstance> m_mapBuildingSRS; // Building : Envelope
+	map<OwlInstance, OwlInstance> m_mapParcelSRS; // Parcel : Reference Point
 
 	// CityObjectGroup
 	OwlClass m_iCityObjectGroupMemberClass;
@@ -375,10 +377,11 @@ private: // Members
 	OwlClass m_iDoorClass;
 	OwlClass m_iWindowClass;
 	map<OwlInstance, vector<OwlInstance>> m_mapBuildings; // Building : Supported Elements
-	map<OwlInstance, vector<OwlInstance>> m_mapBuildingElements; // Building (Supported) Element : Geometries
+	map<OwlInstance, vector<OwlInstance>> m_mapBuildingElements; // Building Supported Element : Geometries
 
 	// Parcel
 	OwlClass m_iCadastralParcelClass;
+	OwlClass m_iPointPropertyClass;
 	OwlClass m_iReferencePointIndicatorClass;
 
 	// Feature
@@ -394,7 +397,7 @@ private: // Members
 	OwlClass m_iTrafficAreaClass;
 	OwlClass m_iThingClass; // Unknown
 	map<OwlInstance, vector<OwlInstance>> m_mapFeatures; // Feature : Supported Elements
-	map<OwlInstance, vector<OwlInstance>> m_mapFeatureElements; // Feature (Supported) Element : Geometries
+	map<OwlInstance, vector<OwlInstance>> m_mapFeatureElements; // Feature Supported Element : Geometries
 	
 	 // Temp
 	OwlInstance m_iCurrentOwlBuildingElementInstance;
@@ -458,6 +461,7 @@ protected:  // Methods
 		const vector<SdaiInstance>& vecRepresentations);
 
 	// Geometry Kernel
+	bool IsPoint3DClass(OwlClass iInstanceClass) const;
 	bool isCollectionClass(OwlClass iInstanceClass) const;	
 	bool isTransformationClass(OwlClass iInstanceClass) const;	
 	void getInstancesDefaultState();
@@ -466,7 +470,7 @@ protected:  // Methods
 	// CRS
 	OwlClass isCityModelClass(OwlClass iInstanceClass) const;
 	OwlClass isBoundingShapeClass(OwlClass iInstanceClass) const;
-	OwlClass isEnvelopeClass(OwlClass iInstanceClass) const;	
+	OwlClass isEnvelopeClass(OwlClass iInstanceClass) const;
 	
 	// Building
 	bool isBuildingElement(OwlInstance iInstance) const;
@@ -476,8 +480,9 @@ protected:  // Methods
 	bool isDoorClass(OwlInstance iInstanceClass) const;
 	bool isWindowClass(OwlInstance iInstanceClass) const;
 
-	// Parcel	
+	// Parcel
 	bool isCadastralParcelClass(OwlClass iInstanceClass) const;
+	bool isPointPropertyClass(OwlClass iInstanceClass) const;
 	bool isReferencePointIndicatorClass(OwlClass iInstanceClass) const;
 
 	// Feature
