@@ -2034,8 +2034,6 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 				double dRefElevation = vecLowerCorner[2];
 				sdaiPutAttrBN(iSiteInstance, "RefElevation", sdaiREAL, &dRefElevation);
 			} // if (getSite()->getWGS84( ...
-
-			printf("*** %s\n", strCoordinates.c_str());
 		} // if (retrieveEnvelopeSRSData( ...
 
 		createProperties(iRootInstance, iSiteInstance);
