@@ -2133,7 +2133,7 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 		}
 
 		createStyledItemInstance(iSdaiInstance, m_iDefaultColorRgbInstance, 0.75);
-	}	
+	}
 }
 
 void _citygml_exporter::createBuildings(SdaiInstance iSiteInstance, SdaiInstance iSiteInstancePlacement)
@@ -2265,7 +2265,7 @@ void _citygml_exporter::createBuildings(SdaiInstance iSiteInstance, SdaiInstance
 
 		buildRelAggregatesInstance(
 			"BuildingContainer", 
-			"BuildingContainer for BuildigStories", 
+			"BuildingContainer for BuildingStories", 
 			iBuildingInstance, 
 			vector<SdaiInstance>{ iBuildingStoreyInstance });
 
