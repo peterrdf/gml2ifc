@@ -1234,7 +1234,9 @@ string _exporter_base::getEPSGCode(const string& strSrsName)
 	// srsName="urn:ogc:def:crs,crs:EPSG::31256"
 	if ((iIndex = strSrsName.find("EPSG::")) != string::npos)
 	{
-		assert(false); //#todo
+		string strCode = strSrsName.substr(iIndex + 6).c_str();
+
+		return strCode;
 	}
 
 	// EPSG:3763
@@ -2029,7 +2031,7 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 				sdaiAppend(pRefLongitude, sdaiINTEGER, &iRefLongitude3);
 				sdaiAppend(pRefLongitude, sdaiINTEGER, &iRefLongitude4);
 
-				double dRefElevation = vecLowerCorner[1];
+				double dRefElevation = vecLowerCorner[2];
 				sdaiPutAttrBN(iSiteInstance, "RefElevation", sdaiREAL, &dRefElevation);
 			} // if (getSite()->getWGS84( ...
 
