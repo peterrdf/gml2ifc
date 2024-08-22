@@ -3857,14 +3857,25 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 
 				case DATATYPEPROPERTY_TYPE_WCHAR_T_ARRAY:
 				{
+					SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, false);
+
 					wchar_t** szValue = nullptr;
 					int64_t iValuesCount = 0;
 					GetDatatypeProperty(iOwlInstance, iPropertyInstance, (void**)&szValue, &iValuesCount);
+					assert(iValuesCount == 1);
+
+					SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, true);
+
+					auto iLength = std::char_traits<char16_t>::length((char16_t*)*szValue);
+
+					u16string strValueU16;
+					strValueU16.resize(iLength);
+					memcpy((void*)strValueU16.data(), szValue[0], iLength * sizeof(char16_t));
 
 					mapProperties[szPropertyName] = buildPropertySingleValueText(
 						strPropertyName.c_str(),
 						"attribute",
-						(LPCSTR)CW2A(szValue[0]),
+						To_UTF8(strValueU16).c_str(),
 						"IFCTEXT");
 				}
 				break;
