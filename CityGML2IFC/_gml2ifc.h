@@ -132,7 +132,7 @@ public: // Methods
 	void execute(unsigned char* szData, size_t iSize, const wstring& strOuputFile);
 
 	// SRS
-	void toWGS84Async(int iCRS, float fX, float fY, float fZ);
+	bool toWGS84Async(int iCRS, float fX, float fY, float fZ);
 	const char* getWGS84(int iCRS, float fX, float fY, float fZ);
 
 	// Log
@@ -494,8 +494,9 @@ protected:  // Methods
 	bool isUnknownClass(OwlClass iInstanceClass) const;
 
 private: // Methods
-
-	bool retrieveEnvelopeSRSData(OwlInstance iEnvelopeInstance);
+	
+	bool retrieveEnvelopeSRSData(OwlInstance iEnvelopeInstance, string& strEPSGCode, vector<float>& vecCentroid);
+	bool transformEnvelopeSRSDataAsync(OwlInstance iEnvelopeInstance);
 };
 
 // ************************************************************************************************

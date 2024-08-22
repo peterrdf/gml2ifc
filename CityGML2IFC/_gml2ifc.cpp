@@ -164,12 +164,16 @@ void _gml2ifc_exporter::execute(unsigned char* szData, size_t iSize, const wstri
 	return ss.str();
 }
 
-void _gml2ifc_exporter::toWGS84Async(int iCRS, float fX, float fY, float fZ)
+bool _gml2ifc_exporter::toWGS84Async(int iCRS, float fX, float fY, float fZ)
 {
 	if (m_pSRSTransformer != nullptr)
 	{
 		m_pSRSTransformer->toWGS84Async(iCRS, fX, fY, fZ);
+
+		return true;
 	}
+
+	return false;
 }
 
 const char* _gml2ifc_exporter::getWGS84(int iCRS, float fX, float fY, float fZ)
@@ -733,7 +737,8 @@ SdaiInstance _exporter_base::buildSiteInstance(
 	iSiteInstancePlacement = buildLocalPlacementInstance(pMatrix, 0);
 	assert(iSiteInstancePlacement != 0);
 
-	// #todo!!!
+	//const char* szWGS84 = getSite()->getWGS84();
+
 	//sdaiPutAttrBN(iSiteInstance, "ObjectPlacement", sdaiINSTANCE, (void*)iSiteInstancePlacement);
 	//sdaiPutAttrBN(iSiteInstance, "CompositionType", sdaiENUM, "ELEMENT");
 
@@ -1939,7 +1944,7 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 	{
 		for (auto itBuildingEnvelopeInstance : m_mapBuildingEnvelopeInstance)
 		{
-			if (retrieveEnvelopeSRSData(itBuildingEnvelopeInstance.second))
+			if (transformEnvelopeSRSDataAsync(itBuildingEnvelopeInstance.second))
 			{
 				iTransformationsCount++;
 			}
@@ -1947,7 +1952,7 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 	}
 	else if (m_iModelEnvelopeInstance != 0)
 	{
-		if (retrieveEnvelopeSRSData(m_iModelEnvelopeInstance))
+		if (transformEnvelopeSRSDataAsync(m_iModelEnvelopeInstance))
 		{
 			iTransformationsCount++;
 		}
@@ -4216,14 +4221,17 @@ bool _citygml_exporter::isUnknownClass(OwlClass iInstanceClass) const
 	return (iInstanceClass == m_iThingClass) || IsClassAncestor(iInstanceClass, m_iThingClass);
 }
 
-bool _citygml_exporter::retrieveEnvelopeSRSData(OwlInstance iEnvelopeInstance)
+bool _citygml_exporter::retrieveEnvelopeSRSData(OwlInstance iEnvelopeInstance, string& strEPSGCode, vector<float>& vecCentroid)
 {
 	assert(iEnvelopeInstance != 0);
+
+	strEPSGCode = "";
+	vecCentroid.clear();
 
 	string strSrsName = getStringAttributeValue(iEnvelopeInstance, "srsName");
 	if (!strSrsName.empty() && (strSrsName.find("EPSG") != string::npos))
 	{
-		string strEPSGCode = getEPSGCode(strSrsName);
+		strEPSGCode = getEPSGCode(strSrsName);
 		assert(!strEPSGCode.empty());
 
 		OwlInstance* piInstances = nullptr;
@@ -4235,39 +4243,99 @@ bool _citygml_exporter::retrieveEnvelopeSRSData(OwlInstance iEnvelopeInstance)
 			&iInstancesCount);
 		assert(iInstancesCount == 2);
 
-		// lowerCorner/upperCorner
+		OwlInstance iLowerCornerInstance = 0;
+		OwlInstance iUpperCornerInstance = 0;
+
+		string strTag0 = getTag(piInstances[0]);
+		string strTag1 = getTag(piInstances[1]);
+
+		if (_string::endsWith(strTag0, "lowerCorner"))
+		{
+			iLowerCornerInstance = piInstances[0];
+
+			if (_string::endsWith(strTag1, "upperCorner"))
+			{
+				iUpperCornerInstance = piInstances[1];
+			}
+			else
+			{
+				assert(false);
+
+				return false;
+			}
+		}
+		else if (_string::endsWith(strTag1, "lowerCorner"))
+		{
+			iLowerCornerInstance = piInstances[1];
+
+			if (_string::endsWith(strTag0, "upperCorner"))
+			{
+				iUpperCornerInstance = piInstances[0];
+			}
+			else
+			{
+				assert(false);
+
+				return false;
+			}
+		}
+		else
+		{
+			assert(false);
+
+			return false;
+		}
+
+		// lowerCorner
 		wchar_t** szValue = nullptr;
 		int64_t iValuesCount = 0;
 		GetDatatypeProperty(
-			piInstances[0],
+			iLowerCornerInstance,
 			GetPropertyByName(getSite()->getOwlModel(), "value"),
 			(void**)&szValue,
 			&iValuesCount);
 		assert(iValuesCount == 1);
 
-		vector<double> vecValues1;
-		getPosValues(szValue[0], vecValues1);
+		vector<double> vecLowerCorner;
+		getPosValues(szValue[0], vecLowerCorner);
 
+		// upperCorner
 		szValue = nullptr;
 		iValuesCount = 0;
 		GetDatatypeProperty(
-			piInstances[1],
+			iUpperCornerInstance,
 			GetPropertyByName(getSite()->getOwlModel(), "value"),
 			(void**)&szValue,
 			&iValuesCount);
 		assert(iValuesCount == 1);
 
-		vector<double> vecValues2;
-		getPosValues(szValue[0], vecValues2);
+		vector<double> vecUpperCorner;
+		getPosValues(szValue[0], vecUpperCorner);
 
-		getSite()->toWGS84Async(
-			atoi(strEPSGCode.c_str()),
-			(float)(vecValues1[0] + vecValues2[0]) / 2.f,
-			(float)(vecValues1[1] + vecValues2[1]) / 2.f,
-			(float)(vecValues1[2] + vecValues2[2]) / 2.f);
+		vecCentroid.push_back((float)(vecLowerCorner[0] + vecUpperCorner[0]) / 2.f);
+		vecCentroid.push_back((float)(vecLowerCorner[1] + vecUpperCorner[1]) / 2.f);
+		vecCentroid.push_back((float)(vecLowerCorner[2] + vecUpperCorner[2]) / 2.f);
 
 		return true;
 	} // if (!strSrsName.empty() && ...
+
+	return false;
+}
+
+bool _citygml_exporter::transformEnvelopeSRSDataAsync(OwlInstance iEnvelopeInstance)
+{
+	assert(iEnvelopeInstance != 0);
+
+	string strEPSGCode;
+	vector<float> vecCentroid;
+	if (retrieveEnvelopeSRSData(iEnvelopeInstance, strEPSGCode, vecCentroid))
+	{
+		return getSite()->toWGS84Async(
+			atoi(strEPSGCode.c_str()),
+			vecCentroid[0],
+			vecCentroid[1],
+			vecCentroid[2]);
+	}
 
 	return false;
 }
