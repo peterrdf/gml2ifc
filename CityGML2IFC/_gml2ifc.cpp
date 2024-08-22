@@ -176,14 +176,19 @@ bool _gml2ifc_exporter::toWGS84Async(int iCRS, float fX, float fY, float fZ)
 	return false;
 }
 
-const char* _gml2ifc_exporter::getWGS84(int iCRS, float fX, float fY, float fZ)
+bool _gml2ifc_exporter::getWGS84(int iCRS, float fX, float fY, float fZ, string& strCoordinates)
 {
+	strCoordinates = "";
+
 	if (m_pSRSTransformer != nullptr)
 	{
-		m_pSRSTransformer->getWGS84(iCRS, fX, fY, fZ);
+		const char* szCoordinates = m_pSRSTransformer->getWGS84(iCRS, fX, fY, fZ);
+		strCoordinates = szCoordinates != nullptr ? szCoordinates : "";
+
+		return !strCoordinates.empty();
 	}
 
-	return nullptr;
+	return false;
 }
 
 /*static*/ string _gml2ifc_exporter::addDateTimeStamp(const string& strInput)
@@ -737,9 +742,10 @@ SdaiInstance _exporter_base::buildSiteInstance(
 	iSiteInstancePlacement = buildLocalPlacementInstance(pMatrix, 0);
 	assert(iSiteInstancePlacement != 0);
 
-	//const char* szWGS84 = getSite()->getWGS84();
+	sdaiPutAttrBN(iSiteInstance, "ObjectPlacement", sdaiINSTANCE, (void*)iSiteInstancePlacement);
 
-	//sdaiPutAttrBN(iSiteInstance, "ObjectPlacement", sdaiINSTANCE, (void*)iSiteInstancePlacement);
+	//const char* szWGS84 = getSite()->getWGS84();
+	
 	//sdaiPutAttrBN(iSiteInstance, "CompositionType", sdaiENUM, "ELEMENT");
 
 	//SdaiAggr pRefLatitude = sdaiCreateAggrBN(iSiteInstance, "RefLatitude");
@@ -1967,34 +1973,60 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 
 	createIfcModel(L"IFC4");
 
-	string strTag = getTag(iRootInstance);
+	if (!m_mapBuildingEnvelopeInstance.empty())
+	{
+		assert(false); //#todo
+	}
+	else if (m_iModelEnvelopeInstance != 0)
+	{
+		string strTag = getTag(iRootInstance);
 
-	OwlClass iInstanceClass = GetInstanceClass(iRootInstance);
-	assert(iInstanceClass != 0);
+		OwlClass iInstanceClass = GetInstanceClass(iRootInstance);
+		assert(iInstanceClass != 0);
 
-	char* szClassName = nullptr;
-	GetNameOfClass(iInstanceClass, &szClassName);
-	assert(szClassName != nullptr);
+		char* szClassName = nullptr;
+		GetNameOfClass(iInstanceClass, &szClassName);
+		assert(szClassName != nullptr);
 
-	_matrix mtxIdentity;
-	SdaiInstance iSiteInstancePlacement = 0;
-	SdaiInstance iSiteInstance = buildSiteInstance(
-		strTag.c_str(),
-		szClassName,
-		&mtxIdentity, 
-		iSiteInstancePlacement);
-	assert(iSiteInstancePlacement != 0);
+		_matrix mtxIdentity;
+		SdaiInstance iSiteInstancePlacement = 0;
+		SdaiInstance iSiteInstance = buildSiteInstance(
+			strTag.c_str(),
+			szClassName,
+			&mtxIdentity,
+			iSiteInstancePlacement);
+		assert(iSiteInstancePlacement != 0);
 
-	createProperties(iRootInstance, iSiteInstance);
+		string strEPSGCode;
+		vector<double> vecLowerCorner;
+		vector<double> vecUpperCorner;
+		if (retrieveEnvelopeSRSData(m_iModelEnvelopeInstance, strEPSGCode, vecLowerCorner, vecUpperCorner))
+		{
+			string strCoordinates = "%%%FAILED%%%";
+			if (getSite()->getWGS84(
+				atoi(strEPSGCode.c_str()),
+				(float)(vecLowerCorner[0] + vecUpperCorner[0]) / 2.f,
+				(float)(vecLowerCorner[1] + vecUpperCorner[1]) / 2.f,
+				(float)(vecLowerCorner[2] + vecUpperCorner[2]) / 2.f,
+				strCoordinates))
+			{
 
-	buildRelAggregatesInstance(
-		"ProjectContainer", 
-		"ProjectContainer for Sites", 
-		getProjectInstance(), 
-		vector<SdaiInstance>{iSiteInstance});
+			}
 
-	createBuildings(iSiteInstance, iSiteInstancePlacement);
-	createFeatures(iSiteInstance, iSiteInstancePlacement);
+			printf("*** %s\n", strCoordinates.c_str());
+		}
+
+		createProperties(iRootInstance, iSiteInstance);
+
+		buildRelAggregatesInstance(
+			"ProjectContainer",
+			"ProjectContainer for Sites",
+			getProjectInstance(),
+			vector<SdaiInstance>{iSiteInstance});
+
+		createBuildings(iSiteInstance, iSiteInstancePlacement);
+		createFeatures(iSiteInstance, iSiteInstancePlacement);
+	} // else if (m_iModelEnvelopeInstance != 0)
 
 	saveIfcFile(strOuputFile.c_str());
 }
@@ -4230,12 +4262,13 @@ void _citygml_exporter::collectSRSData(OwlInstance iRootInstance)
 	} // while (iInstance != 0)
 }
 
-bool _citygml_exporter::retrieveEnvelopeSRSData(OwlInstance iEnvelopeInstance, string& strEPSGCode, vector<float>& vecCentroid)
+bool _citygml_exporter::retrieveEnvelopeSRSData(OwlInstance iEnvelopeInstance, string& strEPSGCode, vector<double>& vecLowerCorner, vector<double>& vecUpperCorner)
 {
 	assert(iEnvelopeInstance != 0);
 
 	strEPSGCode = "";
-	vecCentroid.clear();
+	vecLowerCorner.clear();
+	vecUpperCorner.clear();
 
 	string strSrsName = getStringAttributeValue(iEnvelopeInstance, "srsName");
 	if (!strSrsName.empty() && (strSrsName.find("EPSG") != string::npos))
@@ -4305,7 +4338,6 @@ bool _citygml_exporter::retrieveEnvelopeSRSData(OwlInstance iEnvelopeInstance, s
 			&iValuesCount);
 		assert(iValuesCount == 1);
 
-		vector<double> vecLowerCorner;
 		getPosValues(szValue[0], vecLowerCorner);
 
 		// upperCorner
@@ -4318,15 +4350,31 @@ bool _citygml_exporter::retrieveEnvelopeSRSData(OwlInstance iEnvelopeInstance, s
 			&iValuesCount);
 		assert(iValuesCount == 1);
 
-		vector<double> vecUpperCorner;
 		getPosValues(szValue[0], vecUpperCorner);
-
-		vecCentroid.push_back((float)(vecLowerCorner[0] + vecUpperCorner[0]) / 2.f);
-		vecCentroid.push_back((float)(vecLowerCorner[1] + vecUpperCorner[1]) / 2.f);
-		vecCentroid.push_back((float)(vecLowerCorner[2] + vecUpperCorner[2]) / 2.f);
 
 		return true;
 	} // if (!strSrsName.empty() && ...
+
+	return false;
+}
+
+bool _citygml_exporter::retrieveEnvelopeSRSData(OwlInstance iEnvelopeInstance, string& strEPSGCode, vector<double>& vecCentroid)
+{
+	assert(iEnvelopeInstance != 0);
+
+	strEPSGCode = "";
+	vecCentroid.clear();
+
+	vector<double> vecLowerCorner;
+	vector<double> vecUpperCorner;
+	if (retrieveEnvelopeSRSData(iEnvelopeInstance, strEPSGCode, vecLowerCorner, vecUpperCorner))
+	{
+		vecCentroid.push_back((vecLowerCorner[0] + vecUpperCorner[0]) / 2.);
+		vecCentroid.push_back((vecLowerCorner[1] + vecUpperCorner[1]) / 2.);
+		vecCentroid.push_back((vecLowerCorner[2] + vecUpperCorner[2]) / 2.);
+
+		return true;
+	}
 
 	return false;
 }
@@ -4336,14 +4384,14 @@ bool _citygml_exporter::transformEnvelopeSRSDataAsync(OwlInstance iEnvelopeInsta
 	assert(iEnvelopeInstance != 0);
 
 	string strEPSGCode;
-	vector<float> vecCentroid;
+	vector<double> vecCentroid;
 	if (retrieveEnvelopeSRSData(iEnvelopeInstance, strEPSGCode, vecCentroid))
 	{
 		return getSite()->toWGS84Async(
 			atoi(strEPSGCode.c_str()),
-			vecCentroid[0],
-			vecCentroid[1],
-			vecCentroid[2]);
+			(float)vecCentroid[0],
+			(float)vecCentroid[1],
+			(float)vecCentroid[2]);
 	}
 
 	return false;

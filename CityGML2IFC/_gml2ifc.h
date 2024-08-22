@@ -133,7 +133,7 @@ public: // Methods
 
 	// SRS
 	bool toWGS84Async(int iCRS, float fX, float fY, float fZ);
-	const char* getWGS84(int iCRS, float fX, float fY, float fZ);
+	bool getWGS84(int iCRS, float fX, float fY, float fZ, string& strCoordinates);
 
 	// Log
 	static string dateTimeStamp();
@@ -496,7 +496,8 @@ protected:  // Methods
 private: // Methods
 	
 	void collectSRSData(OwlInstance iRootInstance);
-	bool retrieveEnvelopeSRSData(OwlInstance iEnvelopeInstance, string& strEPSGCode, vector<float>& vecCentroid);
+	bool retrieveEnvelopeSRSData(OwlInstance iEnvelopeInstance, string& strEPSGCode, vector<double>& vecLowerCorner, vector<double>& vecUpperCorner);
+	bool retrieveEnvelopeSRSData(OwlInstance iEnvelopeInstance, string& strEPSGCode, vector<double>& vecCentroid);
 	bool transformEnvelopeSRSDataAsync(OwlInstance iEnvelopeInstance);
 };
 
