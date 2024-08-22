@@ -1240,9 +1240,9 @@ string _exporter_base::getEPSGCode(const string& strSrsName)
 	}
 
 	// EPSG:3763
-	if (strSrsName.find("EPSG:") == 0)
+	if ((iIndex = strSrsName.find("EPSG:")) != string::npos)
 	{
-		string strCode = strSrsName.substr(iIndex + 6).c_str();
+		string strCode = strSrsName.substr(iIndex + 5).c_str();
 
 		return strCode;
 	}
@@ -1709,13 +1709,13 @@ string _exporter_base::getStringAttributeValue(OwlInstance iInstance, const stri
 				(void**)&szValue, &iValuesCount);
 			assert(iValuesCount == 1);
 
+			SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, true);
+
 			auto iLength = std::char_traits<char16_t>::length((char16_t*)*szValue);
 
 			u16string strValueU16;
 			strValueU16.resize(iLength);
 			memcpy((void*)strValueU16.data(), szValue[0], iLength * sizeof(char16_t));
-
-			SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, true);
 
 			return To_UTF8(strValueU16);
 		} // if (strPropertyName == ...
@@ -3887,16 +3887,25 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 			// Attributes
 			assert(GetPropertyType(iPropertyInstance) == DATATYPEPROPERTY_TYPE_WCHAR_T_ARRAY);
 
+			SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, false);
+
 			wchar_t** szValue = nullptr;
 			int64_t iValuesCount = 0;
 			GetDatatypeProperty(iOwlInstance, iPropertyInstance, (void**)&szValue, &iValuesCount);
-
 			assert(iValuesCount == 1);
+
+			SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, true);
+
+			auto iLength = std::char_traits<char16_t>::length((char16_t*)*szValue);
+
+			u16string strValueU16;
+			strValueU16.resize(iLength);
+			memcpy((void*)strValueU16.data(), szValue[0], iLength * sizeof(char16_t));
 
 			mapProperties[szPropertyName] = buildPropertySingleValueText(
 				strPropertyName.c_str(),
 				"attribute",
-				(LPCSTR)CW2A(szValue[0]),
+				To_UTF8(strValueU16).c_str(),
 				"IFCTEXT");
 		} // attr:
 
