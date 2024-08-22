@@ -1247,6 +1247,14 @@ string _exporter_base::getEPSGCode(const string& strSrsName)
 		return strCode;
 	}
 
+	// http://www.opengis.net/def/crs/EPSG/0/25830
+	if ((iIndex = strSrsName.find("/EPSG/0/")) != string::npos)
+	{
+		string strCode = strSrsName.substr(iIndex + 6).c_str();
+
+		return strCode;
+	}
+
 	assert(false);
 
 	return "";
@@ -1913,11 +1921,10 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 
 	for (auto itParcelSRS : m_mapParcelSRS)
 	{
-		//#todo
-		/*if (transformEnvelopeSRSDataAsync(itParcelSRS.second))
+		if (transformReferencePointSRSDataAsync(itParcelSRS.second))
 		{
 			iTransformationsCount++;
-		}*/
+		}
 	}
 
 	return iTransformationsCount;
@@ -4481,6 +4488,56 @@ bool _citygml_exporter::transformEnvelopeSRSDataAsync(OwlInstance iEnvelopeInsta
 	string strEPSGCode;
 	vector<double> vecCentroid;
 	if (retrieveEnvelopeSRSData(iEnvelopeInstance, strEPSGCode, vecCentroid))
+	{
+		return getSite()->toWGS84Async(
+			atoi(strEPSGCode.c_str()),
+			(float)vecCentroid[0],
+			(float)vecCentroid[1],
+			(float)vecCentroid[2]);
+	}
+
+	return false;
+}
+
+bool _citygml_exporter::retrieveReferencePointSRSData(OwlInstance iReferencePointInstance, string& strEPSGCode, vector<double>& vecCentroid)
+{
+	assert(iReferencePointInstance != 0);
+
+	strEPSGCode = "";
+	vecCentroid.clear();
+
+	string strSrsName = getStringAttributeValue(iReferencePointInstance, "srsName");
+	if (!strSrsName.empty() && (strSrsName.find("EPSG") != string::npos))
+	{
+		strEPSGCode = getEPSGCode(strSrsName);
+		assert(!strEPSGCode.empty());
+
+		int64_t iValuesCount = 0;
+		double* pdValue = nullptr;
+		GetDatatypeProperty(
+			iReferencePointInstance,
+			GetPropertyByName(getSite()->getOwlModel(), "points"),
+			(void**)&pdValue,
+			&iValuesCount);
+		assert(iValuesCount == 3);
+
+		vecCentroid.push_back(pdValue[0]);
+		vecCentroid.push_back(pdValue[1]);
+		vecCentroid.push_back(pdValue[2]);
+
+		return true;
+	}
+
+	return false;
+}
+
+bool _citygml_exporter::transformReferencePointSRSDataAsync(OwlInstance iReferencePointInstance)
+{
+	assert(iReferencePointInstance != 0);
+
+	string strEPSGCode;
+	vector<double> vecCentroid;
+	if (retrieveReferencePointSRSData(iReferencePointInstance, strEPSGCode, vecCentroid))
 	{
 		return getSite()->toWGS84Async(
 			atoi(strEPSGCode.c_str()),

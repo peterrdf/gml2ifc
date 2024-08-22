@@ -505,6 +505,8 @@ private: // Methods
 	bool retrieveEnvelopeSRSData(OwlInstance iEnvelopeInstance, string& strEPSGCode, vector<double>& vecLowerCorner, vector<double>& vecUpperCorner);
 	bool retrieveEnvelopeSRSData(OwlInstance iEnvelopeInstance, string& strEPSGCode, vector<double>& vecCentroid);
 	bool transformEnvelopeSRSDataAsync(OwlInstance iEnvelopeInstance);
+	bool retrieveReferencePointSRSData(OwlInstance iReferencePointInstance, string& strEPSGCode, vector<double>& vecCentroid);
+	bool transformReferencePointSRSDataAsync(OwlInstance iReferencePointInstance);
 };
 
 // ************************************************************************************************
