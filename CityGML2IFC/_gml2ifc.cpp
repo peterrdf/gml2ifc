@@ -1250,7 +1250,7 @@ string _exporter_base::getEPSGCode(const string& strSrsName)
 	// http://www.opengis.net/def/crs/EPSG/0/25830
 	if ((iIndex = strSrsName.find("/EPSG/0/")) != string::npos)
 	{
-		string strCode = strSrsName.substr(iIndex + 6).c_str();
+		string strCode = strSrsName.substr(iIndex + 8).c_str();
 
 		return strCode;
 	}
@@ -1980,7 +1980,7 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 	if (!m_mapBuildingSRS.empty() || !m_mapParcelSRS.empty())
 	{
 		printf("TODO: not implemented.\n");
-		assert(false); //#todo
+		//assert(false); //#todo
 	}
 	else if (m_iModelEnvelopeInstance != 0)
 	{
