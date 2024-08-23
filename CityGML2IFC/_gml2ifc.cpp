@@ -1720,14 +1720,14 @@ string _exporter_base::getTag(OwlInstance iInstance) const
 
 	SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, false);
 
-	wchar_t** szValue = nullptr;
+	char** szValue = nullptr;
 	int64_t iValuesCount = 0;
 	GetDatatypeProperty(iInstance, m_iTagProperty, (void**)&szValue, &iValuesCount);
 	assert(iValuesCount == 1);
 
 	SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, true);
 
-	return (LPCSTR)CW2A(szValue[0]);
+	return szValue[0] ? nullptr : "";
 }
 
 string _exporter_base::getStringAttributeValue(OwlInstance iInstance, const string& strAttributeName) const
