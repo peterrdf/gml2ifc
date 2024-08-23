@@ -368,8 +368,7 @@ private: // Members
 	OwlInstance m_iEnvelopeInstance;
 	map<OwlInstance, OwlInstance> m_mapBuildingSRS; // Building : Envelope
 	map<OwlInstance, OwlInstance> m_mapParcelSRS; // Parcel : Reference Point
-	vector<OwlInstance> m_vecInstancesGlobalSRS;
-	vector<pair<OwlInstance, OwlInstance>> m_vecInstancesLocalSRS; // Site : Instance (Building, Parcel, etc.)
+	vector<SdaiInstance> m_vecSiteInstances;
 
 	// CityObjectGroup
 	OwlClass m_iCityObjectGroupMemberClass;
@@ -435,6 +434,7 @@ protected:  // Methods
 
 	// Buildings
 	void createBuildings(SdaiInstance iSiteInstance, SdaiInstance iSiteInstancePlacement);
+	void createBuildings();
 	void createBuildingsRecursively(OwlInstance iInstance);
 	void searchForBuildingElements(OwlInstance iBuildingInstance, OwlInstance iInstance);
 	void searchForProxyBuildingElements(OwlInstance iBuildingInstance, OwlInstance iInstance);
@@ -442,6 +442,7 @@ protected:  // Methods
 
 	// Features
 	void createFeatures(SdaiInstance iSiteInstance, SdaiInstance iSiteInstancePlacement);
+	void createFeatures();
 	void createFeaturesRecursively(OwlInstance iInstance);
 	void searchForFeatureElements(OwlInstance iFeatureInstance, OwlInstance iInstance);
 
@@ -509,7 +510,8 @@ protected:  // Methods
 
 private: // Methods
 	
-	void setSiteSRSData(SdaiInstance iSiteInstance, OwlInstance iEnvelopeInstance);
+	void setSiteEnvelopeSRSData(SdaiInstance iSiteInstance, OwlInstance iEnvelopeInstance);
+	void setSiteReferencePointSRSData(SdaiInstance iSiteInstance, OwlInstance iReferencePointInstance);
 	void collectSRSData(OwlInstance iRootInstance);
 	bool retrieveEnvelopeSRSData(OwlInstance iEnvelopeInstance, string& strEPSGCode, vector<double>& vecLowerCorner, vector<double>& vecUpperCorner);
 	bool retrieveEnvelopeSRSData(OwlInstance iEnvelopeInstance, string& strEPSGCode, vector<double>& vecCentroid);

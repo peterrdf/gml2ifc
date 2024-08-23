@@ -1856,8 +1856,7 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 	, m_iEnvelopeInstance(0)
 	, m_mapBuildingSRS()
 	, m_mapParcelSRS()
-	, m_vecInstancesGlobalSRS()
-	, m_vecInstancesLocalSRS()
+	, m_vecSiteInstances()
 	, m_iCityObjectGroupMemberClass(0)
 	, m_iGeometryMemberClass(0)
 	, m_iBuildingClass(0)
@@ -2017,97 +2016,18 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 
 	createIfcModel(L"IFC4");
 
-	if (!m_mapBuildingSRS.empty() || !m_mapParcelSRS.empty())
+	// Global SRS (if any)
+	createBuildings();
+	createFeatures();
+
+	if (!m_vecSiteInstances.empty())
 	{
-		printf("TODO: not implemented.\n");
-		//assert(false); //#todo
-	}
-	else if (m_iEnvelopeInstance != 0)
-	{
-		string strTag = getTag(iRootInstance);
-
-		OwlClass iInstanceClass = GetInstanceClass(iRootInstance);
-		assert(iInstanceClass != 0);
-
-		char* szClassName = nullptr;
-		GetNameOfClass(iInstanceClass, &szClassName);
-		assert(szClassName != nullptr);
-
-		_matrix mtxIdentity;
-		SdaiInstance iSiteInstancePlacement = 0;
-		SdaiInstance iSiteInstance = buildSiteInstance(
-			strTag.c_str(),
-			szClassName,
-			&mtxIdentity,
-			iSiteInstancePlacement);
-		assert(iSiteInstancePlacement != 0);
-
-		string strEPSGCode;
-		vector<double> vecLowerCorner;
-		vector<double> vecUpperCorner;
-		if (retrieveEnvelopeSRSData(m_iEnvelopeInstance, strEPSGCode, vecLowerCorner, vecUpperCorner))
-		{
-			string strCoordinates;
-			if (getSite()->getWGS84(
-				atoi(strEPSGCode.c_str()),
-				(float)(vecLowerCorner[0] + vecUpperCorner[0]) / 2.f,
-				(float)(vecLowerCorner[1] + vecUpperCorner[1]) / 2.f,
-				(float)(vecLowerCorner[2] + vecUpperCorner[2]) / 2.f,
-				strCoordinates))
-			{
-				vector<double> vecCoordinates;
-				getPosValues(strCoordinates, vecCoordinates);
-
-				double dLatitude = vecCoordinates[0];
-				double dLongitude = vecCoordinates[1];
-
-				SdaiAggr pRefLatitude = sdaiCreateAggrBN(iSiteInstance, "RefLatitude");
-				assert(pRefLatitude != nullptr);
-
-				/*
-				  c[1] :=    a;                                           -- -50
-				  c[2] :=   (a - c[1]) * 60;                              -- -58
-				  c[3] :=  ((a - c[1]) * 60 - c[2]) * 60;                 -- -33
-				  c[4] := (((a - c[1]) * 60 - c[2]) * 60 - c[3]) * 1.e6;  -- -110400
-				*/
-				
-				int64_t iRefLatitude1 = (int64_t)dLatitude;
-				int64_t iRefLatitude2 = (int64_t)((dLatitude - iRefLatitude1) * 60.);
-				int64_t iRefLatitude3 = (int64_t)(((dLatitude - iRefLatitude1) * 60. - iRefLatitude2) * 60.);
-				int64_t iRefLatitude4 = 0;
-				sdaiAppend(pRefLatitude, sdaiINTEGER, &iRefLatitude1);
-				sdaiAppend(pRefLatitude, sdaiINTEGER, &iRefLatitude2);
-				sdaiAppend(pRefLatitude, sdaiINTEGER, &iRefLatitude3);
-				sdaiAppend(pRefLatitude, sdaiINTEGER, &iRefLatitude4);
-
-				SdaiAggr pRefLongitude = sdaiCreateAggrBN(iSiteInstance, "RefLongitude");
-				assert(pRefLongitude != nullptr);
-
-				int64_t iRefLongitude1 = (int64_t)dLongitude;
-				int64_t iRefLongitude2 = (int64_t)((dLongitude - iRefLongitude1) * 60.);
-				int64_t iRefLongitude3 = (int64_t)(((dLongitude - iRefLongitude1) * 60. - iRefLongitude2) * 60.);
-				int64_t iRefLongitude4 = 0;
-				sdaiAppend(pRefLongitude, sdaiINTEGER, &iRefLongitude1);
-				sdaiAppend(pRefLongitude, sdaiINTEGER, &iRefLongitude2);
-				sdaiAppend(pRefLongitude, sdaiINTEGER, &iRefLongitude3);
-				sdaiAppend(pRefLongitude, sdaiINTEGER, &iRefLongitude4);
-
-				double dRefElevation = vecLowerCorner[2];
-				sdaiPutAttrBN(iSiteInstance, "RefElevation", sdaiREAL, &dRefElevation);
-			} // if (getSite()->getWGS84( ...
-		} // if (retrieveEnvelopeSRSData( ...
-
-		createProperties(iRootInstance, iSiteInstance);
-
 		buildRelAggregatesInstance(
 			"ProjectContainer",
 			"ProjectContainer for Sites",
 			getProjectInstance(),
-			vector<SdaiInstance>{iSiteInstance});
-
-		createBuildings(iSiteInstance, iSiteInstancePlacement);
-		createFeatures(iSiteInstance, iSiteInstancePlacement);
-	} // else if (m_iEnvelopeInstance != 0)
+			m_vecSiteInstances);
+	}
 
 	saveIfcFile(strOuputFile.c_str());
 }
@@ -2122,7 +2042,7 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 
 	if (m_iEnvelopeInstance != 0)
 	{
-		setSiteSRSData(iSiteInstance, m_iEnvelopeInstance);
+		setSiteEnvelopeSRSData(iSiteInstance, m_iEnvelopeInstance);
 	}
 }
 
@@ -2332,6 +2252,203 @@ void _citygml_exporter::createBuildings(SdaiInstance iSiteInstance, SdaiInstance
 		"SiteContainer For Buildings", 
 		iSiteInstance, 
 		vecBuildingInstances);
+}
+
+void _citygml_exporter::createBuildings()
+{
+	OwlClass iSchemasClass = GetClassByName(getSite()->getOwlModel(), "class:Schemas");
+	assert(iSchemasClass != 0);
+
+	OwlInstance iInstance = GetInstancesByIterator(getSite()->getOwlModel(), 0);
+	while (iInstance != 0)
+	{
+		OwlClass iInstanceClass = GetInstanceClass(iInstance);
+		assert(iInstanceClass != 0);
+
+		if (GetInstanceInverseReferencesByIterator(iInstance, 0) == 0)
+		{
+			if (iInstanceClass != iSchemasClass)
+			{
+				if (isBuildingClass(iInstanceClass))
+				{
+					if (m_mapBuildings.find(iInstance) == m_mapBuildings.end())
+					{
+						m_mapBuildings[iInstance] = vector<OwlInstance>();
+
+						searchForBuildingElements(iInstance, iInstance);
+					}
+					else
+					{
+						assert(false); // Internal error!
+					}
+				}
+				else
+				{
+					createBuildingsRecursively(iInstance);
+				}
+			}
+		} // if (GetInstanceInverseReferencesByIterator(iInstance, 0) == 0)
+
+		iInstance = GetInstancesByIterator(getSite()->getOwlModel(), iInstance);
+	} // while (iInstance != 0)
+
+	if (m_mapBuildings.empty())
+	{
+		return;
+	}
+
+	_matrix mtxIdentity;
+	map<SdaiInstance, vector<SdaiInstance>> mapSite2Instances;
+	for (auto& itBuilding : m_mapBuildings)
+	{
+		SdaiInstance iSiteInstance = 0;
+		SdaiInstance iSiteInstancePlacement = 0;
+
+		auto itBuildingSRS = m_mapBuildingSRS.find(itBuilding.first);
+		if (itBuildingSRS != m_mapBuildingSRS.end())
+		{
+			OwlInstance iRootInstance = getSite()->getOwlRootInstance();
+			assert(iRootInstance != 0);
+
+			string strTag = getTag(iRootInstance);
+
+			OwlClass iInstanceClass = GetInstanceClass(iRootInstance);
+			assert(iInstanceClass != 0);
+
+			char* szClassName = nullptr;
+			GetNameOfClass(iInstanceClass, &szClassName);
+			assert(szClassName != nullptr);
+
+			_matrix mtxIdentity;
+			iSiteInstance = buildSiteInstance(
+				strTag.c_str(),
+				szClassName,
+				&mtxIdentity,
+				iSiteInstancePlacement);
+			assert(iSiteInstance != 0);
+			assert(iSiteInstancePlacement != 0);
+
+			setSiteEnvelopeSRSData(iSiteInstance, itBuildingSRS->second);
+		}
+		else
+		{
+			iSiteInstance = getSiteInstance(iSiteInstancePlacement);
+		}
+
+		string strTag = getTag(itBuilding.first);
+
+		OwlClass iInstanceClass = GetInstanceClass(itBuilding.first);
+		assert(iInstanceClass != 0);
+
+		char* szClassName = nullptr;
+		GetNameOfClass(iInstanceClass, &szClassName);
+		assert(szClassName != nullptr);
+
+		SdaiInstance iBuildingInstancePlacement = 0;
+		SdaiInstance iBuildingInstance = buildBuildingInstance(
+			strTag.c_str(),
+			szClassName,
+			&mtxIdentity,
+			iSiteInstancePlacement,
+			iBuildingInstancePlacement);
+		assert(iBuildingInstance != 0);
+
+		createProperties(itBuilding.first, iBuildingInstance);
+
+		auto itSite2Instances = mapSite2Instances.find(iSiteInstance);
+		if (itSite2Instances == mapSite2Instances.end())
+		{
+			mapSite2Instances[iSiteInstance] = vector<SdaiInstance>{ iBuildingInstance };
+		}
+		else
+		{
+			itSite2Instances->second.push_back(iBuildingInstance);
+		}
+
+		// Proxy/Unknown Building Elements
+		searchForProxyBuildingElements(itBuilding.first, itBuilding.first);
+
+		if (itBuilding.second.empty())
+		{
+			continue;
+		}
+
+		vector<SdaiInstance> vecBuildingElementInstances;
+		for (auto iOwlBuildingElementInstance : itBuilding.second)
+		{
+			m_iCurrentOwlBuildingElementInstance = iOwlBuildingElementInstance;
+
+			auto itBuildingElement = m_mapBuildingElements.find(iOwlBuildingElementInstance);
+			assert(itBuildingElement != m_mapBuildingElements.end());
+			assert(!itBuildingElement->second.empty());
+
+			vector<SdaiInstance> vecSdaiBuildingElementGeometryInstances;
+			for (auto iOwlBuildingElementGeometryInstance : itBuildingElement->second)
+			{
+				vector<SdaiInstance> vecNewGeometryInstances;
+				createGeometry(iOwlBuildingElementGeometryInstance, vecNewGeometryInstances, true);
+
+				vecSdaiBuildingElementGeometryInstances.insert(
+					vecSdaiBuildingElementGeometryInstances.end(),
+					vecNewGeometryInstances.begin(),
+					vecNewGeometryInstances.end());
+			}
+
+			if (vecSdaiBuildingElementGeometryInstances.empty())
+			{
+				// Not supported
+				continue;
+			}
+
+			SdaiInstance iBuildingElementInstancePlacement = 0;
+			SdaiInstance iSdaiBuildingElementInstance = buildBuildingElementInstance(
+				itBuildingElement->first,
+				&mtxIdentity,
+				iBuildingInstancePlacement,
+				iBuildingElementInstancePlacement,
+				vecSdaiBuildingElementGeometryInstances);
+			assert(iSdaiBuildingElementInstance != 0);
+
+			createProperties(iOwlBuildingElementInstance, iSdaiBuildingElementInstance);
+
+			vecBuildingElementInstances.push_back(iSdaiBuildingElementInstance);
+
+			m_iCurrentOwlBuildingElementInstance = 0;
+		} // for (auto iOwlBuildingElementInstance : ...
+
+		SdaiInstance iBuildingStoreyInstancePlacement = 0;
+		SdaiInstance iBuildingStoreyInstance = buildBuildingStoreyInstance(&mtxIdentity, iBuildingInstancePlacement, iBuildingStoreyInstancePlacement);
+		assert(iBuildingStoreyInstance != 0);
+
+		buildRelAggregatesInstance(
+			"BuildingContainer",
+			"BuildingContainer for BuildingStories",
+			iBuildingInstance,
+			vector<SdaiInstance>{ iBuildingStoreyInstance });
+
+		if (vecBuildingElementInstances.empty())
+		{
+			// Not supported
+			continue;
+		}
+
+		buildRelContainedInSpatialStructureInstance(
+			"BuildingStoreyContainer",
+			"BuildingStoreyContainer for Building Elements",
+			iBuildingStoreyInstance,
+			vecBuildingElementInstances);
+	} // for (auto& itBuilding : ...
+
+	for (const auto& itSite2Instances : mapSite2Instances)
+	{
+		buildRelAggregatesInstance(
+			"SiteContainer",
+			"SiteContainer For Buildings",
+			itSite2Instances.first,
+			itSite2Instances.second);
+
+		m_vecSiteInstances.push_back(itSite2Instances.first);
+	}	
 }
 
 void _citygml_exporter::createBuildingsRecursively(OwlInstance iInstance)
@@ -2719,6 +2836,219 @@ void _citygml_exporter::createFeatures(SdaiInstance iSiteInstance, SdaiInstance 
 		"SiteContainer For Features",
 		iSiteInstance,
 		vecFeatureInstances);
+}
+
+void _citygml_exporter::createFeatures()
+{
+	OwlClass iSchemasClass = GetClassByName(getSite()->getOwlModel(), "class:Schemas");
+	assert(iSchemasClass != 0);
+
+	OwlInstance iInstance = GetInstancesByIterator(getSite()->getOwlModel(), 0);
+	while (iInstance != 0)
+	{
+		if (GetInstanceInverseReferencesByIterator(iInstance, 0) == 0)
+		{
+			OwlClass iInstanceClass = GetInstanceClass(iInstance);
+			assert(iInstanceClass != 0);
+
+			if (iInstanceClass != iSchemasClass)
+			{
+				if (isFeatureClass(iInstanceClass))
+				{
+					if (m_mapFeatures.find(iInstance) == m_mapFeatures.end())
+					{
+						m_mapFeatures[iInstance] = vector<OwlInstance>();
+
+						searchForFeatureElements(iInstance, iInstance);
+					}
+					else
+					{
+						assert(false); // Internal error!
+					}
+				}
+				else
+				{
+					createFeaturesRecursively(iInstance);
+				}
+			}
+		} // if (GetInstanceInverseReferencesByIterator(iInstance, 0) == 0)
+
+		iInstance = GetInstancesByIterator(getSite()->getOwlModel(), iInstance);
+	} // while (iInstance != 0)
+
+	if (m_mapFeatures.empty())
+	{
+		return;
+	}
+
+	_matrix mtxIdentity;
+	map<SdaiInstance, vector<SdaiInstance>> mapSite2Instances;
+	for (auto& itFeature : m_mapFeatures)
+	{
+		if (itFeature.second.empty())
+		{
+			continue;
+		}
+
+		// Geometry
+		vector<SdaiInstance> vecSdaiFeatureElementGeometryInstances;
+		for (auto iOwlFeatureElementInstance : itFeature.second)
+		{
+			m_iCurrentOwlBuildingElementInstance = iOwlFeatureElementInstance;
+
+			auto itFeatureElement = m_mapFeatureElements.find(iOwlFeatureElementInstance);
+			assert(itFeatureElement != m_mapFeatureElements.end());
+			assert(!itFeatureElement->second.empty());
+
+			for (auto iOwlFeatureElementGeometryInstance : itFeatureElement->second)
+			{
+				vector<SdaiInstance> vecNewGeometryInstances;
+				createGeometry(iOwlFeatureElementGeometryInstance, vecNewGeometryInstances, true);
+
+				vecSdaiFeatureElementGeometryInstances.insert(
+					vecSdaiFeatureElementGeometryInstances.end(),
+					vecNewGeometryInstances.begin(),
+					vecNewGeometryInstances.end());
+			}
+
+			m_iCurrentOwlBuildingElementInstance = 0;
+		} // for (auto iOwlFeatureElementInstance : ...
+
+		if (vecSdaiFeatureElementGeometryInstances.empty())
+		{
+			// Not supported
+			continue;
+		}
+
+		SdaiInstance iSiteInstance = 0;
+		SdaiInstance iSiteInstancePlacement = 0;
+
+		auto itParcelSRS = m_mapParcelSRS.find(itFeature.first);
+		if (itParcelSRS != m_mapParcelSRS.end())
+		{
+			OwlInstance iRootInstance = getSite()->getOwlRootInstance();
+			assert(iRootInstance != 0);
+
+			string strTag = getTag(iRootInstance);
+
+			OwlClass iInstanceClass = GetInstanceClass(iRootInstance);
+			assert(iInstanceClass != 0);
+
+			char* szClassName = nullptr;
+			GetNameOfClass(iInstanceClass, &szClassName);
+			assert(szClassName != nullptr);
+
+			_matrix mtxIdentity;
+			iSiteInstance = buildSiteInstance(
+				strTag.c_str(),
+				szClassName,
+				&mtxIdentity,
+				iSiteInstancePlacement);
+			assert(iSiteInstance != 0);
+			assert(iSiteInstancePlacement != 0);
+
+			setSiteReferencePointSRSData(iSiteInstance, itParcelSRS->second);
+		}
+		else
+		{
+			iSiteInstance = getSiteInstance(iSiteInstancePlacement);
+		}
+
+		// Feature
+		string strTag = getTag(itFeature.first);
+
+		OwlClass iInstanceClass = GetInstanceClass(itFeature.first);
+		assert(iInstanceClass != 0);
+
+		char* szClassName = nullptr;
+		GetNameOfClass(iInstanceClass, &szClassName);
+		assert(szClassName != nullptr);
+
+		SdaiInstance iFeatureInstance = 0;
+		SdaiInstance iFeatureInstancePlacement = 0;
+		if (isTransportationObjectClass(iInstanceClass) ||
+			isTrafficSpaceClass(iInstanceClass) ||
+			isTrafficAreaClass(iInstanceClass) ||
+			isBridgeObjectClass(iInstanceClass) ||
+			isTunnelObjectClass(iInstanceClass))
+		{
+			iFeatureInstance = buildTransportElementInstance(
+				strTag.c_str(),
+				szClassName,
+				&mtxIdentity,
+				iSiteInstancePlacement,
+				iFeatureInstancePlacement,
+				vecSdaiFeatureElementGeometryInstances);
+			assert(iFeatureInstance != 0);
+
+			createProperties(itFeature.first, iFeatureInstance);
+		}
+		else if (isReliefObjectClass(iInstanceClass) ||
+			isLandUseClass(iInstanceClass) ||
+			isWaterObjectClass(iInstanceClass) ||
+			isVegetationObjectClass(iInstanceClass))
+		{
+			iFeatureInstance = buildGeographicElementInstance(
+				strTag.c_str(),
+				szClassName,
+				&mtxIdentity,
+				iSiteInstancePlacement,
+				iFeatureInstancePlacement,
+				vecSdaiFeatureElementGeometryInstances);
+			assert(iFeatureInstance != 0);
+
+			createProperties(itFeature.first, iFeatureInstance);
+		}
+		else if (isFurnitureObjectClass(iInstanceClass))
+		{
+			iFeatureInstance = buildFurnitureObjectInstance(
+				strTag.c_str(),
+				szClassName,
+				&mtxIdentity,
+				iSiteInstancePlacement,
+				iFeatureInstancePlacement,
+				vecSdaiFeatureElementGeometryInstances);
+			assert(iFeatureInstance != 0);
+
+			createProperties(itFeature.first, iFeatureInstance);
+		}
+		else
+		{
+			iFeatureInstance = buildFeatureInstance(
+				strTag.c_str(),
+				szClassName,
+				&mtxIdentity,
+				iSiteInstancePlacement,
+				iFeatureInstancePlacement,
+				vecSdaiFeatureElementGeometryInstances);
+			assert(iFeatureInstance != 0);
+
+			createProperties(itFeature.first, iFeatureInstance);
+		}
+
+		assert(iFeatureInstance != 0);
+
+		auto itSite2Instances = mapSite2Instances.find(iSiteInstance);
+		if (itSite2Instances == mapSite2Instances.end())
+		{
+			mapSite2Instances[iSiteInstance] = vector<SdaiInstance>{ iFeatureInstance };
+		}
+		else
+		{
+			itSite2Instances->second.push_back(iFeatureInstance);
+		}
+	} // for (auto& itFeature : ...
+
+	for (const auto& itSite2Instances : mapSite2Instances)
+	{
+		buildRelAggregatesInstance(
+			"SiteContainer",
+			"SiteContainer For Features",
+			itSite2Instances.first,
+			itSite2Instances.second);
+
+		m_vecSiteInstances.push_back(itSite2Instances.first);
+	}
 }
 
 void _citygml_exporter::createFeaturesRecursively(OwlInstance iInstance)
@@ -4338,7 +4668,7 @@ bool _citygml_exporter::isUnknownClass(OwlClass iInstanceClass) const
 	return (iInstanceClass == m_iThingClass) || IsClassAncestor(iInstanceClass, m_iThingClass);
 }
 
-void _citygml_exporter::setSiteSRSData(SdaiInstance iSiteInstance, OwlInstance iEnvelopeInstance)
+void _citygml_exporter::setSiteEnvelopeSRSData(SdaiInstance iSiteInstance, OwlInstance iEnvelopeInstance)
 {
 	assert(iSiteInstance != 0);
 	assert(iEnvelopeInstance != 0);
@@ -4397,6 +4727,66 @@ void _citygml_exporter::setSiteSRSData(SdaiInstance iSiteInstance, OwlInstance i
 			sdaiPutAttrBN(iSiteInstance, "RefElevation", sdaiREAL, &dRefElevation);
 		} // if (getSite()->getWGS84( ...
 	} // if (retrieveEnvelopeSRSData( ...
+}
+
+void _citygml_exporter::setSiteReferencePointSRSData(SdaiInstance iSiteInstance, OwlInstance iReferencePointInstance)
+{
+	assert(iSiteInstance != 0);
+	assert(iReferencePointInstance != 0);
+
+	string strEPSGCode;
+	vector<double> vecCentroid;
+	if (retrieveReferencePointSRSData(iReferencePointInstance, strEPSGCode, vecCentroid))
+	{
+		string strCoordinates;
+		if (getSite()->getWGS84(
+			atoi(strEPSGCode.c_str()),
+			(float)vecCentroid[0],
+			(float)vecCentroid[1],
+			(float)vecCentroid[2],
+			strCoordinates))
+		{
+			vector<double> vecCoordinates;
+			getPosValues(strCoordinates, vecCoordinates);
+
+			double dLatitude = vecCoordinates[0];
+			double dLongitude = vecCoordinates[1];
+
+			SdaiAggr pRefLatitude = sdaiCreateAggrBN(iSiteInstance, "RefLatitude");
+			assert(pRefLatitude != nullptr);
+
+			/*
+			  c[1] :=    a;                                           -- -50
+			  c[2] :=   (a - c[1]) * 60;                              -- -58
+			  c[3] :=  ((a - c[1]) * 60 - c[2]) * 60;                 -- -33
+			  c[4] := (((a - c[1]) * 60 - c[2]) * 60 - c[3]) * 1.e6;  -- -110400
+			*/
+
+			int64_t iRefLatitude1 = (int64_t)dLatitude;
+			int64_t iRefLatitude2 = (int64_t)((dLatitude - iRefLatitude1) * 60.);
+			int64_t iRefLatitude3 = (int64_t)(((dLatitude - iRefLatitude1) * 60. - iRefLatitude2) * 60.);
+			int64_t iRefLatitude4 = 0;
+			sdaiAppend(pRefLatitude, sdaiINTEGER, &iRefLatitude1);
+			sdaiAppend(pRefLatitude, sdaiINTEGER, &iRefLatitude2);
+			sdaiAppend(pRefLatitude, sdaiINTEGER, &iRefLatitude3);
+			sdaiAppend(pRefLatitude, sdaiINTEGER, &iRefLatitude4);
+
+			SdaiAggr pRefLongitude = sdaiCreateAggrBN(iSiteInstance, "RefLongitude");
+			assert(pRefLongitude != nullptr);
+
+			int64_t iRefLongitude1 = (int64_t)dLongitude;
+			int64_t iRefLongitude2 = (int64_t)((dLongitude - iRefLongitude1) * 60.);
+			int64_t iRefLongitude3 = (int64_t)(((dLongitude - iRefLongitude1) * 60. - iRefLongitude2) * 60.);
+			int64_t iRefLongitude4 = 0;
+			sdaiAppend(pRefLongitude, sdaiINTEGER, &iRefLongitude1);
+			sdaiAppend(pRefLongitude, sdaiINTEGER, &iRefLongitude2);
+			sdaiAppend(pRefLongitude, sdaiINTEGER, &iRefLongitude3);
+			sdaiAppend(pRefLongitude, sdaiINTEGER, &iRefLongitude4);
+
+			double dRefElevation = vecCentroid[2];
+			sdaiPutAttrBN(iSiteInstance, "RefElevation", sdaiREAL, &dRefElevation);
+		} // if (getSite()->getWGS84( ...
+	}
 }
 
 void _citygml_exporter::collectSRSData(OwlInstance iRootInstance)
