@@ -368,6 +368,8 @@ private: // Members
 	OwlInstance m_iEnvelopeInstance;
 	map<OwlInstance, OwlInstance> m_mapBuildingSRS; // Building : Envelope
 	map<OwlInstance, OwlInstance> m_mapParcelSRS; // Parcel : Reference Point
+	vector<OwlInstance> m_vecInstancesGlobalSRS;
+	vector<pair<OwlInstance, OwlInstance>> m_vecInstancesLocalSRS; // Site : Instance (Building, Parcel, etc.)
 
 	// CityObjectGroup
 	OwlClass m_iCityObjectGroupMemberClass;
