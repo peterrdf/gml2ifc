@@ -114,6 +114,7 @@ private: // Members
 	_log_callback m_pLogCallback;
 	CSRSTransformer* m_pSRSTransformer;
 	OwlModel m_iOwlModel;
+	OwlInstance m_iOwlRootInstance;
 
 public: // Methods
 
@@ -144,6 +145,7 @@ public: // Methods
 	void logErr(const string& strEvent) { logWrite(enumLogEvent::error, strEvent); }
 
 	OwlModel getOwlModel() const { return m_iOwlModel; }
+	OwlInstance getOwlRootInstance() const { return m_iOwlRootInstance; }
 
 private: // Methods
 
@@ -163,7 +165,6 @@ private: // Members
 	RdfProperty m_iTagProperty;
 
 	SdaiModel m_iSdaiModel;	
-	SdaiInstance m_iSiteInstance;
 	SdaiInstance m_iPersonInstance;
 	SdaiInstance m_iOrganizationInstance;
 	SdaiInstance m_iPersonAndOrganizationInstance;	
@@ -173,7 +174,9 @@ private: // Members
 	SdaiInstance m_iConversionBasedUnitInstance;
 	SdaiInstance m_iUnitAssignmentInstance;
 	SdaiInstance m_iWorldCoordinateSystemInstance;
-	SdaiInstance m_iProjectInstance;	
+	SdaiInstance m_iProjectInstance;
+	SdaiInstance m_iSiteInstance;
+	SdaiInstance m_iSiteInstancePlacement;	
 
 public: // Methods
 
@@ -198,13 +201,15 @@ public: // Methods
 	SdaiInstance getUnitAssignmentInstance();
 	SdaiInstance getWorldCoordinateSystemInstance();	
 	SdaiInstance getProjectInstance();
+	SdaiInstance getSiteInstance(SdaiInstance& iSiteInstancePlacement);
 
 protected: // Methods
 
 	virtual void preProcessing() {}
 	virtual void executeCore(OwlInstance iRootInstance, const wstring& strOuputFile) = 0;
 	virtual void postProcessing() {}
-	virtual OwlInstance getModelEnvelopeInstance() { return 0; }
+
+	virtual void onSiteCreated(SdaiInstance iSiteInstance) {}
 
 	/* Model */
 	void createIfcModel(const wchar_t* szSchemaName);
@@ -359,8 +364,8 @@ private: // Members
 	// CRS
 	OwlClass m_iCityModelClass;
 	OwlClass m_iBoundingShapeClass;
-	OwlClass m_iEnvelopeClass;
-	OwlInstance m_iModelEnvelopeInstance;
+	OwlClass m_iEnvelopeClass;	
+	OwlInstance m_iEnvelopeInstance;
 	map<OwlInstance, OwlInstance> m_mapBuildingSRS; // Building : Envelope
 	map<OwlInstance, OwlInstance> m_mapParcelSRS; // Parcel : Reference Point
 
@@ -402,7 +407,7 @@ private: // Members
 	 // Temp
 	OwlInstance m_iCurrentOwlBuildingElementInstance;
 
-	// Cache
+	// Cache	
 	SdaiInstance m_iDefaultWallSurfaceColorRgbInstance;
 	SdaiInstance m_iDefaultRoofSurfaceColorRgbInstance;
 	SdaiInstance m_iDefaultDoorColorRgbInstance;
@@ -421,7 +426,8 @@ protected:  // Methods
 	virtual void preProcessing() override;
 	virtual void executeCore(OwlInstance iRootInstance, const wstring& strOuputFile) override;
 	virtual void postProcessing() override;
-	virtual OwlInstance getModelEnvelopeInstance() override;
+
+	virtual void onSiteCreated(SdaiInstance iSiteInstance) override;
 
 	virtual void createDefaultStyledItemInstance(SdaiInstance iSdaiInstance) override;
 
@@ -501,6 +507,7 @@ protected:  // Methods
 
 private: // Methods
 	
+	void setSiteSRSData(SdaiInstance iSiteInstance, OwlInstance iEnvelopeInstance);
 	void collectSRSData(OwlInstance iRootInstance);
 	bool retrieveEnvelopeSRSData(OwlInstance iEnvelopeInstance, string& strEPSGCode, vector<double>& vecLowerCorner, vector<double>& vecUpperCorner);
 	bool retrieveEnvelopeSRSData(OwlInstance iEnvelopeInstance, string& strEPSGCode, vector<double>& vecCentroid);

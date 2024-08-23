@@ -19,6 +19,7 @@ _gml2ifc_exporter::_gml2ifc_exporter(
 	, m_pLogCallback(pLogCallback)
 	, m_pSRSTransformer(pSRSTransformer)
 	, m_iOwlModel(0)
+	, m_iOwlRootInstance(0)
 {
 	assert(!m_strRootFolder.empty());
 	assert(m_pLogCallback != nullptr);
@@ -51,10 +52,10 @@ int _gml2ifc_exporter::retrieveSRSData(const wstring& strInputFile)
 
 	setFormatSettings(m_iOwlModel);
 
-	OwlInstance iRootInstance = ImportGISModelW(m_iOwlModel, strInputFile.c_str());
-	if (iRootInstance != 0)
+	m_iOwlRootInstance = ImportGISModelW(m_iOwlModel, strInputFile.c_str());
+	if (m_iOwlRootInstance != 0)
 	{
-		return retrieveSRSDataCore(iRootInstance);
+		return retrieveSRSDataCore(m_iOwlRootInstance);
 	}
 	else
 	{
@@ -111,10 +112,10 @@ void _gml2ifc_exporter::execute(const wstring& strInputFile, const wstring& strO
 
 	setFormatSettings(m_iOwlModel);
 
-	OwlInstance iRootInstance = ImportGISModelW(m_iOwlModel, strInputFile.c_str());
-	if (iRootInstance != 0)
+	m_iOwlRootInstance = ImportGISModelW(m_iOwlModel, strInputFile.c_str());
+	if (m_iOwlRootInstance != 0)
 	{
-		executeCore(iRootInstance, strOuputFile);
+		executeCore(m_iOwlRootInstance, strOuputFile);
 	}
 	else
 	{
@@ -296,8 +297,7 @@ int _gml2ifc_exporter::retrieveSRSDataCore(OwlInstance iRootInstance)
 _exporter_base::_exporter_base(_gml2ifc_exporter* pSite)
 	: m_pSite(pSite)
 	, m_iTagProperty(0)
-	, m_iSdaiModel(0)	
-	, m_iSiteInstance(0)
+	, m_iSdaiModel(0)
 	, m_iPersonInstance(0)
 	, m_iOrganizationInstance(0)
 	, m_iPersonAndOrganizationInstance(0)	
@@ -308,6 +308,8 @@ _exporter_base::_exporter_base(_gml2ifc_exporter* pSite)
 	, m_iUnitAssignmentInstance(0)
 	, m_iWorldCoordinateSystemInstance(0)
 	, m_iProjectInstance(0)
+	, m_iSiteInstance(0) 
+	, m_iSiteInstancePlacement(0) 
 	
 {
 	assert(m_pSite != nullptr);
@@ -541,6 +543,42 @@ SdaiInstance _exporter_base::getProjectInstance()
 	}
 
 	return m_iProjectInstance;
+}
+
+SdaiInstance _exporter_base::getSiteInstance(SdaiInstance& iSiteInstancePlacement)
+{
+	if (m_iSiteInstance == 0)
+	{
+		assert(m_iSiteInstancePlacement == 0);
+
+		OwlInstance iRootInstance = getSite()->getOwlRootInstance();
+		assert(iRootInstance != 0);
+
+		string strTag = getTag(iRootInstance);
+
+		OwlClass iInstanceClass = GetInstanceClass(iRootInstance);
+		assert(iInstanceClass != 0);
+
+		char* szClassName = nullptr;
+		GetNameOfClass(iInstanceClass, &szClassName);
+		assert(szClassName != nullptr);
+
+		_matrix mtxIdentity;
+		m_iSiteInstancePlacement = 0;
+		m_iSiteInstance = buildSiteInstance(
+			strTag.c_str(),
+			szClassName,
+			&mtxIdentity,
+			m_iSiteInstancePlacement);
+		assert(m_iSiteInstance != 0);
+		assert(m_iSiteInstancePlacement != 0);
+
+		onSiteCreated(m_iSiteInstance);
+	} // if (m_iSiteInstance == 0)
+
+	iSiteInstancePlacement = m_iSiteInstancePlacement;
+
+	return m_iSiteInstance;
 }
 
 void _exporter_base::createIfcModel(const wchar_t* szSchemaName)
@@ -1815,7 +1853,7 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 	, m_iCityModelClass(0)
 	, m_iBoundingShapeClass(0)
 	, m_iEnvelopeClass(0)
-	, m_iModelEnvelopeInstance(0)
+	, m_iEnvelopeInstance(0)
 	, m_mapBuildingSRS()
 	, m_mapParcelSRS()
 	, m_iCityObjectGroupMemberClass(0)
@@ -1903,9 +1941,9 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 
 	int iTransformationsCount = 0;
 
-	if (m_iModelEnvelopeInstance != 0)
+	if (m_iEnvelopeInstance != 0)
 	{
-		if (transformEnvelopeSRSDataAsync(m_iModelEnvelopeInstance))
+		if (transformEnvelopeSRSDataAsync(m_iEnvelopeInstance))
 		{
 			iTransformationsCount++;
 		}
@@ -1963,7 +2001,7 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 	assert(iRootInstance != 0);
 	assert(!strOuputFile.empty());
 
-	m_iModelEnvelopeInstance = 0;
+	m_iEnvelopeInstance = 0;
 	m_mapBuildingSRS.clear();
 	m_mapParcelSRS.clear();
 
@@ -1982,7 +2020,7 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 		printf("TODO: not implemented.\n");
 		//assert(false); //#todo
 	}
-	else if (m_iModelEnvelopeInstance != 0)
+	else if (m_iEnvelopeInstance != 0)
 	{
 		string strTag = getTag(iRootInstance);
 
@@ -2005,7 +2043,7 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 		string strEPSGCode;
 		vector<double> vecLowerCorner;
 		vector<double> vecUpperCorner;
-		if (retrieveEnvelopeSRSData(m_iModelEnvelopeInstance, strEPSGCode, vecLowerCorner, vecUpperCorner))
+		if (retrieveEnvelopeSRSData(m_iEnvelopeInstance, strEPSGCode, vecLowerCorner, vecUpperCorner))
 		{
 			string strCoordinates;
 			if (getSite()->getWGS84(
@@ -2067,7 +2105,7 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 
 		createBuildings(iSiteInstance, iSiteInstancePlacement);
 		createFeatures(iSiteInstance, iSiteInstancePlacement);
-	} // else if (m_iModelEnvelopeInstance != 0)
+	} // else if (m_iEnvelopeInstance != 0)
 
 	saveIfcFile(strOuputFile.c_str());
 }
@@ -2076,9 +2114,14 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 {
 }
 
-/*virtual*/ OwlInstance _citygml_exporter::getModelEnvelopeInstance() /*override*/
+/*virtual*/ void _citygml_exporter::onSiteCreated(SdaiInstance iSiteInstance) /*override*/
 {
-	return m_iModelEnvelopeInstance;
+	assert(iSiteInstance != 0);
+
+	if (m_iEnvelopeInstance != 0)
+	{
+		setSiteSRSData(iSiteInstance, m_iEnvelopeInstance);
+	}
 }
 
 /*virtual*/ void _citygml_exporter::createDefaultStyledItemInstance(SdaiInstance iSdaiInstance) /*override*/
@@ -4293,6 +4336,67 @@ bool _citygml_exporter::isUnknownClass(OwlClass iInstanceClass) const
 	return (iInstanceClass == m_iThingClass) || IsClassAncestor(iInstanceClass, m_iThingClass);
 }
 
+void _citygml_exporter::setSiteSRSData(SdaiInstance iSiteInstance, OwlInstance iEnvelopeInstance)
+{
+	assert(iSiteInstance != 0);
+	assert(iEnvelopeInstance != 0);
+
+	string strEPSGCode;
+	vector<double> vecLowerCorner;
+	vector<double> vecUpperCorner;
+	if (retrieveEnvelopeSRSData(iEnvelopeInstance, strEPSGCode, vecLowerCorner, vecUpperCorner))
+	{
+		string strCoordinates;
+		if (getSite()->getWGS84(
+			atoi(strEPSGCode.c_str()),
+			(float)(vecLowerCorner[0] + vecUpperCorner[0]) / 2.f,
+			(float)(vecLowerCorner[1] + vecUpperCorner[1]) / 2.f,
+			(float)(vecLowerCorner[2] + vecUpperCorner[2]) / 2.f,
+			strCoordinates))
+		{
+			vector<double> vecCoordinates;
+			getPosValues(strCoordinates, vecCoordinates);
+
+			double dLatitude = vecCoordinates[0];
+			double dLongitude = vecCoordinates[1];
+
+			SdaiAggr pRefLatitude = sdaiCreateAggrBN(iSiteInstance, "RefLatitude");
+			assert(pRefLatitude != nullptr);
+
+			/*
+			  c[1] :=    a;                                           -- -50
+			  c[2] :=   (a - c[1]) * 60;                              -- -58
+			  c[3] :=  ((a - c[1]) * 60 - c[2]) * 60;                 -- -33
+			  c[4] := (((a - c[1]) * 60 - c[2]) * 60 - c[3]) * 1.e6;  -- -110400
+			*/
+
+			int64_t iRefLatitude1 = (int64_t)dLatitude;
+			int64_t iRefLatitude2 = (int64_t)((dLatitude - iRefLatitude1) * 60.);
+			int64_t iRefLatitude3 = (int64_t)(((dLatitude - iRefLatitude1) * 60. - iRefLatitude2) * 60.);
+			int64_t iRefLatitude4 = 0;
+			sdaiAppend(pRefLatitude, sdaiINTEGER, &iRefLatitude1);
+			sdaiAppend(pRefLatitude, sdaiINTEGER, &iRefLatitude2);
+			sdaiAppend(pRefLatitude, sdaiINTEGER, &iRefLatitude3);
+			sdaiAppend(pRefLatitude, sdaiINTEGER, &iRefLatitude4);
+
+			SdaiAggr pRefLongitude = sdaiCreateAggrBN(iSiteInstance, "RefLongitude");
+			assert(pRefLongitude != nullptr);
+
+			int64_t iRefLongitude1 = (int64_t)dLongitude;
+			int64_t iRefLongitude2 = (int64_t)((dLongitude - iRefLongitude1) * 60.);
+			int64_t iRefLongitude3 = (int64_t)(((dLongitude - iRefLongitude1) * 60. - iRefLongitude2) * 60.);
+			int64_t iRefLongitude4 = 0;
+			sdaiAppend(pRefLongitude, sdaiINTEGER, &iRefLongitude1);
+			sdaiAppend(pRefLongitude, sdaiINTEGER, &iRefLongitude2);
+			sdaiAppend(pRefLongitude, sdaiINTEGER, &iRefLongitude3);
+			sdaiAppend(pRefLongitude, sdaiINTEGER, &iRefLongitude4);
+
+			double dRefElevation = vecLowerCorner[2];
+			sdaiPutAttrBN(iSiteInstance, "RefElevation", sdaiREAL, &dRefElevation);
+		} // if (getSite()->getWGS84( ...
+	} // if (retrieveEnvelopeSRSData( ...
+}
+
 void _citygml_exporter::collectSRSData(OwlInstance iRootInstance)
 {
 	OwlInstance iInstance = GetInstancesByIterator(getSite()->getOwlModel(), 0);
@@ -4321,7 +4425,7 @@ void _citygml_exporter::collectSRSData(OwlInstance iRootInstance)
 
 						if (isCityModelClass(iParentInstanceClass))
 						{
-							m_iModelEnvelopeInstance = iEnvelopeInstance;
+							m_iEnvelopeInstance = iEnvelopeInstance;
 						}
 						else if (isBuildingClass(iParentInstanceClass))
 						{
