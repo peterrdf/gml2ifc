@@ -1718,7 +1718,7 @@ string _exporter_base::getTag(OwlInstance iInstance) const
 {
 	assert(iInstance != 0);
 
-	SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, false);
+	SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, true);
 
 	char** szValue = nullptr;
 	int64_t iValuesCount = 0;
@@ -1727,7 +1727,7 @@ string _exporter_base::getTag(OwlInstance iInstance) const
 
 	SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, true);
 
-	return szValue[0] ? nullptr : "";
+	return szValue[0];
 }
 
 string _exporter_base::getStringAttributeValue(OwlInstance iInstance, const string& strAttributeName) const
