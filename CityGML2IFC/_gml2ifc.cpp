@@ -1718,16 +1718,26 @@ string _exporter_base::getTag(OwlInstance iInstance) const
 {
 	assert(iInstance != 0);
 
-	SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, true);
+	SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, false);
 
-	char** szValue = nullptr;
+	wchar_t** szValue = nullptr;
 	int64_t iValuesCount = 0;
-	GetDatatypeProperty(iInstance, m_iTagProperty, (void**)&szValue, &iValuesCount);
+	GetDatatypeProperty(
+		iInstance,
+		m_iTagProperty,
+		(void**)&szValue, 
+		&iValuesCount);
 	assert(iValuesCount == 1);
 
 	SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, true);
 
-	return szValue[0];
+	auto iLength = std::char_traits<char16_t>::length((char16_t*)*szValue);
+
+	u16string strValueU16;
+	strValueU16.resize(iLength);
+	memcpy((void*)strValueU16.data(), szValue[0], iLength * sizeof(char16_t));
+
+	return To_UTF8(strValueU16);
 }
 
 string _exporter_base::getStringAttributeValue(OwlInstance iInstance, const string& strAttributeName) const
@@ -1750,9 +1760,11 @@ string _exporter_base::getStringAttributeValue(OwlInstance iInstance, const stri
 
 			wchar_t** szValue = nullptr;
 			int64_t iValuesCount = 0;
-			GetDatatypeProperty(iInstance,
+			GetDatatypeProperty(
+				iInstance,
 				iPropertyInstance,
-				(void**)&szValue, &iValuesCount);
+				(void**)&szValue, 
+				&iValuesCount);
 			assert(iValuesCount == 1);
 
 			SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, true);
