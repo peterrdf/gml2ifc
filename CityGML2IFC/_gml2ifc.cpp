@@ -1742,11 +1742,11 @@ string _exporter_base::getTag(OwlInstance iInstance) const
 #else
 	auto iLength = std::char_traits<wchar_t>::length((wchar_t*)*szValue);
 
-	u32string u32Str;
-	u32Str.resize(iLength);
-	memcpy((void*)u32Str.data(), szValue[0], iLength * sizeof(wchar_t));
+	u32string strValueU32;
+	strValueU32.resize(iLength);
+	memcpy((void*)strValueU32.data(), szValue[0], iLength * sizeof(wchar_t));
 
-	return To_UTF8(u32Str);
+	return To_UTF8(strValueU32);
 #endif // _WINDOWS
 }
 
@@ -1779,6 +1779,7 @@ string _exporter_base::getStringAttributeValue(OwlInstance iInstance, const stri
 
 			SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, true);
 
+#ifdef _WINDOWS
 			auto iLength = std::char_traits<char16_t>::length((char16_t*)*szValue);
 
 			u16string strValueU16;
@@ -1786,6 +1787,15 @@ string _exporter_base::getStringAttributeValue(OwlInstance iInstance, const stri
 			memcpy((void*)strValueU16.data(), szValue[0], iLength * sizeof(char16_t));
 
 			return To_UTF8(strValueU16);
+#else
+			auto iLength = std::char_traits<wchar_t>::length((wchar_t*)*szValue);
+
+			u32string strValueU32;
+			strValueU32.resize(iLength);
+			memcpy((void*)strValueU32.data(), szValue[0], iLength * sizeof(wchar_t));
+
+			return To_UTF8(strValueU32);
+#endif // _WINDOWS			
 		} // if (strPropertyName == ...
 
 		iPropertyInstance = GetInstancePropertyByIterator(iInstance, iPropertyInstance);
@@ -4270,6 +4280,7 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 
 					SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, true);
 
+#ifdef _WINDOWS
 					auto iLength = std::char_traits<char16_t>::length((char16_t*)*szValue);
 
 					u16string strValueU16;
@@ -4281,6 +4292,19 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 						"attribute",
 						To_UTF8(strValueU16).c_str(),
 						"IFCTEXT");
+#else
+					auto iLength = std::char_traits<wchar_t>::length((wchar_t*)*szValue);
+
+					u32string strValueU32;
+					strValueU32.resize(iLength);
+					memcpy((void*)strValueU32.data(), szValue[0], iLength * sizeof(wchar_t));
+
+					mapProperties[szPropertyName] = buildPropertySingleValueText(
+						strPropertyName.c_str(),
+						"attribute",
+						To_UTF8(strValueU32).c_str(),
+						"IFCTEXT");
+#endif // _WINDOWS		
 				}
 				break;
 
@@ -4311,6 +4335,7 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 
 			SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, true);
 
+#ifdef _WINDOWS
 			auto iLength = std::char_traits<char16_t>::length((char16_t*)*szValue);
 
 			u16string strValueU16;
@@ -4322,6 +4347,19 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 				"attribute",
 				To_UTF8(strValueU16).c_str(),
 				"IFCTEXT");
+#else
+			auto iLength = std::char_traits<wchar_t>::length((wchar_t*)*szValue);
+
+			u32string strValueU32;
+			strValueU32.resize(iLength);
+			memcpy((void*)strValueU32.data(), szValue[0], iLength * sizeof(wchar_t));
+
+			mapProperties[szPropertyName] = buildPropertySingleValueText(
+				strPropertyName.c_str(),
+				"attribute",
+				To_UTF8(strValueU32).c_str(),
+				"IFCTEXT");
+#endif // _WINDOWS	
 		} // attr:
 
 		iPropertyInstance = GetInstancePropertyByIterator(iOwlInstance, iPropertyInstance);
