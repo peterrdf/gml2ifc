@@ -2339,12 +2339,9 @@ void _citygml_exporter::createBuildings()
 		auto itBuildingSRS = m_mapBuildingSRS.find(itBuilding.first);
 		if (itBuildingSRS != m_mapBuildingSRS.end())
 		{
-			OwlInstance iRootInstance = getSite()->getOwlRootInstance();
-			assert(iRootInstance != 0);
+			string strTag = getTag(itBuildingSRS->first);
 
-			string strTag = "Root";// getTag(iRootInstance);
-
-			OwlClass iInstanceClass = GetInstanceClass(iRootInstance);
+			OwlClass iInstanceClass = GetInstanceClass(itBuildingSRS->first);
 			assert(iInstanceClass != 0);
 
 			char* szClassName = nullptr;
