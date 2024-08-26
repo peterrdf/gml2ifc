@@ -554,7 +554,7 @@ SdaiInstance _exporter_base::getSiteInstance(SdaiInstance& iSiteInstancePlacemen
 		OwlInstance iRootInstance = getSite()->getOwlRootInstance();
 		assert(iRootInstance != 0);
 
-		string strTag = getTag(iRootInstance);
+		string strTag = "Root";// getTag(iRootInstance);
 
 		OwlClass iInstanceClass = GetInstanceClass(iRootInstance);
 		assert(iInstanceClass != 0);
@@ -2342,7 +2342,7 @@ void _citygml_exporter::createBuildings()
 			OwlInstance iRootInstance = getSite()->getOwlRootInstance();
 			assert(iRootInstance != 0);
 
-			string strTag = getTag(iRootInstance);
+			string strTag = "Root";// getTag(iRootInstance);
 
 			OwlClass iInstanceClass = GetInstanceClass(iRootInstance);
 			assert(iInstanceClass != 0);
@@ -2961,7 +2961,7 @@ void _citygml_exporter::createFeatures()
 			OwlInstance iRootInstance = getSite()->getOwlRootInstance();
 			assert(iRootInstance != 0);
 
-			string strTag = getTag(iRootInstance);
+			string strTag = "Root";// getTag(iRootInstance);
 
 			OwlClass iInstanceClass = GetInstanceClass(iRootInstance);
 			assert(iInstanceClass != 0);
