@@ -2955,12 +2955,9 @@ void _citygml_exporter::createFeatures()
 		auto itParcelSRS = m_mapParcelSRS.find(itFeature.first);
 		if (itParcelSRS != m_mapParcelSRS.end())
 		{
-			OwlInstance iRootInstance = getSite()->getOwlRootInstance();
-			assert(iRootInstance != 0);
+			string strTag = getTag(itParcelSRS->first);
 
-			string strTag = "Root";// getTag(iRootInstance);
-
-			OwlClass iInstanceClass = GetInstanceClass(iRootInstance);
+			OwlClass iInstanceClass = GetInstanceClass(itParcelSRS->first);
 			assert(iInstanceClass != 0);
 
 			char* szClassName = nullptr;
