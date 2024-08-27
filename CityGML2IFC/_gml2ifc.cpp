@@ -554,8 +554,6 @@ SdaiInstance _exporter_base::getSiteInstance(SdaiInstance& iSiteInstancePlacemen
 		OwlInstance iRootInstance = getSite()->getOwlRootInstance();
 		assert(iRootInstance != 0);
 
-		string strTag = "Root";// getTag(iRootInstance);
-
 		OwlClass iInstanceClass = GetInstanceClass(iRootInstance);
 		assert(iInstanceClass != 0);
 
@@ -566,7 +564,7 @@ SdaiInstance _exporter_base::getSiteInstance(SdaiInstance& iSiteInstancePlacemen
 		_matrix mtxIdentity;
 		m_iSiteInstancePlacement = 0;
 		m_iSiteInstance = buildSiteInstance(
-			strTag.c_str(),
+			szClassName,
 			szClassName,
 			&mtxIdentity,
 			m_iSiteInstancePlacement);
