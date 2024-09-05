@@ -209,7 +209,8 @@ protected: // Methods
 	virtual void executeCore(OwlInstance iRootInstance, const wstring& strOuputFile) = 0;
 	virtual void postProcessing() {}
 
-	virtual void onSiteCreated(SdaiInstance iSiteInstance) {}
+	virtual void onPreCreateSite(_matrix* pSiteMatrix) {}
+	virtual void onPostCreateSite(SdaiInstance iSiteInstance) {}
 
 	/* Model */
 	void createIfcModel(const wchar_t* szSchemaName);
@@ -428,7 +429,8 @@ protected:  // Methods
 	virtual void executeCore(OwlInstance iRootInstance, const wstring& strOuputFile) override;
 	virtual void postProcessing() override;
 
-	virtual void onSiteCreated(SdaiInstance iSiteInstance) override;
+	virtual void onPreCreateSite(_matrix* pSiteMatrix) override;
+	virtual void onPostCreateSite(SdaiInstance iSiteInstance) override;
 
 	virtual void createDefaultStyledItemInstance(SdaiInstance iSdaiInstance) override;
 

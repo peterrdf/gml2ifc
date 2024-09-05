@@ -561,17 +561,19 @@ SdaiInstance _exporter_base::getSiteInstance(SdaiInstance& iSiteInstancePlacemen
 		GetNameOfClass(iInstanceClass, &szClassName);
 		assert(szClassName != nullptr);
 
-		_matrix mtxIdentity;
+		_matrix mtxSite;
+		onPreCreateSite(&mtxSite);
+
 		m_iSiteInstancePlacement = 0;
 		m_iSiteInstance = buildSiteInstance(
 			szClassName,
 			szClassName,
-			&mtxIdentity,
+			&mtxSite,
 			m_iSiteInstancePlacement);
 		assert(m_iSiteInstance != 0);
 		assert(m_iSiteInstancePlacement != 0);
 
-		onSiteCreated(m_iSiteInstance);
+		onPostCreateSite(m_iSiteInstance);
 	} // if (m_iSiteInstance == 0)
 
 	iSiteInstancePlacement = m_iSiteInstancePlacement;
@@ -2066,7 +2068,25 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 {
 }
 
-/*virtual*/ void _citygml_exporter::onSiteCreated(SdaiInstance iSiteInstance) /*override*/
+/*virtual*/ void _citygml_exporter::onPreCreateSite(_matrix* pSiteMatrix) /*override*/
+{
+	assert(pSiteMatrix != 0);
+
+	if (m_iEnvelopeInstance != 0)
+	{
+		string strEPSGCode;
+		vector<double> vecLowerCorner;
+		vector<double> vecUpperCorner;
+		if (retrieveEnvelopeSRSData(m_iEnvelopeInstance, strEPSGCode, vecLowerCorner, vecUpperCorner))
+		{
+			pSiteMatrix->_41 = (vecLowerCorner[0] + vecUpperCorner[0]) / 2.;
+			pSiteMatrix->_42 = (vecLowerCorner[1] + vecUpperCorner[1]) / 2.;
+			pSiteMatrix->_43 = (vecLowerCorner[2] + vecUpperCorner[1]) / 2.;
+		}
+	}
+}
+
+/*virtual*/ void _citygml_exporter::onPostCreateSite(SdaiInstance iSiteInstance) /*override*/
 {
 	assert(iSiteInstance != 0);
 
@@ -2326,8 +2346,7 @@ void _citygml_exporter::createBuildings()
 	{
 		return;
 	}
-
-	_matrix mtxIdentity;
+	
 	map<SdaiInstance, vector<SdaiInstance>> mapSite2Instances;
 	for (auto& itBuilding : m_mapBuildings)
 	{
@@ -2346,11 +2365,21 @@ void _citygml_exporter::createBuildings()
 			GetNameOfClass(iInstanceClass, &szClassName);
 			assert(szClassName != nullptr);
 
-			_matrix mtxIdentity;
+			_matrix mtxSite;
+			string strEPSGCode;
+			vector<double> vecLowerCorner;
+			vector<double> vecUpperCorner;
+			if (retrieveEnvelopeSRSData(itBuildingSRS->second, strEPSGCode, vecLowerCorner, vecUpperCorner))
+			{
+				mtxSite._41 = (vecLowerCorner[0] + vecUpperCorner[0]) / 2.;
+				mtxSite._42 = (vecLowerCorner[1] + vecUpperCorner[1]) / 2.;
+				mtxSite._43 = (vecLowerCorner[2] + vecUpperCorner[1]) / 2.;
+			}
+
 			iSiteInstance = buildSiteInstance(
 				strTag.c_str(),
 				szClassName,
-				&mtxIdentity,
+				&mtxSite,
 				iSiteInstancePlacement);
 			assert(iSiteInstance != 0);
 			assert(iSiteInstancePlacement != 0);
@@ -2361,6 +2390,8 @@ void _citygml_exporter::createBuildings()
 		{
 			iSiteInstance = getSiteInstance(iSiteInstancePlacement);
 		}
+
+		_matrix mtxIdentity;
 
 		string strTag = getTag(itBuilding.first);
 
@@ -2444,7 +2475,10 @@ void _citygml_exporter::createBuildings()
 		} // for (auto iOwlBuildingElementInstance : ...
 
 		SdaiInstance iBuildingStoreyInstancePlacement = 0;
-		SdaiInstance iBuildingStoreyInstance = buildBuildingStoreyInstance(&mtxIdentity, iBuildingInstancePlacement, iBuildingStoreyInstancePlacement);
+		SdaiInstance iBuildingStoreyInstance = buildBuildingStoreyInstance(
+			&mtxIdentity, 
+			iBuildingInstancePlacement, 
+			iBuildingStoreyInstancePlacement);
 		assert(iBuildingStoreyInstance != 0);
 
 		buildRelAggregatesInstance(
