@@ -3729,14 +3729,14 @@ void _citygml_exporter::createBoundaryRepresentation(OwlInstance iInstance, vect
 		assert(iGeometricRepresentationContextInstance != 0);
 
 		// CRS #todo
-		//const wchar_t* szSrsName = getStringAttributeValue(m_iCurrentOwlBuildingElementInstance, "srsName");
-		//if ((szSrsName != nullptr) && (wstring(szSrsName).find(L"EPSG") != string::npos))			
+		//string strSrsName = getStringAttributeValue(m_iCurrentOwlBuildingElementInstance, "srsName");
+		//if (!strSrsName.empty() && (strSrsName.find("EPSG") != string::npos))
 		//{
-		//	string strEPSG = getEPSG(szSrsName);
+		//	string strEPSG = getEPSG(strSrsName);
 		//	assert(!strEPSG.empty());
 
 		//	SdaiInstance iSourceCRS = buildProjectedCRS(strEPSG);
-		//	SdaiInstance iTargetCRS = buildProjectedCRS(strEPSG);
+		//	SdaiInstance iTargetCRS = buildProjectedCRS("EPSG:4326");
 		//	SdaiInstance iMapConversion = buildMapConversion(iSourceCRS, iTargetCRS);
 
 		//	double dOrthogonalHeight = 10000; // #todo
