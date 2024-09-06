@@ -2062,6 +2062,23 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 			"ProjectContainer for Sites",
 			getProjectInstance(),
 			m_vecSiteInstances);
+
+		{
+			double dPrecision = 0.00001;
+			int_t iCoordinateSpaceDimension = 3;
+
+			SdaiInstance iGeometricRepresentationContextInstance = sdaiCreateInstanceBN(getSdaiModel(), "IfcGeometricRepresentationContext");
+			assert(iGeometricRepresentationContextInstance != 0);
+
+			sdaiPutAttrBN(iGeometricRepresentationContextInstance, "ContextType", sdaiSTRING, "Model");
+			sdaiPutAttrBN(iGeometricRepresentationContextInstance, "CoordinateSpaceDimension", sdaiINTEGER, &iCoordinateSpaceDimension);
+			sdaiPutAttrBN(iGeometricRepresentationContextInstance, "Precision", sdaiREAL, &dPrecision);
+			sdaiPutAttrBN(iGeometricRepresentationContextInstance, "WorldCoordinateSystem", sdaiINSTANCE, (void*)getWorldCoordinateSystemInstance());
+			sdaiPutAttrBN(iGeometricRepresentationContextInstance, "TrueNorth", sdaiINSTANCE, (void*)buildDirectionInstance2D(0., 1.));
+
+			SdaiInstance iTargetCRS = buildProjectedCRS("EPSG:5514");
+			SdaiInstance iMapConversion = buildMapConversion(iGeometricRepresentationContextInstance, iTargetCRS);
+		}
 	}
 
 	saveIfcFile(strOuputFile.c_str());
