@@ -519,9 +519,9 @@ private: // Methods
 	void setSiteReferencePointSRSData(SdaiInstance iSiteInstance, OwlInstance iReferencePointInstance);
 	void collectSRSData(OwlInstance iRootInstance);
 	bool retrieveEnvelopeSRSData(OwlInstance iEnvelopeInstance, string& strEPSGCode, vector<double>& vecLowerCorner, vector<double>& vecUpperCorner);
-	bool retrieveEnvelopeSRSData(OwlInstance iEnvelopeInstance, string& strEPSGCode, vector<double>& vecCentroid);
+	bool retrieveEnvelopeSRSData(OwlInstance iEnvelopeInstance, string& strEPSGCode, vector<double>& vecCenter);
 	bool transformEnvelopeSRSDataAsync(OwlInstance iEnvelopeInstance);
-	bool retrieveReferencePointSRSData(OwlInstance iReferencePointInstance, string& strEPSGCode, vector<double>& vecCentroid);
+	bool retrieveReferencePointSRSData(OwlInstance iReferencePointInstance, string& strEPSGCode, vector<double>& vecCenter);
 	bool transformReferencePointSRSDataAsync(OwlInstance iReferencePointInstance);
 };
 
