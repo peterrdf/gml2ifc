@@ -3282,7 +3282,8 @@ void _citygml_exporter::createGeometry(OwlInstance iInstance, vector<SdaiInstanc
 	}
 	else if (isReferencePointIndicatorClass(iInstanceClass))
 	{
-		createReferencePointIndicator(iInstance, vecGeometryInstances, bCreateIfcShapeRepresentation);
+		//#todo
+		//createReferencePointIndicator(iInstance, vecGeometryInstances, bCreateIfcShapeRepresentation);
 	}
 	else if (isTransformationClass(iInstanceClass))
 	{
