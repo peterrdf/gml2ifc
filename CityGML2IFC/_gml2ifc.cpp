@@ -2991,7 +2991,13 @@ void _citygml_exporter::createFeatures()
 			GetNameOfClass(iInstanceClass, &szClassName);
 			assert(szClassName != nullptr);
 
-			_matrix mtxIdentity;
+			_matrix mtxSite;
+			getReferencePoint(itParcelSRS->second, m_dXOffset, m_dYOffset, m_dZOffset);
+
+			mtxSite._41 = m_dXOffset;
+			mtxSite._42 = m_dYOffset;
+			mtxSite._43 = m_dZOffset;
+
 			iSiteInstance = buildSiteInstance(
 				strTag.c_str(),
 				szClassName,
@@ -3004,6 +3010,11 @@ void _citygml_exporter::createFeatures()
 		}
 		else
 		{
+			if (m_iEnvelopeInstance != 0)
+			{
+				getEnvelopeCenter(m_iEnvelopeInstance, m_dXOffset, m_dYOffset, m_dZOffset);
+			}
+
 			iSiteInstance = getSiteInstance(iSiteInstancePlacement);
 		}
 
@@ -4765,6 +4776,32 @@ void _citygml_exporter::getEnvelopeCenter(OwlInstance iEnvelopeInstance, double&
 		dX = (vecLowerCorner[0] + vecUpperCorner[0]) / 2.;
 		dY = (vecLowerCorner[1] + vecUpperCorner[1]) / 2.;
 		dZ = (vecLowerCorner[2] + vecUpperCorner[2]) / 2.;
+	}
+}
+
+void _citygml_exporter::getReferencePoint(OwlInstance iReferencePointInstance, double& dX, double& dY, double& dZ)
+{
+	assert(iReferencePointInstance != 0);
+
+	dX = 0.;
+	dY = 0.;
+	dZ = 0.;
+
+	string strSrsName = getStringAttributeValue(iReferencePointInstance, "srsName");
+	if (!strSrsName.empty() && (strSrsName.find("EPSG") != string::npos))
+	{
+		int64_t iValuesCount = 0;
+		double* pdValue = nullptr;
+		GetDatatypeProperty(
+			iReferencePointInstance,
+			GetPropertyByName(getSite()->getOwlModel(), "points"),
+			(void**)&pdValue,
+			&iValuesCount);
+		assert(iValuesCount == 3);
+
+		dX = pdValue[0];
+		dY = pdValue[1];
+		dZ = pdValue[2];
 	}
 }
 
