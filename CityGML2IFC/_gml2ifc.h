@@ -408,6 +408,9 @@ private: // Members
 	
 	 // Temp
 	OwlInstance m_iCurrentOwlBuildingElementInstance;
+	double m_dXOffset;
+	double m_dYOffset;
+	double m_dZOffset;
 
 	// Cache	
 	SdaiInstance m_iDefaultWallSurfaceColorRgbInstance;

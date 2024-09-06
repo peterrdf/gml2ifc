@@ -1915,6 +1915,9 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 	, m_mapFeatures()
 	, m_mapFeatureElements()
 	, m_iCurrentOwlBuildingElementInstance(0)	
+	, m_dXOffset(-737812.9775650615)
+	, m_dYOffset(-1043662.9932083769)
+	, m_dZOffset(248.339539032348)
 	, m_iDefaultWallSurfaceColorRgbInstance(0)
 	, m_iDefaultRoofSurfaceColorRgbInstance(0)
 	, m_iDefaultDoorColorRgbInstance(0)
@@ -2081,7 +2084,7 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 		{
 			pSiteMatrix->_41 = (vecLowerCorner[0] + vecUpperCorner[0]) / 2.;
 			pSiteMatrix->_42 = (vecLowerCorner[1] + vecUpperCorner[1]) / 2.;
-			pSiteMatrix->_43 = (vecLowerCorner[2] + vecUpperCorner[1]) / 2.;
+			pSiteMatrix->_43 = (vecLowerCorner[2] + vecUpperCorner[2]) / 2.;
 		}
 	}
 }
@@ -3690,9 +3693,9 @@ void _citygml_exporter::createBoundaryRepresentation(OwlInstance iInstance, vect
 		if (mapIndex2Instance.find(piIndices[iIndex]) == mapIndex2Instance.end())
 		{
 			mapIndex2Instance[piIndices[iIndex]] = buildCartesianPointInstance(
-				pdValue[(piIndices[iIndex] * 3) + 0],
-				pdValue[(piIndices[iIndex] * 3) + 1],
-				pdValue[(piIndices[iIndex] * 3) + 2]);
+				pdValue[(piIndices[iIndex] * 3) + 0] - m_dXOffset,
+				pdValue[(piIndices[iIndex] * 3) + 1] - m_dYOffset,
+				pdValue[(piIndices[iIndex] * 3) + 2] - m_dZOffset);
 		}
 	} // for (int64_t iIndex = ...
 
@@ -4821,15 +4824,15 @@ void _citygml_exporter::setSiteReferencePointSRSData(SdaiInstance iSiteInstance,
 	assert(iReferencePointInstance != 0);
 
 	string strEPSGCode;
-	vector<double> vecCentroid;
-	if (retrieveReferencePointSRSData(iReferencePointInstance, strEPSGCode, vecCentroid))
+	vector<double> vecCenter;
+	if (retrieveReferencePointSRSData(iReferencePointInstance, strEPSGCode, vecCenter))
 	{
 		string strCoordinates;
 		if (getSite()->getWGS84(
 			atoi(strEPSGCode.c_str()),
-			(float)vecCentroid[0],
-			(float)vecCentroid[1],
-			(float)vecCentroid[2],
+			(float)vecCenter[0],
+			(float)vecCenter[1],
+			(float)vecCenter[2],
 			strCoordinates))
 		{
 			vector<double> vecCoordinates;
@@ -4869,7 +4872,7 @@ void _citygml_exporter::setSiteReferencePointSRSData(SdaiInstance iSiteInstance,
 			sdaiAppend(pRefLongitude, sdaiINTEGER, &iRefLongitude3);
 			sdaiAppend(pRefLongitude, sdaiINTEGER, &iRefLongitude4);
 
-			double dRefElevation = vecCentroid[2];
+			double dRefElevation = vecCenter[2];
 			sdaiPutAttrBN(iSiteInstance, "RefElevation", sdaiREAL, &dRefElevation);
 		} // if (getSite()->getWGS84( ...
 	}
@@ -5042,20 +5045,20 @@ bool _citygml_exporter::retrieveEnvelopeSRSData(OwlInstance iEnvelopeInstance, s
 	return false;
 }
 
-bool _citygml_exporter::retrieveEnvelopeSRSData(OwlInstance iEnvelopeInstance, string& strEPSGCode, vector<double>& vecCentroid)
+bool _citygml_exporter::retrieveEnvelopeSRSData(OwlInstance iEnvelopeInstance, string& strEPSGCode, vector<double>& vecCenter)
 {
 	assert(iEnvelopeInstance != 0);
 
 	strEPSGCode = "";
-	vecCentroid.clear();
+	vecCenter.clear();
 
 	vector<double> vecLowerCorner;
 	vector<double> vecUpperCorner;
 	if (retrieveEnvelopeSRSData(iEnvelopeInstance, strEPSGCode, vecLowerCorner, vecUpperCorner))
 	{
-		vecCentroid.push_back((vecLowerCorner[0] + vecUpperCorner[0]) / 2.);
-		vecCentroid.push_back((vecLowerCorner[1] + vecUpperCorner[1]) / 2.);
-		vecCentroid.push_back((vecLowerCorner[2] + vecUpperCorner[2]) / 2.);
+		vecCenter.push_back((vecLowerCorner[0] + vecUpperCorner[0]) / 2.);
+		vecCenter.push_back((vecLowerCorner[1] + vecUpperCorner[1]) / 2.);
+		vecCenter.push_back((vecLowerCorner[2] + vecUpperCorner[2]) / 2.);
 
 		return true;
 	}
@@ -5068,25 +5071,25 @@ bool _citygml_exporter::transformEnvelopeSRSDataAsync(OwlInstance iEnvelopeInsta
 	assert(iEnvelopeInstance != 0);
 
 	string strEPSGCode;
-	vector<double> vecCentroid;
-	if (retrieveEnvelopeSRSData(iEnvelopeInstance, strEPSGCode, vecCentroid))
+	vector<double> vecCenter;
+	if (retrieveEnvelopeSRSData(iEnvelopeInstance, strEPSGCode, vecCenter))
 	{
 		return getSite()->toWGS84Async(
 			atoi(strEPSGCode.c_str()),
-			(float)vecCentroid[0],
-			(float)vecCentroid[1],
-			(float)vecCentroid[2]);
+			(float)vecCenter[0],
+			(float)vecCenter[1],
+			(float)vecCenter[2]);
 	}
 
 	return false;
 }
 
-bool _citygml_exporter::retrieveReferencePointSRSData(OwlInstance iReferencePointInstance, string& strEPSGCode, vector<double>& vecCentroid)
+bool _citygml_exporter::retrieveReferencePointSRSData(OwlInstance iReferencePointInstance, string& strEPSGCode, vector<double>& vecCenter)
 {
 	assert(iReferencePointInstance != 0);
 
 	strEPSGCode = "";
-	vecCentroid.clear();
+	vecCenter.clear();
 
 	string strSrsName = getStringAttributeValue(iReferencePointInstance, "srsName");
 	if (!strSrsName.empty() && (strSrsName.find("EPSG") != string::npos))
@@ -5103,9 +5106,9 @@ bool _citygml_exporter::retrieveReferencePointSRSData(OwlInstance iReferencePoin
 			&iValuesCount);
 		assert(iValuesCount == 3);
 
-		vecCentroid.push_back(pdValue[0]);
-		vecCentroid.push_back(pdValue[1]);
-		vecCentroid.push_back(pdValue[2]);
+		vecCenter.push_back(pdValue[0]);
+		vecCenter.push_back(pdValue[1]);
+		vecCenter.push_back(pdValue[2]);
 
 		return true;
 	}
@@ -5118,14 +5121,14 @@ bool _citygml_exporter::transformReferencePointSRSDataAsync(OwlInstance iReferen
 	assert(iReferencePointInstance != 0);
 
 	string strEPSGCode;
-	vector<double> vecCentroid;
-	if (retrieveReferencePointSRSData(iReferencePointInstance, strEPSGCode, vecCentroid))
+	vector<double> vecCenter;
+	if (retrieveReferencePointSRSData(iReferencePointInstance, strEPSGCode, vecCenter))
 	{
 		return getSite()->toWGS84Async(
 			atoi(strEPSGCode.c_str()),
-			(float)vecCentroid[0],
-			(float)vecCentroid[1],
-			(float)vecCentroid[2]);
+			(float)vecCenter[0],
+			(float)vecCenter[1],
+			(float)vecCenter[2]);
 	}
 
 	return false;
