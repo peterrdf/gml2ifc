@@ -2946,36 +2946,6 @@ void _citygml_exporter::createFeatures()
 			continue;
 		}
 
-		// Geometry
-		vector<SdaiInstance> vecSdaiFeatureElementGeometryInstances;
-		for (auto iOwlFeatureElementInstance : itFeature.second)
-		{
-			m_iCurrentOwlBuildingElementInstance = iOwlFeatureElementInstance;
-
-			auto itFeatureElement = m_mapFeatureElements.find(iOwlFeatureElementInstance);
-			assert(itFeatureElement != m_mapFeatureElements.end());
-			assert(!itFeatureElement->second.empty());
-
-			for (auto iOwlFeatureElementGeometryInstance : itFeatureElement->second)
-			{
-				vector<SdaiInstance> vecNewGeometryInstances;
-				createGeometry(iOwlFeatureElementGeometryInstance, vecNewGeometryInstances, true);
-
-				vecSdaiFeatureElementGeometryInstances.insert(
-					vecSdaiFeatureElementGeometryInstances.end(),
-					vecNewGeometryInstances.begin(),
-					vecNewGeometryInstances.end());
-			}
-
-			m_iCurrentOwlBuildingElementInstance = 0;
-		} // for (auto iOwlFeatureElementInstance : ...
-
-		if (vecSdaiFeatureElementGeometryInstances.empty())
-		{
-			// Not supported
-			continue;
-		}
-
 		SdaiInstance iSiteInstance = 0;
 		SdaiInstance iSiteInstancePlacement = 0;
 
@@ -3017,6 +2987,37 @@ void _citygml_exporter::createFeatures()
 
 			iSiteInstance = getSiteInstance(iSiteInstancePlacement);
 		}
+
+		// Geometry
+		vector<SdaiInstance> vecSdaiFeatureElementGeometryInstances;
+		for (auto iOwlFeatureElementInstance : itFeature.second)
+		{
+			m_iCurrentOwlBuildingElementInstance = iOwlFeatureElementInstance;
+
+			auto itFeatureElement = m_mapFeatureElements.find(iOwlFeatureElementInstance);
+			assert(itFeatureElement != m_mapFeatureElements.end());
+			assert(!itFeatureElement->second.empty());
+
+			for (auto iOwlFeatureElementGeometryInstance : itFeatureElement->second)
+			{
+				vector<SdaiInstance> vecNewGeometryInstances;
+				createGeometry(iOwlFeatureElementGeometryInstance, vecNewGeometryInstances, true);
+
+				vecSdaiFeatureElementGeometryInstances.insert(
+					vecSdaiFeatureElementGeometryInstances.end(),
+					vecNewGeometryInstances.begin(),
+					vecNewGeometryInstances.end());
+			}
+
+			m_iCurrentOwlBuildingElementInstance = 0;
+		} // for (auto iOwlFeatureElementInstance : ...
+
+		if (vecSdaiFeatureElementGeometryInstances.empty())
+		{
+			assert(false); // Not supported
+
+			continue;
+		}		
 
 		// Feature
 		string strTag = getTag(itFeature.first);
