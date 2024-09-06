@@ -4051,9 +4051,9 @@ void _citygml_exporter::createPoint3D(OwlInstance iInstance, vector<SdaiInstance
 	assert(iValuesCount == 3);
 
 	SdaiInstance iCartesianPointInstance = buildCartesianPointInstance(
-		pdValue[0],
-		pdValue[1],
-		pdValue[2]);
+		pdValue[0] - m_dXOffset,
+		pdValue[1] - m_dYOffset,
+		pdValue[2] - m_dZOffset);
 	assert(iCartesianPointInstance != 0);
 
 	if (bCreateIfcShapeRepresentation)
@@ -4130,9 +4130,9 @@ void _citygml_exporter::createPoint3DSet(OwlInstance iInstance, vector<SdaiInsta
 		for (int64_t iValue = 0; iValue < iValuesCount; iValue += 3)
 		{
 			SdaiInstance iCartesianPointInstance = buildCartesianPointInstance(
-				pdValue[iValue + 0],
-				pdValue[iValue + 1],
-				pdValue[iValue + 2]);
+				pdValue[iValue + 0] - m_dXOffset,
+				pdValue[iValue + 1] - m_dYOffset,
+				pdValue[iValue + 2] - m_dZOffset);
 			assert(iCartesianPointInstance != 0);
 
 			sdaiAppend(pItems, sdaiINSTANCE, (void*)iCartesianPointInstance);
@@ -4176,9 +4176,9 @@ void _citygml_exporter::createPoint3DSet(OwlInstance iInstance, vector<SdaiInsta
 		for (int64_t iValue = 0; iValue < iValuesCount; iValue += 3)
 		{
 			SdaiInstance iCartesianPointInstance = buildCartesianPointInstance(
-				pdValue[iValue + 0],
-				pdValue[iValue + 1],
-				pdValue[iValue + 2]);
+				pdValue[iValue + 0] - m_dXOffset,
+				pdValue[iValue + 1] - m_dYOffset,
+				pdValue[iValue + 2] - m_dZOffset);
 			assert(iCartesianPointInstance != 0);
 
 			vecGeometryInstances.push_back(iCartesianPointInstance);
@@ -4209,9 +4209,9 @@ void _citygml_exporter::createPolyLine3D(OwlInstance iInstance, vector<SdaiInsta
 	for (int64_t iValue = 0; iValue < iValuesCount; iValue += 3)
 	{
 		SdaiInstance iCartesianPointInstance = buildCartesianPointInstance(
-			pdValue[iValue + 0],
-			pdValue[iValue + 1],
-			pdValue[iValue + 2]);
+			pdValue[iValue + 0] - m_dXOffset,
+			pdValue[iValue + 1] - m_dYOffset,
+			pdValue[iValue + 2] - m_dZOffset);
 		assert(iCartesianPointInstance != 0);
 
 		sdaiAppend(pPoints, sdaiINSTANCE, (void*)iCartesianPointInstance);
