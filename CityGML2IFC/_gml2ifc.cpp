@@ -1915,9 +1915,9 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 	, m_mapFeatures()
 	, m_mapFeatureElements()
 	, m_iCurrentOwlBuildingElementInstance(0)	
-	, m_dXOffset(-737812.9775650615)
-	, m_dYOffset(-1043662.9932083769)
-	, m_dZOffset(248.339539032348)
+	, m_dXOffset(0.)
+	, m_dYOffset(0.)
+	, m_dZOffset(0.)
 	, m_iDefaultWallSurfaceColorRgbInstance(0)
 	, m_iDefaultRoofSurfaceColorRgbInstance(0)
 	, m_iDefaultDoorColorRgbInstance(0)
@@ -2077,15 +2077,7 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 
 	if (m_iEnvelopeInstance != 0)
 	{
-		string strEPSGCode;
-		vector<double> vecLowerCorner;
-		vector<double> vecUpperCorner;
-		if (retrieveEnvelopeSRSData(m_iEnvelopeInstance, strEPSGCode, vecLowerCorner, vecUpperCorner))
-		{
-			pSiteMatrix->_41 = (vecLowerCorner[0] + vecUpperCorner[0]) / 2.;
-			pSiteMatrix->_42 = (vecLowerCorner[1] + vecUpperCorner[1]) / 2.;
-			pSiteMatrix->_43 = (vecLowerCorner[2] + vecUpperCorner[2]) / 2.;
-		}
+		getEnvelopeCenter(m_iEnvelopeInstance, pSiteMatrix->_41, pSiteMatrix->_42, pSiteMatrix->_43);
 	}
 }
 
@@ -2369,15 +2361,11 @@ void _citygml_exporter::createBuildings()
 			assert(szClassName != nullptr);
 
 			_matrix mtxSite;
-			string strEPSGCode;
-			vector<double> vecLowerCorner;
-			vector<double> vecUpperCorner;
-			if (retrieveEnvelopeSRSData(itBuildingSRS->second, strEPSGCode, vecLowerCorner, vecUpperCorner))
-			{
-				mtxSite._41 = (vecLowerCorner[0] + vecUpperCorner[0]) / 2.;
-				mtxSite._42 = (vecLowerCorner[1] + vecUpperCorner[1]) / 2.;
-				mtxSite._43 = (vecLowerCorner[2] + vecUpperCorner[1]) / 2.;
-			}
+			getEnvelopeCenter(itBuildingSRS->second, m_dXOffset, m_dYOffset, m_dZOffset);
+
+			mtxSite._41 = m_dXOffset;
+			mtxSite._42 = m_dYOffset;
+			mtxSite._43 = m_dZOffset;
 
 			iSiteInstance = buildSiteInstance(
 				strTag.c_str(),
@@ -2391,10 +2379,13 @@ void _citygml_exporter::createBuildings()
 		}
 		else
 		{
+			if (m_iEnvelopeInstance != 0)
+			{
+				getEnvelopeCenter(m_iEnvelopeInstance, m_dXOffset, m_dYOffset, m_dZOffset);
+			}			
+
 			iSiteInstance = getSiteInstance(iSiteInstancePlacement);
 		}
-
-		_matrix mtxIdentity;
 
 		string strTag = getTag(itBuilding.first);
 
@@ -2405,6 +2396,7 @@ void _citygml_exporter::createBuildings()
 		GetNameOfClass(iInstanceClass, &szClassName);
 		assert(szClassName != nullptr);
 
+		_matrix mtxIdentity;
 		SdaiInstance iBuildingInstancePlacement = 0;
 		SdaiInstance iBuildingInstance = buildBuildingInstance(
 			strTag.c_str(),
@@ -4755,6 +4747,25 @@ bool _citygml_exporter::isUnknownClass(OwlClass iInstanceClass) const
 	assert(iInstanceClass != 0);
 
 	return (iInstanceClass == m_iThingClass) || IsClassAncestor(iInstanceClass, m_iThingClass);
+}
+
+void _citygml_exporter::getEnvelopeCenter(OwlInstance iEnvelopeInstance, double& dX, double& dY, double& dZ)
+{
+	assert(iEnvelopeInstance != 0);
+
+	dX = 0.;
+	dY = 0.;
+	dZ = 0.;
+
+	string strEPSGCode;
+	vector<double> vecLowerCorner;
+	vector<double> vecUpperCorner;
+	if (retrieveEnvelopeSRSData(iEnvelopeInstance, strEPSGCode, vecLowerCorner, vecUpperCorner))
+	{
+		dX = (vecLowerCorner[0] + vecUpperCorner[0]) / 2.;
+		dY = (vecLowerCorner[1] + vecUpperCorner[1]) / 2.;
+		dZ = (vecLowerCorner[2] + vecUpperCorner[2]) / 2.;
+	}
 }
 
 void _citygml_exporter::setSiteEnvelopeSRSData(SdaiInstance iSiteInstance, OwlInstance iEnvelopeInstance)

@@ -515,6 +515,7 @@ protected:  // Methods
 
 private: // Methods
 	
+	void getEnvelopeCenter(OwlInstance iEnvelopeInstance, double& dX, double& dY, double& dZ);
 	void setSiteEnvelopeSRSData(SdaiInstance iSiteInstance, OwlInstance iEnvelopeInstance);
 	void setSiteReferencePointSRSData(SdaiInstance iSiteInstance, OwlInstance iReferencePointInstance);
 	void collectSRSData(OwlInstance iRootInstance);
