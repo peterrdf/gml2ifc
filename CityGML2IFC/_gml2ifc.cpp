@@ -1248,6 +1248,24 @@ SdaiInstance _exporter_base::buildMapConversion(OwlInstance iSourceCRSInstance, 
 	sdaiPutAttrBN(iMapConversionInstance, "SourceCRS", sdaiINSTANCE, (void*)iSourceCRSInstance);
 	sdaiPutAttrBN(iMapConversionInstance, "TargetCRS", sdaiINSTANCE, (void*)iTargetCRSInstance);
 
+	double dValue = 0.;
+	sdaiPutAttrBN(iMapConversionInstance, "Eastings", sdaiREAL, &dValue);
+
+	dValue = 0.;
+	sdaiPutAttrBN(iMapConversionInstance, "Northings", sdaiREAL, &dValue);
+
+	dValue = 0.;
+	sdaiPutAttrBN(iMapConversionInstance, "OrthogonalHeight", sdaiREAL, &dValue);
+
+	dValue = 1.;
+	sdaiPutAttrBN(iMapConversionInstance, "XAxisAbscissa", sdaiREAL, &dValue);
+
+	dValue = 0.;
+	sdaiPutAttrBN(iMapConversionInstance, "XAxisOrdinate", sdaiREAL, &dValue);
+
+	dValue = 1.;
+	sdaiPutAttrBN(iMapConversionInstance, "Scale", sdaiREAL, &dValue);
+
 	return iMapConversionInstance;
 }
 
