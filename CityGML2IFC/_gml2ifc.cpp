@@ -2441,6 +2441,10 @@ void _citygml_exporter::createBuildings()
 			GetNameOfClass(iInstanceClass, &szClassName);
 			assert(szClassName != nullptr);
 
+			_auto_var<double> xOffset(m_dXOffset, 0., 0.);
+			_auto_var<double> yOffset(m_dYOffset, 0., 0.);
+			_auto_var<double> zOffset(m_dZOffset, 0., 0.);
+
 			_matrix mtxSite;
 			getEnvelopeCenter(itBuildingSRS->second, m_dXOffset, m_dYOffset, m_dZOffset);
 
@@ -2462,6 +2466,10 @@ void _citygml_exporter::createBuildings()
 		{
 			if (m_iEnvelopeInstance != 0)
 			{
+				_auto_var<double> xOffset(m_dXOffset, 0., 0.);
+				_auto_var<double> yOffset(m_dYOffset, 0., 0.);
+				_auto_var<double> zOffset(m_dZOffset, 0., 0.);
+
 				getEnvelopeCenter(m_iEnvelopeInstance, m_dXOffset, m_dYOffset, m_dZOffset);
 			}			
 
@@ -3038,6 +3046,10 @@ void _citygml_exporter::createFeatures()
 			GetNameOfClass(iInstanceClass, &szClassName);
 			assert(szClassName != nullptr);
 
+			_auto_var<double> xOffset(m_dXOffset, 0., 0.);
+			_auto_var<double> yOffset(m_dYOffset, 0., 0.);
+			_auto_var<double> zOffset(m_dZOffset, 0., 0.);
+
 			_matrix mtxSite;
 			getReferencePoint(itParcelSRS->second, m_dXOffset, m_dYOffset, m_dZOffset);
 
@@ -3059,6 +3071,10 @@ void _citygml_exporter::createFeatures()
 		{
 			if (m_iEnvelopeInstance != 0)
 			{
+				_auto_var<double> xOffset(m_dXOffset, 0., 0.);
+				_auto_var<double> yOffset(m_dYOffset, 0., 0.);
+				_auto_var<double> zOffset(m_dZOffset, 0., 0.);
+
 				getEnvelopeCenter(m_iEnvelopeInstance, m_dXOffset, m_dYOffset, m_dZOffset);
 			}
 

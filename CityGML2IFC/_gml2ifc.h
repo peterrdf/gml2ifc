@@ -35,24 +35,24 @@ class _auto_var
 private: // Fields
 
 	T& m_var;
-	bool m_bReset;
 	const T& m_resetVal;
+	bool m_bReset;	
 
 public: // Methods
 
 	_auto_var(T& var, const T& initVal)
 		: m_var(var)
-		, m_bReset(false)
 		, m_resetVal(T())
+		, m_bReset(false)
 	{
 		m_var = var;
 		m_var = initVal;
 	}
 
 	_auto_var(T& var, const T& initVal, const T& resetVal)
-		: m_var(var)
-		, m_bReset(true)
+		: m_var(var)		
 		, m_resetVal(resetVal)
+		, m_bReset(true)
 	{
 		m_var = var;
 		m_var = initVal;
