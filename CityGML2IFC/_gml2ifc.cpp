@@ -2312,7 +2312,7 @@ void _citygml_exporter::createBuildings(SdaiInstance iSiteInstance, SdaiInstance
 		vector<SdaiInstance> vecBuildingElementInstances;
 		for (auto iOwlBuildingElementInstance : itBuilding.second)
 		{
-			m_iCurrentOwlBuildingElementInstance = iOwlBuildingElementInstance;
+			_auto_var<OwlInstance> owlBuildingElementInstance(m_iCurrentOwlBuildingElementInstance, iOwlBuildingElementInstance, 0);
 
 			auto itBuildingElement = m_mapBuildingElements.find(iOwlBuildingElementInstance);
 			assert(itBuildingElement != m_mapBuildingElements.end());
@@ -2348,8 +2348,6 @@ void _citygml_exporter::createBuildings(SdaiInstance iSiteInstance, SdaiInstance
 			createProperties(iOwlBuildingElementInstance, iSdaiBuildingElementInstance);
 
 			vecBuildingElementInstances.push_back(iSdaiBuildingElementInstance);
-
-			m_iCurrentOwlBuildingElementInstance = 0;
 		} // for (auto iOwlBuildingElementInstance : ...
 
 		SdaiInstance iBuildingStoreyInstancePlacement = 0;
@@ -2512,7 +2510,7 @@ void _citygml_exporter::createBuildings()
 		vector<SdaiInstance> vecBuildingElementInstances;
 		for (auto iOwlBuildingElementInstance : itBuilding.second)
 		{
-			m_iCurrentOwlBuildingElementInstance = iOwlBuildingElementInstance;
+			_auto_var<OwlInstance> owlBuildingElementInstance(m_iCurrentOwlBuildingElementInstance, iOwlBuildingElementInstance, 0);
 
 			auto itBuildingElement = m_mapBuildingElements.find(iOwlBuildingElementInstance);
 			assert(itBuildingElement != m_mapBuildingElements.end());
@@ -2548,8 +2546,6 @@ void _citygml_exporter::createBuildings()
 			createProperties(iOwlBuildingElementInstance, iSdaiBuildingElementInstance);
 
 			vecBuildingElementInstances.push_back(iSdaiBuildingElementInstance);
-
-			m_iCurrentOwlBuildingElementInstance = 0;
 		} // for (auto iOwlBuildingElementInstance : ...
 
 		SdaiInstance iBuildingStoreyInstancePlacement = 0;
@@ -2864,7 +2860,7 @@ void _citygml_exporter::createFeatures(SdaiInstance iSiteInstance, SdaiInstance 
 		vector<SdaiInstance> vecSdaiFeatureElementGeometryInstances;
 		for (auto iOwlFeatureElementInstance : itFeature.second)
 		{
-			m_iCurrentOwlBuildingElementInstance = iOwlFeatureElementInstance;
+			_auto_var<OwlInstance> owlBuildingElementInstance(m_iCurrentOwlBuildingElementInstance, iOwlFeatureElementInstance, 0);
 
 			auto itFeatureElement = m_mapFeatureElements.find(iOwlFeatureElementInstance);
 			assert(itFeatureElement != m_mapFeatureElements.end());
@@ -2880,8 +2876,6 @@ void _citygml_exporter::createFeatures(SdaiInstance iSiteInstance, SdaiInstance 
 					vecNewGeometryInstances.begin(),
 					vecNewGeometryInstances.end());
 			}
-
-			m_iCurrentOwlBuildingElementInstance = 0;
 		} // for (auto iOwlFeatureElementInstance : ...
 
 		if (vecSdaiFeatureElementGeometryInstances.empty())
@@ -3075,7 +3069,7 @@ void _citygml_exporter::createFeatures()
 		vector<SdaiInstance> vecSdaiFeatureElementGeometryInstances;
 		for (auto iOwlFeatureElementInstance : itFeature.second)
 		{
-			m_iCurrentOwlBuildingElementInstance = iOwlFeatureElementInstance;
+			_auto_var<OwlInstance> owlBuildingElementInstance(m_iCurrentOwlBuildingElementInstance, iOwlFeatureElementInstance, 0);
 
 			auto itFeatureElement = m_mapFeatureElements.find(iOwlFeatureElementInstance);
 			assert(itFeatureElement != m_mapFeatureElements.end());
@@ -3091,8 +3085,6 @@ void _citygml_exporter::createFeatures()
 					vecNewGeometryInstances.begin(),
 					vecNewGeometryInstances.end());
 			}
-
-			m_iCurrentOwlBuildingElementInstance = 0;
 		} // for (auto iOwlFeatureElementInstance : ...
 
 		if (vecSdaiFeatureElementGeometryInstances.empty())

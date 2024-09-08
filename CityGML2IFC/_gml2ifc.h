@@ -28,6 +28,46 @@
 using namespace std;
 
 // ************************************************************************************************
+template<class T>
+class _auto_var
+{
+
+private: // Fields
+
+	T& m_var;
+	bool m_bReset;
+	const T& m_resetVal;
+
+public: // Methods
+
+	_auto_var(T& var, const T& initVal)
+		: m_var(var)
+		, m_bReset(false)
+		, m_resetVal(T())
+	{
+		m_var = var;
+		m_var = initVal;
+	}
+
+	_auto_var(T& var, const T& initVal, const T& resetVal)
+		: m_var(var)
+		, m_bReset(true)
+		, m_resetVal(resetVal)
+	{
+		m_var = var;
+		m_var = initVal;
+	}
+
+	virtual ~_auto_var()
+	{
+		if (m_bReset)
+		{
+			m_var = m_resetVal;
+		}
+	}
+};
+
+// ************************************************************************************************
 class _point3d
 {
 
