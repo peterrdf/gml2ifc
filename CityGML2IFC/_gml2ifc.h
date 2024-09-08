@@ -368,8 +368,7 @@ private: // Members
 	OwlClass m_iEnvelopeClass;	
 	OwlInstance m_iEnvelopeInstance;
 	map<OwlInstance, OwlInstance> m_mapBuildingSRS; // Building : Envelope
-	map<OwlInstance, OwlInstance> m_mapParcelSRS; // Parcel : Reference Point
-	vector<SdaiInstance> m_vecSiteInstances;
+	map<OwlInstance, OwlInstance> m_mapParcelSRS; // Parcel : Reference Point		
 
 	// CityObjectGroup
 	OwlClass m_iCityObjectGroupMemberClass;
@@ -385,7 +384,7 @@ private: // Members
 	OwlClass m_iWindowClass;
 	map<OwlInstance, vector<OwlInstance>> m_mapBuildings; // Building : Supported Elements
 	map<OwlInstance, vector<OwlInstance>> m_mapBuildingElements; // Building Supported Element : Geometries
-
+	
 	// Parcel
 	OwlClass m_iCadastralParcelClass;
 	OwlClass m_iPointPropertyClass;
@@ -405,6 +404,9 @@ private: // Members
 	OwlClass m_iThingClass; // Unknown
 	map<OwlInstance, vector<OwlInstance>> m_mapFeatures; // Feature : Supported Elements
 	map<OwlInstance, vector<OwlInstance>> m_mapFeatureElements; // Feature Supported Element : Geometries
+
+	// Sites
+	vector<SdaiInstance> m_vecSiteInstances;
 	
 	 // Temp
 	OwlInstance m_iCurrentOwlBuildingElementInstance;
