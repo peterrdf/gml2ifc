@@ -15,7 +15,7 @@
 #endif
 
 // ************************************************************************************************
-static TCHAR SUPPORTED_FILES[] = _T("CityGML Files (*.gml;*citygml)|*.gml;*citygml|\
+static TCHAR SUPPORTED_FILES[] = _T("CityGML Files (*.gml;*.xml;citygml)|*.gml;*.xml;*citygml|\
 CityJSON Files (*.city.json)|*.city.json|\
 All Files (*.*)|*.*||");
 
