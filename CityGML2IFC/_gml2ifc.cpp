@@ -1741,10 +1741,10 @@ string _exporter_base::getTag(OwlInstance iInstance) const
 #endif // _WINDOWS
 }
 
-string _exporter_base::getStringAttributeValue(OwlInstance iInstance, const string& strAttributeName) const
+string _exporter_base::getStringAttributeValue(OwlInstance iInstance, const string& strName) const
 {
 	assert(iInstance != 0);
-	assert(!strAttributeName.empty());
+	assert(!strName.empty());
 
 	int64_t iPropertyInstance = GetInstancePropertyByIterator(iInstance, 0);
 	while (iPropertyInstance != 0)
@@ -1753,7 +1753,7 @@ string _exporter_base::getStringAttributeValue(OwlInstance iInstance, const stri
 		GetNameOfProperty(iPropertyInstance, &szPropertyName);
 
 		string strPropertyName = szPropertyName;
-		if (strPropertyName == "attr:str:" + strAttributeName)
+		if (strPropertyName == "attr:str:" + strName)
 		{
 			assert(GetPropertyType(iPropertyInstance) == DATATYPEPROPERTY_TYPE_WCHAR_T_ARRAY);
 
@@ -1793,6 +1793,100 @@ string _exporter_base::getStringAttributeValue(OwlInstance iInstance, const stri
 	} // while (iPropertyInstance != 0)
 
 	return "";
+}
+
+string _exporter_base::getStringPropertyValue(OwlInstance iInstance, const string& strName) const
+{
+	assert(iInstance != 0);
+	assert(!strName.empty());
+
+	int64_t iPropertyInstance = GetInstancePropertyByIterator(iInstance, 0);
+	while (iPropertyInstance != 0)
+	{
+		char* szPropertyName = nullptr;
+		GetNameOfProperty(iPropertyInstance, &szPropertyName);
+
+		string strPropertyName = szPropertyName;
+		if (strPropertyName == "prop:str:" + strName)
+		{
+			assert((GetPropertyType(iPropertyInstance) == DATATYPEPROPERTY_TYPE_WCHAR_T_ARRAY) ||
+				(GetPropertyType(iPropertyInstance) == DATATYPEPROPERTY_TYPE_STRING));
+
+			SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, false);
+
+			wchar_t** szValue = nullptr;
+			int64_t iValuesCount = 0;
+			GetDatatypeProperty(
+				iInstance,
+				iPropertyInstance,
+				(void**)&szValue,
+				&iValuesCount);
+			assert(iValuesCount == 1);
+
+			SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, true);
+
+#ifdef _WINDOWS
+			auto iLength = std::char_traits<char16_t>::length((char16_t*)*szValue);
+
+			u16string strValueU16;
+			strValueU16.resize(iLength);
+			memcpy((void*)strValueU16.data(), szValue[0], iLength * sizeof(char16_t));
+
+			return To_UTF8(strValueU16);
+#else
+			auto iLength = std::char_traits<wchar_t>::length((wchar_t*)*szValue);
+
+			u32string strValueU32;
+			strValueU32.resize(iLength);
+			memcpy((void*)strValueU32.data(), szValue[0], iLength * sizeof(wchar_t));
+
+			return To_UTF8(strValueU32);
+#endif // _WINDOWS			
+		} // if (strPropertyName == ...
+
+		iPropertyInstance = GetInstancePropertyByIterator(iInstance, iPropertyInstance);
+	} // while (iPropertyInstance != 0)
+
+	return "";
+}
+
+void _exporter_base::getDoublePropertyValue(OwlInstance iInstance, const string& strName, vector<double>& vecValue) const
+{
+	assert(iInstance != 0);
+	assert(!strName.empty());
+
+	vecValue.clear();
+
+	int64_t iPropertyInstance = GetInstancePropertyByIterator(iInstance, 0);
+	while (iPropertyInstance != 0)
+	{
+		char* szPropertyName = nullptr;
+		GetNameOfProperty(iPropertyInstance, &szPropertyName);
+
+		string strPropertyName = szPropertyName;
+		if (strPropertyName == "prop:dbl:" + strName)
+		{
+			assert(GetPropertyType(iPropertyInstance) == DATATYPEPROPERTY_TYPE_DOUBLE);
+
+			double* pdValue = nullptr;
+			int64_t iValuesCount = 0;
+			GetDatatypeProperty(
+				iInstance,
+				iPropertyInstance,
+				(void**)&pdValue,
+				&iValuesCount);
+			assert(iValuesCount > 0);
+
+			for (int64_t iValue = 0; iValue < iValuesCount; iValue++)
+			{
+				vecValue.push_back(pdValue[iValue]);
+			}
+
+			break;
+		} // if (strPropertyName == ...
+
+		iPropertyInstance = GetInstancePropertyByIterator(iInstance, iPropertyInstance);
+	} // while (iPropertyInstance != 0)
 }
 
 OwlInstance* _exporter_base::getObjectProperty(OwlInstance iInstance, const string& strPropertyName, int64_t& iInstancesCount) const
@@ -5179,6 +5273,25 @@ _cityjson_exporter::_cityjson_exporter(_gml2ifc_exporter* pSite)
 /*virtual*/ _cityjson_exporter::~_cityjson_exporter()
 {}
 
+/*virtual*/ int _cityjson_exporter::retrieveSRSData(OwlInstance iRootInstance) /*override*/
+{
+	assert(iRootInstance != 0);
+
+	collectSRSData(iRootInstance);
+
+	int iTransformationsCount = 0;
+
+	if (m_iMetadataInstance != 0)
+	{
+		if (transformMetadataSRSDataAsync(m_iMetadataInstance))
+		{
+			iTransformationsCount++;
+		}
+	}
+
+	return iTransformationsCount;
+}
+
 /*virtual*/ void _cityjson_exporter::collectSRSData(OwlInstance iRootInstance) /*override*/
 {
 	OwlInstance iInstance = GetInstancesByIterator(getSite()->getOwlModel(), 0);
@@ -5203,6 +5316,7 @@ _cityjson_exporter::_cityjson_exporter(_gml2ifc_exporter* pSite)
 
 				if (isCityJSONClass(iParentInstanceClass))
 				{
+					assert(m_iMetadataInstance == 0);
 					m_iMetadataInstance = iMetadataInstance;
 				}
 				else
@@ -5224,4 +5338,70 @@ OwlClass _cityjson_exporter::isCityJSONClass(OwlClass iInstanceClass) const
 OwlClass _cityjson_exporter::isMetadataClass(OwlClass iInstanceClass) const
 {
 	return (iInstanceClass == m_iMetadataClass) || IsClassAncestor(iInstanceClass, m_iMetadataClass);
+}
+
+bool _cityjson_exporter::transformMetadataSRSDataAsync(OwlInstance iMetadataInstance)
+{
+	assert(iMetadataInstance != 0);
+
+	string strEPSGCode;
+	vector<double> vecCenter;
+	if (retrieveMetadataSRSData(iMetadataInstance, strEPSGCode, vecCenter))
+	{
+		return getSite()->toWGS84Async(
+			atoi(strEPSGCode.c_str()),
+			(float)vecCenter[0],
+			(float)vecCenter[1],
+			(float)vecCenter[2]);
+	}
+
+	return false;
+}
+
+bool _cityjson_exporter::retrieveMetadataSRSData(OwlInstance iMetadataInstance, string& strEPSGCode, vector<double>& vecLowerCorner, vector<double>& vecUpperCorner)
+{
+	assert(iMetadataInstance != 0);
+
+	strEPSGCode = "";
+	vecLowerCorner.clear();
+	vecUpperCorner.clear();
+
+	string strSrsName = getStringPropertyValue(iMetadataInstance, "referenceSystem");
+	if (!strSrsName.empty() && (strSrsName.find("EPSG") != string::npos))
+	{
+		strEPSGCode = getEPSGCode(strSrsName);
+		assert(!strEPSGCode.empty());
+
+		vector<double> vecGeographicalExtent;
+		getDoublePropertyValue(iMetadataInstance, "geographicalExtent", vecGeographicalExtent);
+		assert(vecGeographicalExtent.size() == 6);
+
+		vecLowerCorner = vector<double>{ vecGeographicalExtent[0], vecGeographicalExtent[1], vecGeographicalExtent[2] };
+		vecUpperCorner = vector<double>{ vecGeographicalExtent[3], vecGeographicalExtent[4], vecGeographicalExtent[5] };
+
+		return true;
+	} // if (!strSrsName.empty() && ...
+
+	return false;
+}
+
+bool _cityjson_exporter::retrieveMetadataSRSData(OwlInstance iMetadataInstance, string& strEPSGCode, vector<double>& vecCenter)
+{
+	assert(iMetadataInstance != 0);
+
+	strEPSGCode = "";
+	vecCenter.clear();
+
+	vector<double> vecLowerCorner;
+	vector<double> vecUpperCorner;
+	if (retrieveMetadataSRSData(iMetadataInstance, strEPSGCode, vecLowerCorner, vecUpperCorner))
+	{
+		vecCenter.push_back((vecLowerCorner[0] + vecUpperCorner[0]) / 2.);
+		vecCenter.push_back((vecLowerCorner[1] + vecUpperCorner[1]) / 2.);
+		vecCenter.push_back((vecLowerCorner[2] + vecUpperCorner[2]) / 2.);
+
+		return true;
+	}
+
+	return false;
 }

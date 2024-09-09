@@ -374,7 +374,9 @@ protected: // Methods
 
 	/* Helpers */
 	string getTag(OwlInstance iInstance) const;
-	string getStringAttributeValue(OwlInstance iInstance, const string& strAttributeName) const;
+	string getStringAttributeValue(OwlInstance iInstance, const string& strName) const;
+	string getStringPropertyValue(OwlInstance iInstance, const string& strName) const;
+	void getDoublePropertyValue(OwlInstance iInstance, const string& strName, vector<double>& vecValue) const;
 	OwlInstance* getObjectProperty(OwlInstance iInstance, const string& strPropertyName, int64_t& iInstancesCount) const;
 	bool hasObjectProperty(OwlInstance iInstance, const string& strPropertyName);
 	void getPosValues(const string& strContent, vector<double>& vecValues) const;
@@ -596,6 +598,8 @@ public: // Methods
 	_cityjson_exporter(_gml2ifc_exporter* pSite);
 	virtual ~_cityjson_exporter();
 
+	virtual int retrieveSRSData(OwlInstance iRootInstance) override;
+
 protected: // Methods
 
 	virtual void collectSRSData(OwlInstance iRootInstance) override;
@@ -603,4 +607,10 @@ protected: // Methods
 	// CRS
 	OwlClass isCityJSONClass(OwlClass iInstanceClass) const;
 	OwlClass isMetadataClass(OwlClass iInstanceClass) const;
+
+private: // Methods
+
+	bool transformMetadataSRSDataAsync(OwlInstance iMetadataInstance);
+	bool retrieveMetadataSRSData(OwlInstance iMetadataInstance, string& strEPSGCode, vector<double>& vecLowerCorner, vector<double>& vecUpperCorner);
+	bool retrieveMetadataSRSData(OwlInstance iMetadataInstance, string& strEPSGCode, vector<double>& vecCenter);
 };
