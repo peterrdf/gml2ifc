@@ -5299,6 +5299,16 @@ _cityjson_exporter::_cityjson_exporter(_gml2ifc_exporter* pSite)
 	return iTransformationsCount;
 }
 
+/*virtual*/ void _cityjson_exporter::onPreCreateSite(_matrix* pSiteMatrix) /*override*/
+{
+	assert(pSiteMatrix != 0);
+
+	if (m_iMetadataInstance != 0)
+	{
+		getMetadataCenter(m_iMetadataInstance, pSiteMatrix->_41, pSiteMatrix->_42, pSiteMatrix->_43);
+	}
+}
+
 /*virtual*/ void _cityjson_exporter::onPostCreateSite(SdaiInstance iSiteInstance) /*override*/
 {
 	assert(iSiteInstance != 0);
@@ -5387,6 +5397,25 @@ OwlClass _cityjson_exporter::isCityJSONClass(OwlClass iInstanceClass) const
 OwlClass _cityjson_exporter::isMetadataClass(OwlClass iInstanceClass) const
 {
 	return (iInstanceClass == m_iMetadataClass) || IsClassAncestor(iInstanceClass, m_iMetadataClass);
+}
+
+void _cityjson_exporter::getMetadataCenter(OwlInstance iMetadataInstance, double& dX, double& dY, double& dZ)
+{
+	assert(iMetadataInstance != 0);
+
+	dX = 0.;
+	dY = 0.;
+	dZ = 0.;
+
+	string strEPSGCode;
+	vector<double> vecLowerCorner;
+	vector<double> vecUpperCorner;
+	if (retrieveMetadataSRSData(iMetadataInstance, strEPSGCode, vecLowerCorner, vecUpperCorner))
+	{
+		dX = (vecLowerCorner[0] + vecUpperCorner[0]) / 2.;
+		dY = (vecLowerCorner[1] + vecUpperCorner[1]) / 2.;
+		dZ = (vecLowerCorner[2] + vecUpperCorner[2]) / 2.;
+	}
 }
 
 bool _cityjson_exporter::transformMetadataSRSDataAsync(OwlInstance iMetadataInstance)

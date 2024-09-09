@@ -603,6 +603,7 @@ public: // Methods
 
 protected: // Methods
 
+	virtual void onPreCreateSite(_matrix* pSiteMatrix) override;
 	virtual void onPostCreateSite(SdaiInstance iSiteInstance) override;
 
 	virtual void collectSRSData(OwlInstance iRootInstance) override;
@@ -614,6 +615,7 @@ protected: // Methods
 
 private: // Methods
 
+	void getMetadataCenter(OwlInstance iMetadataInstance, double& dX, double& dY, double& dZ);
 	bool transformMetadataSRSDataAsync(OwlInstance iMetadataInstance);
 	bool retrieveMetadataSRSData(OwlInstance iMetadataInstance, string& strEPSGCode, vector<double>& vecLowerCorner, vector<double>& vecUpperCorner);
 	bool retrieveMetadataSRSData(OwlInstance iMetadataInstance, string& strEPSGCode, vector<double>& vecCenter);
