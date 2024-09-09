@@ -5297,6 +5297,16 @@ _cityjson_exporter::_cityjson_exporter(_gml2ifc_exporter* pSite)
 	return iTransformationsCount;
 }
 
+/*virtual*/ void _cityjson_exporter::onPostCreateSite(SdaiInstance iSiteInstance) /*override*/
+{
+	assert(iSiteInstance != 0);
+
+	if (m_iMetadataInstance != 0)
+	{
+		setSiteMetadataSRSData(iSiteInstance, m_iMetadataInstance);
+	}
+}
+
 /*virtual*/ void _cityjson_exporter::collectSRSData(OwlInstance iRootInstance) /*override*/
 {
 	OwlInstance iInstance = GetInstancesByIterator(getSite()->getOwlModel(), 0);
@@ -5441,4 +5451,65 @@ bool _cityjson_exporter::retrieveMetadataSRSData(OwlInstance iMetadataInstance, 
 	}
 
 	return false;
+}
+
+void _cityjson_exporter::setSiteMetadataSRSData(SdaiInstance iSiteInstance, OwlInstance iMetadataInstance)
+{
+	assert(iSiteInstance != 0);
+	assert(iMetadataInstance != 0);
+
+	string strEPSGCode;
+	vector<double> vecLowerCorner;
+	vector<double> vecUpperCorner;
+	if (retrieveMetadataSRSData(iMetadataInstance, strEPSGCode, vecLowerCorner, vecUpperCorner))
+	{
+		string strCoordinates;
+		if (getSite()->getWGS84(
+			atoi(strEPSGCode.c_str()),
+			(float)(vecLowerCorner[0] + vecUpperCorner[0]) / 2.f,
+			(float)(vecLowerCorner[1] + vecUpperCorner[1]) / 2.f,
+			(float)(vecLowerCorner[2] + vecUpperCorner[2]) / 2.f,
+			strCoordinates))
+		{
+			vector<double> vecCoordinates;
+			getPosValues(strCoordinates, vecCoordinates);
+
+			double dLatitude = vecCoordinates[0];
+			double dLongitude = vecCoordinates[1];
+
+			SdaiAggr pRefLatitude = sdaiCreateAggrBN(iSiteInstance, "RefLatitude");
+			assert(pRefLatitude != nullptr);
+
+			/*
+			  c[1] :=    a;                                           -- -50
+			  c[2] :=   (a - c[1]) * 60;                              -- -58
+			  c[3] :=  ((a - c[1]) * 60 - c[2]) * 60;                 -- -33
+			  c[4] := (((a - c[1]) * 60 - c[2]) * 60 - c[3]) * 1.e6;  -- -110400
+			*/
+
+			int64_t iRefLatitude1 = (int64_t)dLatitude;
+			int64_t iRefLatitude2 = (int64_t)((dLatitude - iRefLatitude1) * 60.);
+			int64_t iRefLatitude3 = (int64_t)(((dLatitude - iRefLatitude1) * 60. - iRefLatitude2) * 60.);
+			int64_t iRefLatitude4 = 0;
+			sdaiAppend(pRefLatitude, sdaiINTEGER, &iRefLatitude1);
+			sdaiAppend(pRefLatitude, sdaiINTEGER, &iRefLatitude2);
+			sdaiAppend(pRefLatitude, sdaiINTEGER, &iRefLatitude3);
+			sdaiAppend(pRefLatitude, sdaiINTEGER, &iRefLatitude4);
+
+			SdaiAggr pRefLongitude = sdaiCreateAggrBN(iSiteInstance, "RefLongitude");
+			assert(pRefLongitude != nullptr);
+
+			int64_t iRefLongitude1 = (int64_t)dLongitude;
+			int64_t iRefLongitude2 = (int64_t)((dLongitude - iRefLongitude1) * 60.);
+			int64_t iRefLongitude3 = (int64_t)(((dLongitude - iRefLongitude1) * 60. - iRefLongitude2) * 60.);
+			int64_t iRefLongitude4 = 0;
+			sdaiAppend(pRefLongitude, sdaiINTEGER, &iRefLongitude1);
+			sdaiAppend(pRefLongitude, sdaiINTEGER, &iRefLongitude2);
+			sdaiAppend(pRefLongitude, sdaiINTEGER, &iRefLongitude3);
+			sdaiAppend(pRefLongitude, sdaiINTEGER, &iRefLongitude4);
+
+			double dRefElevation = vecLowerCorner[2];
+			sdaiPutAttrBN(iSiteInstance, "RefElevation", sdaiREAL, &dRefElevation);
+		} // if (getSite()->getWGS84( ...
+	} // if (retrieveMetadataSRSData( ...
 }
