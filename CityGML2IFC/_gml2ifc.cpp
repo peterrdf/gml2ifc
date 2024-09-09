@@ -2144,6 +2144,8 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 
 	if (!m_vecSiteInstances.empty())
 	{
+		m_vecSiteInstances.erase(unique(m_vecSiteInstances.begin(), m_vecSiteInstances.end()), m_vecSiteInstances.end());
+
 		buildRelAggregatesInstance(
 			"ProjectContainer",
 			"ProjectContainer for Sites",
