@@ -92,7 +92,10 @@ void CCityGML2IFCDlg::ExportFile(const wstring& strInputFile)
 	strOutputFile += L".ifc";
 
 	_gml2ifc_exporter exporter(m_strRootFolder, LogCallbackImpl, nullptr);
-	exporter.retrieveSRSData(strInputFile);  // TESTQQQQQQQQQQQQQ
+
+	// TEST
+	//exporter.retrieveSRSData(strInputFile);
+
 	exporter.execute(strInputFile, strOutputFile);
 }
 
