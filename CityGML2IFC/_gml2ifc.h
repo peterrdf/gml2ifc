@@ -479,6 +479,9 @@ protected:  // Methods
 
 	virtual void createDefaultStyledItemInstance(SdaiInstance iSdaiInstance) override;
 
+	// SRS
+	virtual void collectSRSData(OwlInstance iRootInstance);
+
 	// Buildings
 	void createBuildings(SdaiInstance iSiteInstance, SdaiInstance iSiteInstancePlacement);
 	void createBuildings();
@@ -527,7 +530,7 @@ protected:  // Methods
 	OwlClass isCityModelClass(OwlClass iInstanceClass) const;
 	OwlClass isBoundingShapeClass(OwlClass iInstanceClass) const;
 	OwlClass isEnvelopeClass(OwlClass iInstanceClass) const;
-	
+		
 	// Building
 	bool isBuildingElement(OwlInstance iInstance) const;
 	bool isBuildingClass(OwlClass iInstanceClass) const;
@@ -556,12 +559,11 @@ protected:  // Methods
 	bool isUnknownClass(OwlClass iInstanceClass) const;
 
 private: // Methods
-	
+
 	void getEnvelopeCenter(OwlInstance iEnvelopeInstance, double& dX, double& dY, double& dZ);
 	void getReferencePoint(OwlInstance iReferencePointInstance, double& dX, double& dY, double& dZ);
 	void setSiteEnvelopeSRSData(SdaiInstance iSiteInstance, OwlInstance iEnvelopeInstance);
-	void setSiteReferencePointSRSData(SdaiInstance iSiteInstance, OwlInstance iReferencePointInstance);
-	void collectSRSData(OwlInstance iRootInstance);
+	void setSiteReferencePointSRSData(SdaiInstance iSiteInstance, OwlInstance iReferencePointInstance);	
 	bool retrieveEnvelopeSRSData(OwlInstance iEnvelopeInstance, string& strEPSGCode, vector<double>& vecLowerCorner, vector<double>& vecUpperCorner);
 	bool retrieveEnvelopeSRSData(OwlInstance iEnvelopeInstance, string& strEPSGCode, vector<double>& vecCenter);
 	bool transformEnvelopeSRSDataAsync(OwlInstance iEnvelopeInstance);
@@ -583,8 +585,22 @@ public: // Methods
 class _cityjson_exporter : public _citygml_exporter
 {
 
+private: // Members
+
+	OwlClass m_iCityJSONClass;
+	OwlClass m_iMetadataClass;
+	OwlInstance m_iMetadataInstance;
+
 public: // Methods
 
 	_cityjson_exporter(_gml2ifc_exporter* pSite);
 	virtual ~_cityjson_exporter();
+
+protected: // Methods
+
+	virtual void collectSRSData(OwlInstance iRootInstance) override;
+
+	// CRS
+	OwlClass isCityJSONClass(OwlClass iInstanceClass) const;
+	OwlClass isMetadataClass(OwlClass iInstanceClass) const;
 };
