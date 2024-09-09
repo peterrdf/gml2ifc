@@ -483,6 +483,7 @@ protected:  // Methods
 
 	// SRS
 	virtual void collectSRSData(OwlInstance iRootInstance);
+	virtual void createSRSMapConversion();
 
 	// Buildings
 	void createBuildings(SdaiInstance iSiteInstance, SdaiInstance iSiteInstancePlacement);
@@ -603,6 +604,7 @@ public: // Methods
 protected: // Methods
 
 	virtual void collectSRSData(OwlInstance iRootInstance) override;
+	virtual void createSRSMapConversion() override;
 
 	// CRS
 	OwlClass isCityJSONClass(OwlClass iInstanceClass) const;

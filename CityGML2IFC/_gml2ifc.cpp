@@ -2150,68 +2150,7 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 			getProjectInstance(),
 			m_vecSiteInstances);
 
-		/* SRSs */
-		set<string> setSRSs;
-
-		// Root
-		if (m_iEnvelopeInstance != 0)
-		{
-			string strEPSGCode;
-			vector<double> vecCenter;
-			if (retrieveEnvelopeSRSData(m_iEnvelopeInstance, strEPSGCode, vecCenter))
-			{
-				setSRSs.insert(strEPSGCode);
-			}
-		}
-
-		// Building
-		for (auto itBuildingSRS : m_mapBuildingSRS)
-		{
-			string strEPSGCode;
-			vector<double> vecCenter;
-			if (retrieveEnvelopeSRSData(itBuildingSRS.second, strEPSGCode, vecCenter))
-			{
-				setSRSs.insert(strEPSGCode);
-			}
-		}
-
-		// Feature
-		for (auto itParcelSRS : m_mapParcelSRS)
-		{
-			string strEPSGCode;
-			vector<double> vecCenter;
-			if (retrieveReferencePointSRSData(itParcelSRS.second, strEPSGCode, vecCenter))
-			{
-				setSRSs.insert(strEPSGCode);
-			}
-		}
-
-		if (setSRSs.size() == 1)
-		{
-			string strSRS = "EPSG:";
-			strSRS += *setSRSs.begin();
-
-			SdaiInstance iGeometricRepresentationContextInstance = sdaiCreateInstanceBN(getSdaiModel(), "IfcGeometricRepresentationContext");
-			assert(iGeometricRepresentationContextInstance != 0);
-
-			sdaiPutAttrBN(iGeometricRepresentationContextInstance, "ContextType", sdaiSTRING, "Model");
-
-			int_t iCoordinateSpaceDimension = 3;
-			sdaiPutAttrBN(iGeometricRepresentationContextInstance, "CoordinateSpaceDimension", sdaiINTEGER, &iCoordinateSpaceDimension);
-
-			double dPrecision = 0.00001;
-			sdaiPutAttrBN(iGeometricRepresentationContextInstance, "Precision", sdaiREAL, &dPrecision);
-
-			sdaiPutAttrBN(iGeometricRepresentationContextInstance, "WorldCoordinateSystem", sdaiINSTANCE, (void*)getWorldCoordinateSystemInstance());
-			sdaiPutAttrBN(iGeometricRepresentationContextInstance, "TrueNorth", sdaiINSTANCE, (void*)buildDirectionInstance2D(0., 1.));
-
-			SdaiInstance iTargetCRS = buildProjectedCRS(strSRS);
-			SdaiInstance iMapConversion = buildMapConversion(iGeometricRepresentationContextInstance, iTargetCRS);
-		}
-		else
-		{
-			assert(setSRSs.size() == 0);
-		}
+		createSRSMapConversion();
 	} // if (!m_vecSiteInstances.empty())
 
 	saveIfcFile(strOuputFile.c_str());
@@ -2365,6 +2304,72 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 
 		iInstance = GetInstancesByIterator(getSite()->getOwlModel(), iInstance);
 	} // while (iInstance != 0)
+}
+
+/*virtual*/ void _citygml_exporter::createSRSMapConversion()
+{
+	/* SRSs */
+	set<string> setSRSs;
+
+	// Root
+	if (m_iEnvelopeInstance != 0)
+	{
+		string strEPSGCode;
+		vector<double> vecCenter;
+		if (retrieveEnvelopeSRSData(m_iEnvelopeInstance, strEPSGCode, vecCenter))
+		{
+			setSRSs.insert(strEPSGCode);
+		}
+	}
+
+	// Building
+	for (auto itBuildingSRS : m_mapBuildingSRS)
+	{
+		string strEPSGCode;
+		vector<double> vecCenter;
+		if (retrieveEnvelopeSRSData(itBuildingSRS.second, strEPSGCode, vecCenter))
+		{
+			setSRSs.insert(strEPSGCode);
+		}
+	}
+
+	// Feature
+	for (auto itParcelSRS : m_mapParcelSRS)
+	{
+		string strEPSGCode;
+		vector<double> vecCenter;
+		if (retrieveReferencePointSRSData(itParcelSRS.second, strEPSGCode, vecCenter))
+		{
+			setSRSs.insert(strEPSGCode);
+		}
+	}
+
+	if (setSRSs.size() == 1)
+	{
+		string strSRS = "EPSG:";
+		strSRS += *setSRSs.begin();
+
+		SdaiInstance iGeometricRepresentationContextInstance = sdaiCreateInstanceBN(getSdaiModel(), "IfcGeometricRepresentationContext");
+		assert(iGeometricRepresentationContextInstance != 0);
+
+		sdaiPutAttrBN(iGeometricRepresentationContextInstance, "ContextType", sdaiSTRING, "Model");
+
+		int_t iCoordinateSpaceDimension = 3;
+		sdaiPutAttrBN(iGeometricRepresentationContextInstance, "CoordinateSpaceDimension", sdaiINTEGER, &iCoordinateSpaceDimension);
+
+		double dPrecision = 0.00001;
+		sdaiPutAttrBN(iGeometricRepresentationContextInstance, "Precision", sdaiREAL, &dPrecision);
+
+		sdaiPutAttrBN(iGeometricRepresentationContextInstance, "WorldCoordinateSystem", sdaiINSTANCE, (void*)getWorldCoordinateSystemInstance());
+		sdaiPutAttrBN(iGeometricRepresentationContextInstance, "TrueNorth", sdaiINSTANCE, (void*)buildDirectionInstance2D(0., 1.));
+
+		SdaiInstance iTargetCRS = buildProjectedCRS(strSRS);
+		SdaiInstance iMapConversion = buildMapConversion(iGeometricRepresentationContextInstance, iTargetCRS);
+	}
+	else
+	{
+		assert(setSRSs.size() == 0);
+	}
 }
 
 void _citygml_exporter::createBuildings(SdaiInstance iSiteInstance, SdaiInstance iSiteInstancePlacement)
@@ -5328,6 +5333,38 @@ _cityjson_exporter::_cityjson_exporter(_gml2ifc_exporter* pSite)
 		
 		iInstance = GetInstancesByIterator(getSite()->getOwlModel(), iInstance);
 	} // while (iInstance != 0)
+}
+
+/*virtual*/ void _cityjson_exporter::createSRSMapConversion() /*override*/
+{
+	// Root
+	if (m_iMetadataInstance != 0)
+	{
+		string strEPSGCode;
+		vector<double> vecCenter;
+		if (retrieveMetadataSRSData(m_iMetadataInstance, strEPSGCode, vecCenter))
+		{
+			string strSRS = "EPSG:";
+			strSRS += strEPSGCode;
+
+			SdaiInstance iGeometricRepresentationContextInstance = sdaiCreateInstanceBN(getSdaiModel(), "IfcGeometricRepresentationContext");
+			assert(iGeometricRepresentationContextInstance != 0);
+
+			sdaiPutAttrBN(iGeometricRepresentationContextInstance, "ContextType", sdaiSTRING, "Model");
+
+			int_t iCoordinateSpaceDimension = 3;
+			sdaiPutAttrBN(iGeometricRepresentationContextInstance, "CoordinateSpaceDimension", sdaiINTEGER, &iCoordinateSpaceDimension);
+
+			double dPrecision = 0.00001;
+			sdaiPutAttrBN(iGeometricRepresentationContextInstance, "Precision", sdaiREAL, &dPrecision);
+
+			sdaiPutAttrBN(iGeometricRepresentationContextInstance, "WorldCoordinateSystem", sdaiINSTANCE, (void*)getWorldCoordinateSystemInstance());
+			sdaiPutAttrBN(iGeometricRepresentationContextInstance, "TrueNorth", sdaiINSTANCE, (void*)buildDirectionInstance2D(0., 1.));
+
+			SdaiInstance iTargetCRS = buildProjectedCRS(strSRS);
+			SdaiInstance iMapConversion = buildMapConversion(iGeometricRepresentationContextInstance, iTargetCRS);
+		} // if (retrieveMetadataSRSData(...
+	} // if (m_iMetadataInstance != 0)
 }
 
 OwlClass _cityjson_exporter::isCityJSONClass(OwlClass iInstanceClass) const
