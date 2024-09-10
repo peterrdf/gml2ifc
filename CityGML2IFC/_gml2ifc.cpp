@@ -4988,7 +4988,7 @@ void _citygml_exporter::setSiteEnvelopeSRSData(SdaiInstance iSiteInstance, OwlIn
 			int64_t iRefLatitude1 = (int64_t)dLatitude;
 			int64_t iRefLatitude2 = (int64_t)((dLatitude - iRefLatitude1) * 60.);
 			int64_t iRefLatitude3 = (int64_t)(((dLatitude - iRefLatitude1) * 60. - iRefLatitude2) * 60.);
-			int64_t iRefLatitude4 = 0;
+			int64_t iRefLatitude4 = (int64_t)(((((dLatitude - iRefLatitude1) * 60. - iRefLatitude2) * 60.) - iRefLatitude3) * 1.e6);
 			sdaiAppend(pRefLatitude, sdaiINTEGER, &iRefLatitude1);
 			sdaiAppend(pRefLatitude, sdaiINTEGER, &iRefLatitude2);
 			sdaiAppend(pRefLatitude, sdaiINTEGER, &iRefLatitude3);
@@ -5000,7 +5000,7 @@ void _citygml_exporter::setSiteEnvelopeSRSData(SdaiInstance iSiteInstance, OwlIn
 			int64_t iRefLongitude1 = (int64_t)dLongitude;
 			int64_t iRefLongitude2 = (int64_t)((dLongitude - iRefLongitude1) * 60.);
 			int64_t iRefLongitude3 = (int64_t)(((dLongitude - iRefLongitude1) * 60. - iRefLongitude2) * 60.);
-			int64_t iRefLongitude4 = 0;
+			int64_t iRefLongitude4 = (int64_t)(((((dLongitude - iRefLongitude1) * 60. - iRefLongitude2) * 60.) - iRefLongitude3) * 1.e6);
 			sdaiAppend(pRefLongitude, sdaiINTEGER, &iRefLongitude1);
 			sdaiAppend(pRefLongitude, sdaiINTEGER, &iRefLongitude2);
 			sdaiAppend(pRefLongitude, sdaiINTEGER, &iRefLongitude3);
