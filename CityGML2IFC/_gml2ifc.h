@@ -36,34 +36,25 @@ private: // Fields
 
 	T& m_var;
 	const T& m_resetVal;
-	bool m_bReset;	
 
-public: // Methods
-
-	_auto_var(T& var, const T& initVal)
-		: m_var(var)
-		, m_resetVal(T())
-		, m_bReset(false)
-	{
-		m_var = var;
-		m_var = initVal;
-	}
+public: // Methods	
 
 	_auto_var(T& var, const T& initVal, const T& resetVal)
 		: m_var(var)		
 		, m_resetVal(resetVal)
-		, m_bReset(true)
 	{
-		m_var = var;
 		m_var = initVal;
+	}
+
+	_auto_var(T& var, const T& resetVal)
+		: m_var(var)
+		, m_resetVal(resetVal)
+	{
 	}
 
 	virtual ~_auto_var()
 	{
-		if (m_bReset)
-		{
-			m_var = m_resetVal;
-		}
+		m_var = m_resetVal;
 	}
 };
 
@@ -484,6 +475,7 @@ protected:  // Methods
 	// SRS
 	virtual void collectSRSData(OwlInstance iRootInstance);
 	virtual void createSRSMapConversion();
+	virtual void getXYZOffset(double& dX, double& dY, double& dZ);
 
 	// Buildings
 	void createBuildings(SdaiInstance iSiteInstance, SdaiInstance iSiteInstancePlacement);
@@ -608,6 +600,7 @@ protected: // Methods
 
 	virtual void collectSRSData(OwlInstance iRootInstance) override;
 	virtual void createSRSMapConversion() override;
+	virtual void getXYZOffset(double& dX, double& dY, double& dZ) override;
 
 	// CRS
 	OwlClass isCityJSONClass(OwlClass iInstanceClass) const;

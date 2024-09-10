@@ -2374,6 +2374,18 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 	}
 }
 
+/*virtual*/ void _citygml_exporter::getXYZOffset(double& dX, double& dY, double& dZ)
+{
+	dX = 0.;
+	dY = 0.; 
+	dZ = 0.;
+
+	if (m_iEnvelopeInstance != 0)
+	{
+		getEnvelopeCenter(m_iEnvelopeInstance, dX, dY, dZ);
+	}
+}
+
 void _citygml_exporter::createBuildings(SdaiInstance iSiteInstance, SdaiInstance iSiteInstancePlacement)
 {
 	assert(iSiteInstance != 0);
@@ -2571,6 +2583,10 @@ void _citygml_exporter::createBuildings()
 	map<SdaiInstance, vector<SdaiInstance>> mapSite2Instances;
 	for (auto& itBuilding : m_mapBuildings)
 	{
+		_auto_var<double> xOffset(m_dXOffset, 0., 0.);
+		_auto_var<double> yOffset(m_dYOffset, 0., 0.);
+		_auto_var<double> zOffset(m_dZOffset, 0., 0.);
+
 		SdaiInstance iSiteInstance = 0;
 		SdaiInstance iSiteInstancePlacement = 0;
 
@@ -2585,10 +2601,6 @@ void _citygml_exporter::createBuildings()
 			char* szClassName = nullptr;
 			GetNameOfClass(iInstanceClass, &szClassName);
 			assert(szClassName != nullptr);
-
-			_auto_var<double> xOffset(m_dXOffset, 0., 0.);
-			_auto_var<double> yOffset(m_dYOffset, 0., 0.);
-			_auto_var<double> zOffset(m_dZOffset, 0., 0.);
 
 			_matrix mtxSite;
 			getEnvelopeCenter(itBuildingSRS->second, m_dXOffset, m_dYOffset, m_dZOffset);
@@ -2609,14 +2621,7 @@ void _citygml_exporter::createBuildings()
 		}
 		else
 		{
-			if (m_iEnvelopeInstance != 0)
-			{
-				_auto_var<double> xOffset(m_dXOffset, 0., 0.);
-				_auto_var<double> yOffset(m_dYOffset, 0., 0.);
-				_auto_var<double> zOffset(m_dZOffset, 0., 0.);
-
-				getEnvelopeCenter(m_iEnvelopeInstance, m_dXOffset, m_dYOffset, m_dZOffset);
-			}			
+			getXYZOffset(m_dXOffset, m_dYOffset, m_dZOffset);
 
 			iSiteInstance = getSiteInstance(iSiteInstancePlacement);
 		}
@@ -3171,6 +3176,10 @@ void _citygml_exporter::createFeatures()
 	map<SdaiInstance, vector<SdaiInstance>> mapSite2Instances;
 	for (auto& itFeature : m_mapFeatures)
 	{
+		_auto_var<double> xOffset(m_dXOffset, 0., 0.);
+		_auto_var<double> yOffset(m_dYOffset, 0., 0.);
+		_auto_var<double> zOffset(m_dZOffset, 0., 0.);
+
 		if (itFeature.second.empty())
 		{
 			continue;
@@ -3190,10 +3199,6 @@ void _citygml_exporter::createFeatures()
 			char* szClassName = nullptr;
 			GetNameOfClass(iInstanceClass, &szClassName);
 			assert(szClassName != nullptr);
-
-			_auto_var<double> xOffset(m_dXOffset, 0., 0.);
-			_auto_var<double> yOffset(m_dYOffset, 0., 0.);
-			_auto_var<double> zOffset(m_dZOffset, 0., 0.);
 
 			_matrix mtxSite;
 			getReferencePoint(itParcelSRS->second, m_dXOffset, m_dYOffset, m_dZOffset);
@@ -3216,10 +3221,6 @@ void _citygml_exporter::createFeatures()
 		{
 			if (m_iEnvelopeInstance != 0)
 			{
-				_auto_var<double> xOffset(m_dXOffset, 0., 0.);
-				_auto_var<double> yOffset(m_dYOffset, 0., 0.);
-				_auto_var<double> zOffset(m_dZOffset, 0., 0.);
-
 				getEnvelopeCenter(m_iEnvelopeInstance, m_dXOffset, m_dYOffset, m_dZOffset);
 			}
 
@@ -5387,6 +5388,18 @@ _cityjson_exporter::_cityjson_exporter(_gml2ifc_exporter* pSite)
 			SdaiInstance iMapConversion = buildMapConversion(iGeometricRepresentationContextInstance, iTargetCRS);
 		} // if (retrieveMetadataSRSData(...
 	} // if (m_iMetadataInstance != 0)
+}
+
+/*virtual*/ void _cityjson_exporter::getXYZOffset(double& dX, double& dY, double& dZ)
+{
+	dX = 0.;
+	dY = 0.;
+	dZ = 0.;
+
+	if (m_iMetadataInstance != 0)
+	{
+		getMetadataCenter(m_iMetadataInstance, dX, dY, dZ);
+	}
 }
 
 OwlClass _cityjson_exporter::isCityJSONClass(OwlClass iInstanceClass) const
