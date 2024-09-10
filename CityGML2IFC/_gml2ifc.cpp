@@ -3219,10 +3219,7 @@ void _citygml_exporter::createFeatures()
 		}
 		else
 		{
-			if (m_iEnvelopeInstance != 0)
-			{
-				getEnvelopeCenter(m_iEnvelopeInstance, m_dXOffset, m_dYOffset, m_dZOffset);
-			}
+			getXYZOffset(m_dXOffset, m_dYOffset, m_dZOffset);
 
 			iSiteInstance = getSiteInstance(iSiteInstancePlacement);
 		}
@@ -3467,6 +3464,8 @@ void _citygml_exporter::searchForFeatureElements(OwlInstance iFeatureInstance, O
 
 void _citygml_exporter::createGeometry(OwlInstance iInstance, vector<SdaiInstance>& vecGeometryInstances, bool bCreateIfcShapeRepresentation)
 {
+	assert(m_dXOffset > 0.);
+
 	assert(iInstance != 0);
 
 	OwlClass iInstanceClass = GetInstanceClass(iInstance);
