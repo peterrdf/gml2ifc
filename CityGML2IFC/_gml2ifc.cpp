@@ -509,10 +509,7 @@ SdaiInstance _exporter_base::getProjectInstance()
 		SdaiAggr pRepresentationContexts = sdaiCreateAggrBN(m_iProjectInstance, "RepresentationContexts");
 		assert(pRepresentationContexts != nullptr);
 
-		SdaiInstance iGeometricRepresentationContextInstance = buildGeometricRepresentationContextInstance();
-		assert(iGeometricRepresentationContextInstance != 0);
-
-		sdaiAppend(pRepresentationContexts, sdaiINSTANCE, (void*)iGeometricRepresentationContextInstance);
+		sdaiAppend(pRepresentationContexts, sdaiINSTANCE, (void*)buildGeometricRepresentationContextInstance());
 	}
 
 	return m_iProjectInstance;
@@ -3996,11 +3993,7 @@ void _citygml_exporter::createBoundaryRepresentation(OwlInstance iInstance, vect
 
 		sdaiPutAttrBN(iShapeRepresentationInstance, "RepresentationIdentifier", sdaiSTRING, "Body");
 		sdaiPutAttrBN(iShapeRepresentationInstance, "RepresentationType", sdaiSTRING, "Brep");
-
-		SdaiInstance iGeometricRepresentationContextInstance = buildGeometricRepresentationContextInstance();
-		assert(iGeometricRepresentationContextInstance != 0);
-
-		sdaiPutAttrBN(iShapeRepresentationInstance, "ContextOfItems", sdaiINSTANCE, (void*)iGeometricRepresentationContextInstance);
+		sdaiPutAttrBN(iShapeRepresentationInstance, "ContextOfItems", sdaiINSTANCE, (void*)buildGeometricRepresentationContextInstance());
 
 		vecGeometryInstances.push_back(iShapeRepresentationInstance);
 	}
@@ -4276,11 +4269,7 @@ void _citygml_exporter::createPoint3D(OwlInstance iInstance, vector<SdaiInstance
 
 		sdaiPutAttrBN(iShapeRepresentationInstance, "RepresentationIdentifier", sdaiSTRING, "Body");
 		sdaiPutAttrBN(iShapeRepresentationInstance, "RepresentationType", sdaiSTRING, "PointCloud");
-
-		SdaiInstance iGeometricRepresentationContextInstance = buildGeometricRepresentationContextInstance();
-		assert(iGeometricRepresentationContextInstance != 0);
-
-		sdaiPutAttrBN(iShapeRepresentationInstance, "ContextOfItems", sdaiINSTANCE, (void*)iGeometricRepresentationContextInstance);
+		sdaiPutAttrBN(iShapeRepresentationInstance, "ContextOfItems", sdaiINSTANCE, (void*)buildGeometricRepresentationContextInstance());
 
 		vecGeometryInstances.push_back(iShapeRepresentationInstance);
 	}
@@ -4325,11 +4314,7 @@ void _citygml_exporter::createPoint3DSet(OwlInstance iInstance, vector<SdaiInsta
 
 		sdaiPutAttrBN(iShapeRepresentationInstance, "RepresentationIdentifier", sdaiSTRING, "Body");
 		sdaiPutAttrBN(iShapeRepresentationInstance, "RepresentationType", sdaiSTRING, "PointCloud");
-
-		SdaiInstance iGeometricRepresentationContextInstance = buildGeometricRepresentationContextInstance();
-		assert(iGeometricRepresentationContextInstance != 0);
-
-		sdaiPutAttrBN(iShapeRepresentationInstance, "ContextOfItems", sdaiINSTANCE, (void*)iGeometricRepresentationContextInstance);
+		sdaiPutAttrBN(iShapeRepresentationInstance, "ContextOfItems", sdaiINSTANCE, (void*)buildGeometricRepresentationContextInstance());
 
 		vecGeometryInstances.push_back(iShapeRepresentationInstance);
 	}
@@ -4391,11 +4376,7 @@ void _citygml_exporter::createPolyLine3D(OwlInstance iInstance, vector<SdaiInsta
 
 		sdaiPutAttrBN(iShapeRepresentationInstance, "RepresentationIdentifier", sdaiSTRING, "Body");
 		sdaiPutAttrBN(iShapeRepresentationInstance, "RepresentationType", sdaiSTRING, "Curve3D");
-
-		SdaiInstance iGeometricRepresentationContextInstance = buildGeometricRepresentationContextInstance();
-		assert(iGeometricRepresentationContextInstance != 0);
-
-		sdaiPutAttrBN(iShapeRepresentationInstance, "ContextOfItems", sdaiINSTANCE, (void*)iGeometricRepresentationContextInstance);
+		sdaiPutAttrBN(iShapeRepresentationInstance, "ContextOfItems", sdaiINSTANCE, (void*)buildGeometricRepresentationContextInstance());
 
 		vecGeometryInstances.push_back(iShapeRepresentationInstance);
 	}
