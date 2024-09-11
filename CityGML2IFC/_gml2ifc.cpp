@@ -310,7 +310,7 @@ _exporter_base::_exporter_base(_gml2ifc_exporter* pSite)
 	, m_iProjectInstance(0)
 	, m_iSiteInstance(0) 
 	, m_iSiteInstancePlacement(0) 
-	
+	, m_iGeometricRepresentationContextInstance(0)
 {
 	assert(m_pSite != nullptr);
 
@@ -509,7 +509,7 @@ SdaiInstance _exporter_base::getProjectInstance()
 		SdaiAggr pRepresentationContexts = sdaiCreateAggrBN(m_iProjectInstance, "RepresentationContexts");
 		assert(pRepresentationContexts != nullptr);
 
-		sdaiAppend(pRepresentationContexts, sdaiINSTANCE, (void*)buildGeometricRepresentationContextInstance());
+		sdaiAppend(pRepresentationContexts, sdaiINSTANCE, (void*)getGeometricRepresentationContextInstance());
 	}
 
 	return m_iProjectInstance;
@@ -549,6 +549,26 @@ SdaiInstance _exporter_base::getSiteInstance(SdaiInstance& iSiteInstancePlacemen
 	iSiteInstancePlacement = m_iSiteInstancePlacement;
 
 	return m_iSiteInstance;
+}
+
+SdaiInstance _exporter_base::getGeometricRepresentationContextInstance()
+{
+	if (m_iGeometricRepresentationContextInstance == 0)
+	{
+		double dPrecision = 0.00001;
+		int_t iCoordinateSpaceDimension = 3;
+
+		m_iGeometricRepresentationContextInstance = sdaiCreateInstanceBN(m_iSdaiModel, "IfcGeometricRepresentationContext");
+		assert(m_iGeometricRepresentationContextInstance != 0);
+
+		sdaiPutAttrBN(m_iGeometricRepresentationContextInstance, "ContextType", sdaiSTRING, "Model");
+		sdaiPutAttrBN(m_iGeometricRepresentationContextInstance, "CoordinateSpaceDimension", sdaiINTEGER, &iCoordinateSpaceDimension);
+		sdaiPutAttrBN(m_iGeometricRepresentationContextInstance, "Precision", sdaiREAL, &dPrecision);
+		sdaiPutAttrBN(m_iGeometricRepresentationContextInstance, "WorldCoordinateSystem", sdaiINSTANCE, (void*)getWorldCoordinateSystemInstance());
+		sdaiPutAttrBN(m_iGeometricRepresentationContextInstance, "TrueNorth", sdaiINSTANCE, (void*)buildDirectionInstance2D(0., 1.));
+	}
+
+	return m_iGeometricRepresentationContextInstance;
 }
 
 void _exporter_base::createIfcModel(const wchar_t* szSchemaName)
@@ -633,23 +653,6 @@ void _exporter_base::saveIfcFile(const wchar_t* szFileName)
 	assert(m_iSdaiModel != 0);
 
 	sdaiSaveModelBNUnicode(m_iSdaiModel, szFileName);
-}
-
-SdaiInstance _exporter_base::buildGeometricRepresentationContextInstance()
-{
-	double dPrecision = 0.00001;
-	int_t iCoordinateSpaceDimension = 3;
-
-	SdaiInstance iGeometricRepresentationContextInstance = sdaiCreateInstanceBN(m_iSdaiModel, "IfcGeometricRepresentationContext");
-	assert(iGeometricRepresentationContextInstance != 0);
-
-	sdaiPutAttrBN(iGeometricRepresentationContextInstance, "ContextType", sdaiSTRING, "Model");
-	sdaiPutAttrBN(iGeometricRepresentationContextInstance, "CoordinateSpaceDimension", sdaiINTEGER, &iCoordinateSpaceDimension);
-	sdaiPutAttrBN(iGeometricRepresentationContextInstance, "Precision", sdaiREAL, &dPrecision);
-	sdaiPutAttrBN(iGeometricRepresentationContextInstance, "WorldCoordinateSystem", sdaiINSTANCE, (void*)getWorldCoordinateSystemInstance());
-	sdaiPutAttrBN(iGeometricRepresentationContextInstance, "TrueNorth", sdaiINSTANCE, (void*)buildDirectionInstance2D(0., 1.));
-
-	return iGeometricRepresentationContextInstance;
 }
 
 SdaiInstance _exporter_base::buildSIUnitInstance(const char* szUnitType, const char* szPrefix, const char* szName)
@@ -1111,7 +1114,7 @@ SdaiInstance _exporter_base::buildRepresentationMap(_matrix* pMatrix, const vect
 
 	sdaiPutAttrBN(iShapeRepresentationInstance, "RepresentationIdentifier", sdaiSTRING, "Body");
 	sdaiPutAttrBN(iShapeRepresentationInstance, "RepresentationType", sdaiSTRING, "Brep");
-	sdaiPutAttrBN(iShapeRepresentationInstance, "ContextOfItems", sdaiINSTANCE, (void*)buildGeometricRepresentationContextInstance());
+	sdaiPutAttrBN(iShapeRepresentationInstance, "ContextOfItems", sdaiINSTANCE, (void*)getGeometricRepresentationContextInstance());
 
 	SdaiAggr pItems = sdaiCreateAggrBN(iShapeRepresentationInstance, "Items");
 	assert(pItems != 0);
@@ -1197,7 +1200,7 @@ SdaiInstance _exporter_base::buildMappedItem(
 
 	sdaiPutAttrBN(iShapeRepresentationInstance, "RepresentationIdentifier", sdaiSTRING, "Body");
 	sdaiPutAttrBN(iShapeRepresentationInstance, "RepresentationType", sdaiSTRING, "MappedRepresentation");
-	sdaiPutAttrBN(iShapeRepresentationInstance, "ContextOfItems", sdaiINSTANCE, (void*)buildGeometricRepresentationContextInstance());
+	sdaiPutAttrBN(iShapeRepresentationInstance, "ContextOfItems", sdaiINSTANCE, (void*)getGeometricRepresentationContextInstance());
 
 	SdaiAggr pItems = sdaiCreateAggrBN(iShapeRepresentationInstance, "Items");
 	assert(pItems != 0);
@@ -2348,22 +2351,8 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 		string strSRS = "EPSG:";
 		strSRS += *setSRSs.begin();
 
-		SdaiInstance iGeometricRepresentationContextInstance = sdaiCreateInstanceBN(getSdaiModel(), "IfcGeometricRepresentationContext");
-		assert(iGeometricRepresentationContextInstance != 0);
-
-		sdaiPutAttrBN(iGeometricRepresentationContextInstance, "ContextType", sdaiSTRING, "Model");
-
-		int_t iCoordinateSpaceDimension = 3;
-		sdaiPutAttrBN(iGeometricRepresentationContextInstance, "CoordinateSpaceDimension", sdaiINTEGER, &iCoordinateSpaceDimension);
-
-		double dPrecision = 0.00001;
-		sdaiPutAttrBN(iGeometricRepresentationContextInstance, "Precision", sdaiREAL, &dPrecision);
-
-		sdaiPutAttrBN(iGeometricRepresentationContextInstance, "WorldCoordinateSystem", sdaiINSTANCE, (void*)getWorldCoordinateSystemInstance());
-		sdaiPutAttrBN(iGeometricRepresentationContextInstance, "TrueNorth", sdaiINSTANCE, (void*)buildDirectionInstance2D(0., 1.));
-
-		SdaiInstance iTargetCRS = buildProjectedCRS(strSRS);
-		SdaiInstance iMapConversion = buildMapConversion(iGeometricRepresentationContextInstance, iTargetCRS);
+		SdaiInstance iMapConversion = buildMapConversion(getGeometricRepresentationContextInstance(), buildProjectedCRS(strSRS));
+		assert(iMapConversion != 0);
 	}
 	else
 	{
@@ -3993,7 +3982,7 @@ void _citygml_exporter::createBoundaryRepresentation(OwlInstance iInstance, vect
 
 		sdaiPutAttrBN(iShapeRepresentationInstance, "RepresentationIdentifier", sdaiSTRING, "Body");
 		sdaiPutAttrBN(iShapeRepresentationInstance, "RepresentationType", sdaiSTRING, "Brep");
-		sdaiPutAttrBN(iShapeRepresentationInstance, "ContextOfItems", sdaiINSTANCE, (void*)buildGeometricRepresentationContextInstance());
+		sdaiPutAttrBN(iShapeRepresentationInstance, "ContextOfItems", sdaiINSTANCE, (void*)getGeometricRepresentationContextInstance());
 
 		vecGeometryInstances.push_back(iShapeRepresentationInstance);
 	}
@@ -4227,7 +4216,7 @@ void _citygml_exporter::createReferencePointIndicator(OwlInstance iInstance, vec
 
 		sdaiPutAttrBN(iShapeRepresentationInstance, "RepresentationIdentifier", sdaiSTRING, "Body");
 		sdaiPutAttrBN(iShapeRepresentationInstance, "RepresentationType", sdaiSTRING, "Brep");
-		sdaiPutAttrBN(iShapeRepresentationInstance, "ContextOfItems", sdaiINSTANCE, (void*)buildGeometricRepresentationContextInstance());
+		sdaiPutAttrBN(iShapeRepresentationInstance, "ContextOfItems", sdaiINSTANCE, (void*)getGeometricRepresentationContextInstance());
 
 		vecGeometryInstances.push_back(iShapeRepresentationInstance);
 	}
@@ -4269,7 +4258,7 @@ void _citygml_exporter::createPoint3D(OwlInstance iInstance, vector<SdaiInstance
 
 		sdaiPutAttrBN(iShapeRepresentationInstance, "RepresentationIdentifier", sdaiSTRING, "Body");
 		sdaiPutAttrBN(iShapeRepresentationInstance, "RepresentationType", sdaiSTRING, "PointCloud");
-		sdaiPutAttrBN(iShapeRepresentationInstance, "ContextOfItems", sdaiINSTANCE, (void*)buildGeometricRepresentationContextInstance());
+		sdaiPutAttrBN(iShapeRepresentationInstance, "ContextOfItems", sdaiINSTANCE, (void*)getGeometricRepresentationContextInstance());
 
 		vecGeometryInstances.push_back(iShapeRepresentationInstance);
 	}
@@ -4314,7 +4303,7 @@ void _citygml_exporter::createPoint3DSet(OwlInstance iInstance, vector<SdaiInsta
 
 		sdaiPutAttrBN(iShapeRepresentationInstance, "RepresentationIdentifier", sdaiSTRING, "Body");
 		sdaiPutAttrBN(iShapeRepresentationInstance, "RepresentationType", sdaiSTRING, "PointCloud");
-		sdaiPutAttrBN(iShapeRepresentationInstance, "ContextOfItems", sdaiINSTANCE, (void*)buildGeometricRepresentationContextInstance());
+		sdaiPutAttrBN(iShapeRepresentationInstance, "ContextOfItems", sdaiINSTANCE, (void*)getGeometricRepresentationContextInstance());
 
 		vecGeometryInstances.push_back(iShapeRepresentationInstance);
 	}
@@ -4376,7 +4365,7 @@ void _citygml_exporter::createPolyLine3D(OwlInstance iInstance, vector<SdaiInsta
 
 		sdaiPutAttrBN(iShapeRepresentationInstance, "RepresentationIdentifier", sdaiSTRING, "Body");
 		sdaiPutAttrBN(iShapeRepresentationInstance, "RepresentationType", sdaiSTRING, "Curve3D");
-		sdaiPutAttrBN(iShapeRepresentationInstance, "ContextOfItems", sdaiINSTANCE, (void*)buildGeometricRepresentationContextInstance());
+		sdaiPutAttrBN(iShapeRepresentationInstance, "ContextOfItems", sdaiINSTANCE, (void*)getGeometricRepresentationContextInstance());
 
 		vecGeometryInstances.push_back(iShapeRepresentationInstance);
 	}

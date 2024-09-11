@@ -208,6 +208,7 @@ private: // Members
 	SdaiInstance m_iProjectInstance;
 	SdaiInstance m_iSiteInstance;
 	SdaiInstance m_iSiteInstancePlacement;	
+	SdaiInstance m_iGeometricRepresentationContextInstance;
 
 public: // Methods
 
@@ -233,6 +234,7 @@ public: // Methods
 	SdaiInstance getWorldCoordinateSystemInstance();	
 	SdaiInstance getProjectInstance();
 	SdaiInstance getSiteInstance(SdaiInstance& iSiteInstancePlacement);
+	SdaiInstance getGeometricRepresentationContextInstance();
 
 protected: // Methods
 
@@ -248,7 +250,6 @@ protected: // Methods
 	void saveIfcFile(const wchar_t* szFileName);
 
 	/* Geometry */
-	SdaiInstance buildGeometricRepresentationContextInstance();
 	SdaiInstance buildSIUnitInstance(const char* szUnitType, const char* szPrefix, const char* szName);
 	SdaiInstance buildMeasureWithUnitInstance();
 	SdaiInstance buildDirectionInstance2D(double dX, double dY);
