@@ -3201,11 +3201,7 @@ void _citygml_exporter::createFeatures()
 			assert(szClassName != nullptr);
 
 			_matrix mtxSite;
-			getReferencePoint(itParcelSRS->second, m_dXOffset, m_dYOffset, m_dZOffset);
-
-			mtxSite._41 = m_dXOffset;
-			mtxSite._42 = m_dYOffset;
-			mtxSite._43 = m_dZOffset;
+			getReferencePoint(itParcelSRS->second, mtxSite._41, mtxSite._42, mtxSite._43);
 
 			iSiteInstance = buildSiteInstance(
 				strTag.c_str(),
@@ -3464,8 +3460,6 @@ void _citygml_exporter::searchForFeatureElements(OwlInstance iFeatureInstance, O
 
 void _citygml_exporter::createGeometry(OwlInstance iInstance, vector<SdaiInstance>& vecGeometryInstances, bool bCreateIfcShapeRepresentation)
 {
-	assert(m_dXOffset > 0.);
-
 	assert(iInstance != 0);
 
 	OwlClass iInstanceClass = GetInstanceClass(iInstance);
