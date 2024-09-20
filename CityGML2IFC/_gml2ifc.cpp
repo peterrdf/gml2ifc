@@ -2366,16 +2366,9 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 	OwlClass iInstanceClass = GetInstanceClass(m_iCurrentOwlBuildingElementInstance);
 	assert(iInstanceClass != 0);
 
-	char* szClassName = nullptr;
-	GetNameOfClass(iInstanceClass, &szClassName);
-	assert(szClassName != nullptr);
-
-	string strEntity = szClassName;
-	_string::toUpper(strEntity);
-
 	if (isWallSurfaceClass(iInstanceClass))
 	{
-		auto pMaterial = getSite()->getDefaultMaterial(strEntity);
+		auto pMaterial = getSite()->getDefaultMaterial("$WALL");
 		if (pMaterial != nullptr)
 		{
 			if (m_iDefaultWallSurfaceColorRgbInstance == 0)
@@ -2391,7 +2384,7 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 	}
 	else if (isRoofSurfaceClass(iInstanceClass))
 	{
-		auto pMaterial = getSite()->getDefaultMaterial(strEntity);
+		auto pMaterial = getSite()->getDefaultMaterial("$ROOF");
 		if (pMaterial != nullptr)
 		{
 			if (m_iDefaultRoofSurfaceColorRgbInstance == 0)
@@ -2407,7 +2400,7 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 	}
 	else if (isDoorClass(iInstanceClass))
 	{
-		auto pMaterial = getSite()->getDefaultMaterial(strEntity);
+		auto pMaterial = getSite()->getDefaultMaterial("$DOOR");
 		if (pMaterial != nullptr)
 		{
 			if (m_iDefaultDoorColorRgbInstance == 0)
@@ -2423,7 +2416,7 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 	}
 	else if (isWindowClass(iInstanceClass))
 	{
-		auto pMaterial = getSite()->getDefaultMaterial(strEntity);
+		auto pMaterial = getSite()->getDefaultMaterial("$WINDOW");
 		if (pMaterial != nullptr)
 		{
 			if (m_iDefaultWindowColorRgbInstance == 0)
