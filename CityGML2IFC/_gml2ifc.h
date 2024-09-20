@@ -5,6 +5,7 @@
 
 #ifdef _WINDOWS
 #include "gisengine.h"
+#include "_string.h"
 #endif
 
 #ifdef __EMSCRIPTEN__
@@ -136,12 +137,73 @@ public: // methods
 };
 
 // ************************************************************************************************
+class _gml2ifc_exporter;
+
+// ************************************************************************************************
+class _material
+{
+
+private: // Members
+
+	int m_iR;
+	int m_iG;
+	int m_iB;
+	int m_iA;
+
+public: // Methods
+
+	_material(int iR, int iG, int iB, int iA)
+		: m_iR(iR)
+		, m_iG(iG)
+		, m_iB(iB)
+		, m_iA(iA)
+	{}
+
+	_material(const vector<string>& vecRGBA)
+		: m_iR(atoi(vecRGBA[0].c_str()))
+		, m_iG(atoi(vecRGBA[1].c_str()))
+		, m_iB(atoi(vecRGBA[2].c_str()))
+		, m_iA(atoi(vecRGBA[3].c_str()))
+	{}
+
+	int getR() const { return m_iR; }
+	int getG() const { return m_iG; }
+	int getB() const { return m_iB; }
+	int getA() const { return m_iA; }
+};
+
+// ************************************************************************************************
+class _settings_provider
+{
+
+private: // Members
+
+	_gml2ifc_exporter* m_pSite;
+
+	// Entity or $ALL : _material*
+	map<string, _material*> m_mapDefaultMaterials;
+	map<string, _material*> m_mapOverridenMaterials;
+
+public: // Methods
+
+	_settings_provider(_gml2ifc_exporter* pSite, const wstring& strSettingsFile);
+	virtual ~_settings_provider();
+
+private: // Methods
+
+	void loadSettings(const wstring& strSettingsFile);
+
+	_gml2ifc_exporter* getSite() const { return m_pSite; }
+};
+
+// ************************************************************************************************
 class _gml2ifc_exporter
 {
 
 private: // Members
 
 	wstring m_strRootFolder;
+	_settings_provider* m_pSettingsProvider;
 	_log_callback m_pLogCallback;
 	CSRSTransformer* m_pSRSTransformer;
 	OwlModel m_iOwlModel;

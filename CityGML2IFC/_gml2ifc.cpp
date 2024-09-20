@@ -1,14 +1,141 @@
 #include "pch.h"
 #include "_gml2ifc.h"
 
-#ifdef _WINDOWS
-#include "_string.h"
-#endif
-
 #include <float.h>
 #include <locale>
 #include <codecvt>
 #include <cassert>
+
+// ************************************************************************************************
+_settings_provider::_settings_provider(_gml2ifc_exporter* pSite, const wstring& strSettingsFile)
+	: m_pSite(pSite)
+	, m_mapDefaultMaterials()
+	, m_mapOverridenMaterials()
+{
+	assert(pSite != nullptr);
+
+	loadSettings(strSettingsFile);
+}
+
+/*virtual*/ _settings_provider::~_settings_provider()
+{
+	for (auto itMaterial : m_mapDefaultMaterials)
+	{
+		delete itMaterial.second;
+	}
+
+	for (auto itMaterial : m_mapOverridenMaterials)
+	{
+		delete itMaterial.second;
+	}
+}
+
+void _settings_provider::loadSettings(const wstring& strSettingsFile)
+{
+	if (strSettingsFile.empty())
+	{
+		return;
+	}
+
+	ifstream streamSettings(strSettingsFile.c_str());
+	if (!streamSettings)
+	{
+		return;
+	}
+
+	string strLine;
+	while (getline(streamSettings, strLine))
+	{
+		stringstream ssLine(strLine);
+		_string::trim(strLine);
+
+		// # Comment
+		if (strLine.empty() || strLine[0] == '#')
+		{
+			continue;
+		}
+
+		string strSetting;
+		ssLine >> strSetting;
+		_string::trim(strSetting);
+
+		// $VERSION
+		if (strSetting == "$VERSION")
+		{
+			string strValue;
+			ssLine >> strValue;
+			_string::trim(strValue);
+
+			if (strValue != "1.0")
+			{
+				getSite()->logErr("Unknown version.");
+
+				return;
+			}
+
+			continue;
+		} // $VERSION
+
+		if (strSetting == "$MATERIAL")
+		{
+			string strType;
+			ssLine >> strType;
+			_string::trim(strType);
+
+			if ((strType == "$DEFAULT") || (strType == "$OVERRIDE"))
+			{
+				string strEntity;
+				ssLine >> strEntity;
+				_string::trim(strEntity);
+
+				string strValue;
+				ssLine >> strValue;
+				_string::trim(strValue);
+
+				if (strEntity.empty() || strValue.empty())
+				{
+					getSite()->logErr(_string::format("Invalid format: '%s'", strLine.c_str()).c_str());
+
+					return;
+				}
+
+				vector<string> vecRGBA;
+				_string::split(strValue, ";", vecRGBA);
+
+				if (vecRGBA.size() != 4)
+				{
+					getSite()->logErr(_string::format("Invalid format: '%s'", strLine.c_str()).c_str());
+
+					return;
+				}
+
+				_string::toUpper(strEntity);
+
+				auto& mapMaterials = (strType == "$DEFAULT") ? m_mapDefaultMaterials : m_mapOverridenMaterials;
+				if (mapMaterials.find(strEntity) != mapMaterials.end())
+				{
+					assert(false);
+
+					continue;
+				}
+
+				mapMaterials[strEntity] = new _material(vecRGBA);
+			} // $DEFAULT, $OVERRIDE
+			else
+			{
+				getSite()->logErr("Unknown material type.");
+
+				return;
+			}
+
+			continue;
+		} // $MATERIAL
+
+		getSite()->logErr("Unknown setting.");
+
+		return;
+	} // while (getline(streamSettings, strLine)) 
+}
 
 // ************************************************************************************************
 _gml2ifc_exporter::_gml2ifc_exporter(
@@ -16,6 +143,7 @@ _gml2ifc_exporter::_gml2ifc_exporter(
 		_log_callback pLogCallback,
 		CSRSTransformer* pSRSTransformer)
 	: m_strRootFolder(strRootFolder)
+	, m_pSettingsProvider(nullptr)
 	, m_pLogCallback(pLogCallback)
 	, m_pSRSTransformer(pSRSTransformer)
 	, m_iOwlModel(0)
@@ -23,6 +151,10 @@ _gml2ifc_exporter::_gml2ifc_exporter(
 {
 	assert(!m_strRootFolder.empty());
 	assert(m_pLogCallback != nullptr);
+
+	wstring strSettingsFile = m_strRootFolder;
+	strSettingsFile += L"CityGML2IFC.settings";
+	m_pSettingsProvider = new _settings_provider(this, strSettingsFile);
 
 	SetGISOptionsW(strRootFolder.c_str(), true, m_pLogCallback);
 }
