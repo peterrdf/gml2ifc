@@ -284,6 +284,50 @@ void _gml2ifc_exporter::execute(unsigned char* szData, size_t iSize, const wstri
 	}
 }
 
+_material* _gml2ifc_exporter::getDefaultMaterial(const string& strEntity)
+{
+	assert(!strEntity.empty());
+
+	const auto& mapOverridenMaterials = m_pSettingsProvider->getOverridenMaterials();
+
+	auto itOverridenMaterial = mapOverridenMaterials.find(strEntity);
+	if (itOverridenMaterial != mapOverridenMaterials.end())
+	{
+		return itOverridenMaterial->second;
+	}
+
+	const auto& mapDefaultMaterials = m_pSettingsProvider->getDefaultMaterials();
+
+	auto itDefaultMaterial = mapDefaultMaterials.find(strEntity);
+	if (itDefaultMaterial != mapDefaultMaterials.end())
+	{
+		return itDefaultMaterial->second;
+	}
+
+	itDefaultMaterial = mapDefaultMaterials.find("$ALL");
+	if (itDefaultMaterial != mapDefaultMaterials.end())
+	{
+		return itDefaultMaterial->second;
+	}
+
+	return nullptr;
+}
+
+_material* _gml2ifc_exporter::getOverridenMaterial(const string& strEntity)
+{
+	assert(!strEntity.empty());
+
+	const auto& mapOverridenMaterials = m_pSettingsProvider->getOverridenMaterials();
+
+	auto itOverridenMaterial = mapOverridenMaterials.find(strEntity);
+	if (itOverridenMaterial != mapOverridenMaterials.end())
+	{
+		return itOverridenMaterial->second;
+	}
+
+	return nullptr;
+}
+
 /*static*/ string _gml2ifc_exporter::dateTimeStamp()
 {
 	auto timePointNow = chrono::system_clock::now();
@@ -479,7 +523,7 @@ SdaiInstance _exporter_base::getPersonInstance()
 		sdaiPutAttrBN(m_iPersonInstance, "FamilyName", sdaiSTRING, "Bonsma");
 	}
 
-	return	m_iPersonInstance;
+	return m_iPersonInstance;
 }
 
 SdaiInstance _exporter_base::getOrganizationInstance()
@@ -493,7 +537,7 @@ SdaiInstance _exporter_base::getOrganizationInstance()
 		sdaiPutAttrBN(m_iOrganizationInstance, "Description", sdaiSTRING, "RDF Ltd.");
 	}	
 
-	return	m_iOrganizationInstance;
+	return m_iOrganizationInstance;
 }
 
 SdaiInstance _exporter_base::getPersonAndOrganizationInstance()
@@ -507,7 +551,7 @@ SdaiInstance _exporter_base::getPersonAndOrganizationInstance()
 		sdaiPutAttrBN(m_iPersonAndOrganizationInstance, "TheOrganization", sdaiINSTANCE, (void*)getOrganizationInstance());
 	}
 
-	return	m_iPersonAndOrganizationInstance;
+	return m_iPersonAndOrganizationInstance;
 }
 
 SdaiInstance _exporter_base::getApplicationInstance()
@@ -523,7 +567,7 @@ SdaiInstance _exporter_base::getApplicationInstance()
 		sdaiPutAttrBN(m_iApplicationInstance, "ApplicationIdentifier", sdaiSTRING, "TA 1001"); //#tbd
 	}
 
-	return	m_iApplicationInstance;
+	return m_iApplicationInstance;
 }
 
 SdaiInstance _exporter_base::getOwnerHistoryInstance()
@@ -542,7 +586,7 @@ SdaiInstance _exporter_base::getOwnerHistoryInstance()
 		sdaiPutAttrBN(m_iOwnerHistoryInstance, "LastModifiedDate", sdaiINTEGER, &iTimeStamp);
 	}
 
-	return	m_iOwnerHistoryInstance;
+	return m_iOwnerHistoryInstance;
 }
 
 SdaiInstance _exporter_base::getDimensionalExponentsInstance()
@@ -569,7 +613,7 @@ SdaiInstance _exporter_base::getDimensionalExponentsInstance()
 		sdaiPutAttrBN(m_iDimensionalExponentsInstance, "LuminousIntensityExponent", sdaiINTEGER, &LuminousIntensityExponent);
 	}
 
-	return	m_iDimensionalExponentsInstance;
+	return m_iDimensionalExponentsInstance;
 }
 
 SdaiInstance _exporter_base::getConversionBasedUnitInstance()
@@ -585,7 +629,7 @@ SdaiInstance _exporter_base::getConversionBasedUnitInstance()
 		sdaiPutAttrBN(m_iConversionBasedUnitInstance, "ConversionFactor", sdaiINSTANCE, (void*)buildMeasureWithUnitInstance());
 	}
 
-	return	m_iConversionBasedUnitInstance;
+	return m_iConversionBasedUnitInstance;
 }
 
 SdaiInstance _exporter_base::getUnitAssignmentInstance()
@@ -609,7 +653,7 @@ SdaiInstance _exporter_base::getUnitAssignmentInstance()
 		sdaiAppend(pUnits, sdaiINSTANCE, (void*)buildSIUnitInstance("LUMINOUSINTENSITYUNIT", nullptr, "LUMEN"));
 	}
 
-	return	m_iUnitAssignmentInstance;
+	return m_iUnitAssignmentInstance;
 }
 
 SdaiInstance _exporter_base::getWorldCoordinateSystemInstance()
@@ -2322,50 +2366,92 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 	OwlClass iInstanceClass = GetInstanceClass(m_iCurrentOwlBuildingElementInstance);
 	assert(iInstanceClass != 0);
 
+	char* szClassName = nullptr;
+	GetNameOfClass(iInstanceClass, &szClassName);
+	assert(szClassName != nullptr);
+
+	string strEntity = szClassName;
+	_string::toUpper(strEntity);
+
 	if (isWallSurfaceClass(iInstanceClass))
 	{
-		if (m_iDefaultWallSurfaceColorRgbInstance == 0)
+		auto pMaterial = getSite()->getDefaultMaterial(strEntity);
+		if (pMaterial != nullptr)
 		{
-			m_iDefaultWallSurfaceColorRgbInstance = buildColorRgbInstance(128. / 255., 128. / 255., 128. / 255.);
-		}
+			if (m_iDefaultWallSurfaceColorRgbInstance == 0)
+			{
+				m_iDefaultWallSurfaceColorRgbInstance = buildColorRgbInstance(
+					pMaterial->getR() / 255.,
+					pMaterial->getG() / 255.,
+					pMaterial->getB() / 255.);
+			}
 
-		createStyledItemInstance(iSdaiInstance, m_iDefaultWallSurfaceColorRgbInstance, 0.);
+			createStyledItemInstance(iSdaiInstance, m_iDefaultWallSurfaceColorRgbInstance, pMaterial->getA() / 255.);
+		}
 	}
 	else if (isRoofSurfaceClass(iInstanceClass))
 	{
-		if (m_iDefaultRoofSurfaceColorRgbInstance == 0)
+		auto pMaterial = getSite()->getDefaultMaterial(strEntity);
+		if (pMaterial != nullptr)
 		{
-			m_iDefaultRoofSurfaceColorRgbInstance = buildColorRgbInstance(139. / 255., 69. / 255., 19. / 255.);
-		}
+			if (m_iDefaultRoofSurfaceColorRgbInstance == 0)
+			{
+				m_iDefaultRoofSurfaceColorRgbInstance = buildColorRgbInstance(
+					pMaterial->getR() / 255.,
+					pMaterial->getG() / 255.,
+					pMaterial->getB() / 255.);
+			}
 
-		createStyledItemInstance(iSdaiInstance, m_iDefaultRoofSurfaceColorRgbInstance, 0.);
+			createStyledItemInstance(iSdaiInstance, m_iDefaultRoofSurfaceColorRgbInstance, pMaterial->getA() / 255.);
+		}		
 	}
 	else if (isDoorClass(iInstanceClass))
 	{
-		if (m_iDefaultDoorColorRgbInstance == 0)
+		auto pMaterial = getSite()->getDefaultMaterial(strEntity);
+		if (pMaterial != nullptr)
 		{
-			m_iDefaultDoorColorRgbInstance = buildColorRgbInstance(139. / 255., 139. / 255., 139. / 255.);
-		}
+			if (m_iDefaultDoorColorRgbInstance == 0)
+			{
+				m_iDefaultDoorColorRgbInstance = buildColorRgbInstance(
+					pMaterial->getR() / 255.,
+					pMaterial->getG() / 255.,
+					pMaterial->getB() / 255.);
+			}
 
-		createStyledItemInstance(iSdaiInstance, m_iDefaultDoorColorRgbInstance, 0.);
+			createStyledItemInstance(iSdaiInstance, m_iDefaultDoorColorRgbInstance, pMaterial->getA() / 255.);
+		}
 	}
 	else if (isWindowClass(iInstanceClass))
 	{
-		if (m_iDefaultWindowColorRgbInstance == 0)
+		auto pMaterial = getSite()->getDefaultMaterial(strEntity);
+		if (pMaterial != nullptr)
 		{
-			m_iDefaultWindowColorRgbInstance = buildColorRgbInstance(25. / 255., 25. / 255., 25. / 255.);
-		}
+			if (m_iDefaultWindowColorRgbInstance == 0)
+			{
+				m_iDefaultWindowColorRgbInstance = buildColorRgbInstance(
+					pMaterial->getR() / 255.,
+					pMaterial->getG() / 255.,
+					pMaterial->getB() / 255.);
+			}
 
-		createStyledItemInstance(iSdaiInstance, m_iDefaultWindowColorRgbInstance, 0.95);
+			createStyledItemInstance(iSdaiInstance, m_iDefaultWindowColorRgbInstance, pMaterial->getA() / 255.);
+		}
 	}
 	else
 	{
-		if (m_iDefaultColorRgbInstance == 0)
+		auto pMaterial = getSite()->getDefaultMaterial("$ALL");
+		if (pMaterial != nullptr)
 		{
-			m_iDefaultColorRgbInstance = buildColorRgbInstance(0., 0., 1.);
-		}
+			if (m_iDefaultColorRgbInstance == 0)
+			{
+				m_iDefaultColorRgbInstance = buildColorRgbInstance(
+					pMaterial->getR() / 255.,
+					pMaterial->getG() / 255.,
+					pMaterial->getB() / 255.);
+			}
 
-		createStyledItemInstance(iSdaiInstance, m_iDefaultColorRgbInstance, 0.75);
+			createStyledItemInstance(iSdaiInstance, m_iDefaultColorRgbInstance, pMaterial->getA() / 255.);
+		}		
 	}
 }
 

@@ -189,6 +189,9 @@ public: // Methods
 	_settings_provider(_gml2ifc_exporter* pSite, const wstring& strSettingsFile);
 	virtual ~_settings_provider();
 
+	const map<string, _material*>& getDefaultMaterials() const { return m_mapDefaultMaterials; }
+	const map<string, _material*>& getOverridenMaterials() const { return m_mapOverridenMaterials; }
+
 private: // Methods
 
 	void loadSettings(const wstring& strSettingsFile);
@@ -228,6 +231,10 @@ public: // Methods
 	// SRS
 	bool toWGS84Async(int iCRS, float fX, float fY, float fZ);
 	bool getWGS84(int iCRS, float fX, float fY, float fZ, string& strCoordinates);
+
+	// Settings
+	_material* getDefaultMaterial(const string& strEntity);
+	_material* getOverridenMaterial(const string& strEntity);
 
 	// Log
 	static string dateTimeStamp();
