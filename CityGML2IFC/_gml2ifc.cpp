@@ -10,7 +10,7 @@
 _settings_provider::_settings_provider(_gml2ifc_exporter* pSite, const wstring& strSettingsFile)
 	: m_pSite(pSite)
 	, m_mapDefaultMaterials()
-	, m_mapOverridenMaterials()
+	, m_mapOverriddenMaterials()
 {
 	assert(pSite != nullptr);
 
@@ -24,7 +24,7 @@ _settings_provider::_settings_provider(_gml2ifc_exporter* pSite, const wstring& 
 		delete itMaterial.second;
 	}
 
-	for (auto itMaterial : m_mapOverridenMaterials)
+	for (auto itMaterial : m_mapOverriddenMaterials)
 	{
 		delete itMaterial.second;
 	}
@@ -111,7 +111,7 @@ void _settings_provider::loadSettings(const wstring& strSettingsFile)
 
 				_string::toUpper(strEntity);
 
-				auto& mapMaterials = (strType == "$DEFAULT") ? m_mapDefaultMaterials : m_mapOverridenMaterials;
+				auto& mapMaterials = (strType == "$DEFAULT") ? m_mapDefaultMaterials : m_mapOverriddenMaterials;
 				if (mapMaterials.find(strEntity) != mapMaterials.end())
 				{
 					assert(false);
@@ -288,12 +288,10 @@ _material* _gml2ifc_exporter::getDefaultMaterial(const string& strEntity)
 {
 	assert(!strEntity.empty());
 
-	const auto& mapOverridenMaterials = m_pSettingsProvider->getOverridenMaterials();
-
-	auto itOverridenMaterial = mapOverridenMaterials.find(strEntity);
-	if (itOverridenMaterial != mapOverridenMaterials.end())
+	auto pOverriddenMaterial = getOverriddenMaterial(strEntity);
+	if (pOverriddenMaterial != nullptr)
 	{
-		return itOverridenMaterial->second;
+		return pOverriddenMaterial;
 	}
 
 	const auto& mapDefaultMaterials = m_pSettingsProvider->getDefaultMaterials();
@@ -313,16 +311,16 @@ _material* _gml2ifc_exporter::getDefaultMaterial(const string& strEntity)
 	return nullptr;
 }
 
-_material* _gml2ifc_exporter::getOverridenMaterial(const string& strEntity)
+_material* _gml2ifc_exporter::getOverriddenMaterial(const string& strEntity)
 {
 	assert(!strEntity.empty());
 
-	const auto& mapOverridenMaterials = m_pSettingsProvider->getOverridenMaterials();
+	const auto& mapOverriddenMaterials = m_pSettingsProvider->getOverriddenMaterials();
 
-	auto itOverridenMaterial = mapOverridenMaterials.find(strEntity);
-	if (itOverridenMaterial != mapOverridenMaterials.end())
+	auto itOverriddenMaterial = mapOverriddenMaterials.find(strEntity);
+	if (itOverriddenMaterial != mapOverriddenMaterials.end())
 	{
-		return itOverridenMaterial->second;
+		return itOverriddenMaterial->second;
 	}
 
 	return nullptr;
@@ -1537,6 +1535,11 @@ void _exporter_base::createStyledItemInstance(OwlInstance iOwlInstance, SdaiInst
 		return;
 	}
 
+	if (createOverriddenStyledItemInstance(iSdaiInstance))
+	{
+		return;
+	}
+
 	// color
 	OwlInstance* piInstances = nullptr;
 	int64_t iInstancesCount = 0;
@@ -2446,6 +2449,90 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 			createStyledItemInstance(iSdaiInstance, m_iDefaultColorRgbInstance, pMaterial->getA() / 255.);
 		}		
 	}
+}
+
+/*virtual*/ bool _citygml_exporter::createOverriddenStyledItemInstance(SdaiInstance iSdaiInstance) /*override*/
+{
+	assert(m_iCurrentOwlBuildingElementInstance != 0);
+	assert(iSdaiInstance != 0);
+
+	OwlClass iInstanceClass = GetInstanceClass(m_iCurrentOwlBuildingElementInstance);
+	assert(iInstanceClass != 0);
+
+	if (isWallSurfaceClass(iInstanceClass))
+	{
+		auto pMaterial = getSite()->getOverriddenMaterial("$WALL");
+		if (pMaterial != nullptr)
+		{
+			if (m_iDefaultWallSurfaceColorRgbInstance == 0)
+			{
+				m_iDefaultWallSurfaceColorRgbInstance = buildColorRgbInstance(
+					pMaterial->getR() / 255.,
+					pMaterial->getG() / 255.,
+					pMaterial->getB() / 255.);
+			}
+
+			createStyledItemInstance(iSdaiInstance, m_iDefaultWallSurfaceColorRgbInstance, pMaterial->getA() / 255.);
+
+			return true;
+		}
+	}
+	else if (isRoofSurfaceClass(iInstanceClass))
+	{
+		auto pMaterial = getSite()->getOverriddenMaterial("$ROOF");
+		if (pMaterial != nullptr)
+		{
+			if (m_iDefaultRoofSurfaceColorRgbInstance == 0)
+			{
+				m_iDefaultRoofSurfaceColorRgbInstance = buildColorRgbInstance(
+					pMaterial->getR() / 255.,
+					pMaterial->getG() / 255.,
+					pMaterial->getB() / 255.);
+			}
+
+			createStyledItemInstance(iSdaiInstance, m_iDefaultRoofSurfaceColorRgbInstance, pMaterial->getA() / 255.);
+
+			return true;
+		}
+	}
+	else if (isDoorClass(iInstanceClass))
+	{
+		auto pMaterial = getSite()->getOverriddenMaterial("$DOOR");
+		if (pMaterial != nullptr)
+		{
+			if (m_iDefaultDoorColorRgbInstance == 0)
+			{
+				m_iDefaultDoorColorRgbInstance = buildColorRgbInstance(
+					pMaterial->getR() / 255.,
+					pMaterial->getG() / 255.,
+					pMaterial->getB() / 255.);
+			}
+
+			createStyledItemInstance(iSdaiInstance, m_iDefaultDoorColorRgbInstance, pMaterial->getA() / 255.);
+
+			return true;
+		}
+	}
+	else if (isWindowClass(iInstanceClass))
+	{
+		auto pMaterial = getSite()->getOverriddenMaterial("$WINDOW");
+		if (pMaterial != nullptr)
+		{
+			if (m_iDefaultWindowColorRgbInstance == 0)
+			{
+				m_iDefaultWindowColorRgbInstance = buildColorRgbInstance(
+					pMaterial->getR() / 255.,
+					pMaterial->getG() / 255.,
+					pMaterial->getB() / 255.);
+			}
+
+			createStyledItemInstance(iSdaiInstance, m_iDefaultWindowColorRgbInstance, pMaterial->getA() / 255.);
+
+			return true;
+		}
+	}
+
+	return false;
 }
 
 /*virtual*/ void _citygml_exporter::collectSRSData(OwlInstance iRootInstance)

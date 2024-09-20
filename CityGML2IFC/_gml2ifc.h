@@ -182,7 +182,7 @@ private: // Members
 
 	// Entity or $ALL : _material*
 	map<string, _material*> m_mapDefaultMaterials;
-	map<string, _material*> m_mapOverridenMaterials;
+	map<string, _material*> m_mapOverriddenMaterials;
 
 public: // Methods
 
@@ -190,7 +190,7 @@ public: // Methods
 	virtual ~_settings_provider();
 
 	const map<string, _material*>& getDefaultMaterials() const { return m_mapDefaultMaterials; }
-	const map<string, _material*>& getOverridenMaterials() const { return m_mapOverridenMaterials; }
+	const map<string, _material*>& getOverriddenMaterials() const { return m_mapOverriddenMaterials; }
 
 private: // Methods
 
@@ -234,7 +234,7 @@ public: // Methods
 
 	// Settings
 	_material* getDefaultMaterial(const string& strEntity);
-	_material* getOverridenMaterial(const string& strEntity);
+	_material* getOverriddenMaterial(const string& strEntity);
 
 	// Log
 	static string dateTimeStamp();
@@ -407,6 +407,7 @@ protected: // Methods
 	void createStyledItemInstance(SdaiInstance iSdaiInstance, double dR, double G, double dB, double dTransparency);
 	void createStyledItemInstance(SdaiInstance iSdaiInstance, SdaiInstance iColorRgbInstance, double dTransparency);
 	virtual void createDefaultStyledItemInstance(SdaiInstance iSdaiInstance) {}
+	virtual bool createOverriddenStyledItemInstance(SdaiInstance iSdaiInstance) { return false; }
 	SdaiInstance buildPresentationStyleAssignmentInstance();
 	SdaiInstance buildSurfaceStyleInstance();
 	SdaiInstance buildSurfaceStyleRenderingInstance();
@@ -541,6 +542,7 @@ protected:  // Methods
 	virtual void onPostCreateSite(SdaiInstance iSiteInstance) override;
 
 	virtual void createDefaultStyledItemInstance(SdaiInstance iSdaiInstance) override;
+	virtual bool createOverriddenStyledItemInstance(SdaiInstance iSdaiInstance) override;
 
 	// SRS
 	virtual void collectSRSData(OwlInstance iRootInstance);
