@@ -540,6 +540,7 @@ _exporter_base::_exporter_base(_gml2ifc_exporter* pSite)
 	, m_iDimensionalExponentsInstance(0)
 	, m_iConversionBasedUnitInstance(0)
 	, m_iUnitAssignmentInstance(0)
+	, m_iLengthUnitInstance(0)
 	, m_iWorldCoordinateSystemInstance(0)
 	, m_iProjectInstance(0)
 	, m_iSiteInstance(0) 
@@ -700,7 +701,9 @@ SdaiInstance _exporter_base::getUnitAssignmentInstance()
 		SdaiAggr pUnits = sdaiCreateAggrBN(m_iUnitAssignmentInstance, "Units");
 		assert(pUnits != nullptr);
 
-		sdaiAppend(pUnits, sdaiINSTANCE, (void*)buildSIUnitInstance("LENGTHUNIT", nullptr, "METRE"));
+		m_iLengthUnitInstance = buildSIUnitInstance("LENGTHUNIT", nullptr, "METRE");
+		sdaiAppend(pUnits, sdaiINSTANCE, (void*)m_iLengthUnitInstance);
+
 		sdaiAppend(pUnits, sdaiINSTANCE, (void*)buildSIUnitInstance("AREAUNIT", nullptr, "SQUARE_METRE"));
 		sdaiAppend(pUnits, sdaiINSTANCE, (void*)buildSIUnitInstance("VOLUMEUNIT", nullptr, "CUBIC_METRE"));
 		sdaiAppend(pUnits, sdaiINSTANCE, (void*)getConversionBasedUnitInstance());
@@ -4904,7 +4907,7 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 		} // attr:
 		else if (strPropertyUniqueName == "$relations")
 		{
-			createObjectProperties(iOwlInstance, iSdaiInstance, mapProperties);
+			createObjectProperties(iOwlInstance, mapProperties);
 		}
 
 		iPropertyInstance = GetInstancePropertyByIterator(iOwlInstance, iPropertyInstance);
@@ -4926,10 +4929,9 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 	buildRelDefinesByProperties(iSdaiInstance, iPropertySetInstance);
 }
 
-void _citygml_exporter::createObjectProperties(OwlInstance iOwlInstance, SdaiInstance iSdaiInstance, map<string, SdaiInstance>& mapProperties)
+void _citygml_exporter::createObjectProperties(OwlInstance iOwlInstance, map<string, SdaiInstance>& mapProperties)
 {
 	assert(iOwlInstance != 0);
-	assert(iSdaiInstance != 0);
 
 	OwlInstance* piInstances = nullptr;
 	int64_t iInstancesCount = 0;
@@ -4942,7 +4944,27 @@ void _citygml_exporter::createObjectProperties(OwlInstance iOwlInstance, SdaiIns
 
 	for (int64_t iIndex = 0; iIndex < iInstancesCount; iIndex++)
 	{
-		string strUOMAttr = getStringAttributeValue(piInstances[iIndex], "uom"); // TODO
+		SdaiInstance iUnitInstance = 0;
+		string strUOMAttr = getStringAttributeValue(piInstances[iIndex], "uom");
+		if (!strUOMAttr.empty())
+		{
+			OwlClass iInstanceClass = GetInstanceClass(piInstances[iIndex]);
+			assert(iInstanceClass != 0);
+
+			char* szClassName = nullptr;
+			GetNameOfClass(iInstanceClass, &szClassName);
+			assert(szClassName != nullptr);
+
+			if (string(szClassName) == "class:LengthType")
+			{
+				iUnitInstance = getLengthUnitInstance();
+			}
+			else
+			{
+				assert(false);// TODO
+			}
+		} // if (!strUOMAttr.empty())
+
 		string strTag = getTag(piInstances[iIndex]);
 
 		string strPrefix;
@@ -5009,11 +5031,18 @@ void _citygml_exporter::createObjectProperties(OwlInstance iOwlInstance, SdaiIns
 			{
 				assert(iValuesCount == 1);
 
-				mapProperties["double-value"] = buildPropertySingleValueReal(
+				SdaiInstance iPropertyInstance = buildPropertySingleValueReal(
 					strName.c_str(),
 					"property",
 					pdValues[0],
 					"IFCREAL");
+
+				if (iUnitInstance != 0)
+				{
+					sdaiPutAttrBN(iPropertyInstance, "Unit", sdaiINSTANCE, (void*)iUnitInstance);
+				}
+
+				mapProperties["double-value"] = iPropertyInstance;
 			}
 		} // double-value
 	} // for (int64_t iIndex = ...

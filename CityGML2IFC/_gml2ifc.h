@@ -276,6 +276,7 @@ private: // Members
 	SdaiInstance m_iDimensionalExponentsInstance;
 	SdaiInstance m_iConversionBasedUnitInstance;
 	SdaiInstance m_iUnitAssignmentInstance;
+	SdaiInstance m_iLengthUnitInstance;
 	SdaiInstance m_iWorldCoordinateSystemInstance;
 	SdaiInstance m_iProjectInstance;
 	SdaiInstance m_iSiteInstance;
@@ -303,6 +304,7 @@ public: // Methods
 	SdaiInstance getDimensionalExponentsInstance();
 	SdaiInstance getConversionBasedUnitInstance();
 	SdaiInstance getUnitAssignmentInstance();
+	SdaiInstance getLengthUnitInstance() const { return m_iLengthUnitInstance; }
 	SdaiInstance getWorldCoordinateSystemInstance();	
 	SdaiInstance getProjectInstance();
 	SdaiInstance getSiteInstance(SdaiInstance& iSiteInstancePlacement);
@@ -582,7 +584,7 @@ protected:  // Methods
 	void createPolyLine3D(OwlInstance iInstance, vector<SdaiInstance>& vecGeometryInstances, bool bCreateIfcShapeRepresentation);	
 
 	void createProperties(OwlInstance iOwlInstance, SdaiInstance iSdaiInstance);
-	void createObjectProperties(OwlInstance iOwlInstance, SdaiInstance iSdaiInstance, map<string, SdaiInstance>& mapProperties);
+	void createObjectProperties(OwlInstance iOwlInstance, map<string, SdaiInstance>& mapProperties);
 
 	SdaiInstance buildBuildingElementInstance(
 		OwlInstance iOwlInstance,
