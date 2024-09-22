@@ -4942,6 +4942,7 @@ void _citygml_exporter::createObjectProperties(OwlInstance iOwlInstance, SdaiIns
 
 	for (int64_t iIndex = 0; iIndex < iInstancesCount; iIndex++)
 	{
+		string strUOMAttr = getStringAttributeValue(piInstances[iIndex], "uom"); // TODO
 		string strTag = getTag(piInstances[iIndex]);
 
 		string strPrefix;
