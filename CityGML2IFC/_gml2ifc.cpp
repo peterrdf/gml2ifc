@@ -331,7 +331,7 @@ void _gml2ifc_exporter::execute(unsigned char* szData, size_t iSize, const wstri
 	}
 }
 
-_material* _gml2ifc_exporter::getDefaultMaterial(const string& strEntity)
+_material* _gml2ifc_exporter::getDefaultMaterial(const string& strEntity) const
 {
 	assert(!strEntity.empty());
 
@@ -343,7 +343,7 @@ _material* _gml2ifc_exporter::getDefaultMaterial(const string& strEntity)
 
 	const auto& mapDefaultMaterials = m_pSettingsProvider->getDefaultMaterials();
 
-	auto itDefaultMaterial = mapDefaultMaterials.find(strEntity);
+	auto& itDefaultMaterial = mapDefaultMaterials.find(strEntity);
 	if (itDefaultMaterial != mapDefaultMaterials.end())
 	{
 		return itDefaultMaterial->second;
@@ -358,19 +358,32 @@ _material* _gml2ifc_exporter::getDefaultMaterial(const string& strEntity)
 	return nullptr;
 }
 
-_material* _gml2ifc_exporter::getOverriddenMaterial(const string& strEntity)
+_material* _gml2ifc_exporter::getOverriddenMaterial(const string& strEntity) const
 {
 	assert(!strEntity.empty());
 
 	const auto& mapOverriddenMaterials = m_pSettingsProvider->getOverriddenMaterials();
 
-	auto itOverriddenMaterial = mapOverriddenMaterials.find(strEntity);
+	auto& itOverriddenMaterial = mapOverriddenMaterials.find(strEntity);
 	if (itOverriddenMaterial != mapOverriddenMaterials.end())
 	{
 		return itOverriddenMaterial->second;
 	}
 
 	return nullptr;
+}
+
+string _gml2ifc_exporter::getPropertyName(const string& strName) const
+{
+	assert(!strName.empty());
+
+	auto& itRenamedProperty = m_pSettingsProvider->getRenamedProperties().find(strName);
+	if (itRenamedProperty != m_pSettingsProvider->getRenamedProperties().end())
+	{
+		return itRenamedProperty->second;
+	}
+
+	return strName;
 }
 
 /*static*/ string _gml2ifc_exporter::dateTimeStamp()
@@ -1967,6 +1980,24 @@ string _exporter_base::getTag(OwlInstance iInstance) const
 #endif // _WINDOWS
 }
 
+void _exporter_base::getXMLElementPrefixAndName(const string& strUniqueName, string& strPrefix, string& strName) const
+{
+	assert(!strUniqueName.empty() && strPrefix.empty() && strName.empty());
+
+	strName = strUniqueName;
+
+	vector<string> vecTokens;
+	_string::tokenize(strUniqueName, ":", vecTokens);
+
+	assert(!vecTokens.empty() && (vecTokens.size() <= 2));
+
+	if (vecTokens.size() == 2)
+	{
+		strPrefix = vecTokens[0];
+		strName = vecTokens[1];
+	}
+}
+
 string _exporter_base::getStringAttributeValue(OwlInstance iInstance, const string& strName) const
 {
 	assert(iInstance != 0);
@@ -1975,11 +2006,11 @@ string _exporter_base::getStringAttributeValue(OwlInstance iInstance, const stri
 	int64_t iPropertyInstance = GetInstancePropertyByIterator(iInstance, 0);
 	while (iPropertyInstance != 0)
 	{
-		char* szPropertyName = nullptr;
-		GetNameOfProperty(iPropertyInstance, &szPropertyName);
+		char* szPropertyUniqueName = nullptr;
+		GetNameOfProperty(iPropertyInstance, &szPropertyUniqueName);
 
-		string strPropertyName = szPropertyName;
-		if (strPropertyName == "attr:str:" + strName)
+		string strPropertyUniqueName = szPropertyUniqueName;
+		if (strPropertyUniqueName == "attr:str:" + strName)
 		{
 			assert(GetPropertyType(iPropertyInstance) == DATATYPEPROPERTY_TYPE_WCHAR_T_ARRAY);
 
@@ -2013,7 +2044,7 @@ string _exporter_base::getStringAttributeValue(OwlInstance iInstance, const stri
 
 			return To_UTF8(strValueU32);
 #endif // _WINDOWS			
-		} // if (strPropertyName == ...
+		} // if (strPropertyUniqueName == ...
 
 		iPropertyInstance = GetInstancePropertyByIterator(iInstance, iPropertyInstance);
 	} // while (iPropertyInstance != 0)
@@ -2029,11 +2060,11 @@ string _exporter_base::getStringPropertyValue(OwlInstance iInstance, const strin
 	int64_t iPropertyInstance = GetInstancePropertyByIterator(iInstance, 0);
 	while (iPropertyInstance != 0)
 	{
-		char* szPropertyName = nullptr;
-		GetNameOfProperty(iPropertyInstance, &szPropertyName);
+		char* szPropertyUniqueName = nullptr;
+		GetNameOfProperty(iPropertyInstance, &szPropertyUniqueName);
 
-		string strPropertyName = szPropertyName;
-		if (strPropertyName == "prop:str:" + strName)
+		string strPropertyUniqueName = szPropertyUniqueName;
+		if (strPropertyUniqueName == "prop:str:" + strName)
 		{
 			assert((GetPropertyType(iPropertyInstance) == DATATYPEPROPERTY_TYPE_WCHAR_T_ARRAY) ||
 				(GetPropertyType(iPropertyInstance) == DATATYPEPROPERTY_TYPE_STRING));
@@ -2068,7 +2099,7 @@ string _exporter_base::getStringPropertyValue(OwlInstance iInstance, const strin
 
 			return To_UTF8(strValueU32);
 #endif // _WINDOWS			
-		} // if (strPropertyName == ...
+		} // if (strPropertyUniqueName == ...
 
 		iPropertyInstance = GetInstancePropertyByIterator(iInstance, iPropertyInstance);
 	} // while (iPropertyInstance != 0)
@@ -2086,11 +2117,11 @@ void _exporter_base::getDoublePropertyValue(OwlInstance iInstance, const string&
 	int64_t iPropertyInstance = GetInstancePropertyByIterator(iInstance, 0);
 	while (iPropertyInstance != 0)
 	{
-		char* szPropertyName = nullptr;
-		GetNameOfProperty(iPropertyInstance, &szPropertyName);
+		char* szPropertyUniqueName = nullptr;
+		GetNameOfProperty(iPropertyInstance, &szPropertyUniqueName);
 
-		string strPropertyName = szPropertyName;
-		if (strPropertyName == "prop:dbl:" + strName)
+		string strPropertyUniqueName = szPropertyUniqueName;
+		if (strPropertyUniqueName == "prop:dbl:" + strName)
 		{
 			assert(GetPropertyType(iPropertyInstance) == DATATYPEPROPERTY_TYPE_DOUBLE);
 
@@ -2109,7 +2140,7 @@ void _exporter_base::getDoublePropertyValue(OwlInstance iInstance, const string&
 			}
 
 			break;
-		} // if (strPropertyName == ...
+		} // if (strPropertyUniqueName == ...
 
 		iPropertyInstance = GetInstancePropertyByIterator(iInstance, iPropertyInstance);
 	} // while (iPropertyInstance != 0)
@@ -4730,25 +4761,33 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 	RdfProperty iPropertyInstance = GetInstancePropertyByIterator(iOwlInstance, 0);
 	while (iPropertyInstance != 0)
 	{
-		char* szPropertyName = nullptr;
-		GetNameOfProperty(iPropertyInstance, &szPropertyName);
+		char* szPropertyUniqueName = nullptr;
+		GetNameOfProperty(iPropertyInstance, &szPropertyUniqueName);
 
-		string strPropertyName = szPropertyName;
+		string strPropertyUniqueName = szPropertyUniqueName;
 		
-		if (strPropertyName.find("prop:") == 0)
+		if (strPropertyUniqueName.find("prop:") == 0)
 		{
 			// Properties
 			switch (GetPropertyType(iPropertyInstance))
 			{
 				case DATATYPEPROPERTY_TYPE_DOUBLE:
 				{
+					string strPropertyName = strPropertyUniqueName.replace(0, string("prop:dbl:").size(), "");
+
+					string strPrefix;
+					string strName;
+					getXMLElementPrefixAndName(strPropertyName, strPrefix, strName);
+
+					strPropertyName = getSite()->getPropertyName(strName);
+
 					double* pdValue = nullptr;
 					int64_t iValuesCount = 0;
 					GetDatatypeProperty(iOwlInstance, iPropertyInstance, (void**)&pdValue, &iValuesCount);
 
 					assert(iValuesCount == 1);
 
-					mapProperties[szPropertyName] = buildPropertySingleValueReal(
+					mapProperties[strPropertyName] = buildPropertySingleValueReal(
 						strPropertyName.c_str(),
 						"property",
 						pdValue[0],
@@ -4758,6 +4797,14 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 
 				case DATATYPEPROPERTY_TYPE_WCHAR_T_ARRAY:
 				{
+					string strPropertyName = strPropertyUniqueName.replace(0, string("prop:str:").size(), "");
+
+					string strPrefix;
+					string strName;
+					getXMLElementPrefixAndName(strPropertyName, strPrefix, strName);
+
+					strPropertyName = getSite()->getPropertyName(strName);
+
 					SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, false);
 
 					wchar_t** szValue = nullptr;
@@ -4766,7 +4813,6 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 					assert(iValuesCount == 1);
 
 					SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, true);
-
 #ifdef _WINDOWS
 					auto iLength = std::char_traits<char16_t>::length((char16_t*)*szValue);
 
@@ -4774,7 +4820,7 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 					strValueU16.resize(iLength);
 					memcpy((void*)strValueU16.data(), szValue[0], iLength * sizeof(char16_t));
 
-					mapProperties[szPropertyName] = buildPropertySingleValueText(
+					mapProperties[strPropertyName] = buildPropertySingleValueText(
 						strPropertyName.c_str(),
 						"property",
 						To_UTF8(strValueU16).c_str(),
@@ -4786,7 +4832,7 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 					strValueU32.resize(iLength);
 					memcpy((void*)strValueU32.data(), szValue[0], iLength * sizeof(wchar_t));
 
-					mapProperties[szPropertyName] = buildPropertySingleValueText(
+					mapProperties[strPropertyName] = buildPropertySingleValueText(
 						strPropertyName.c_str(),
 						"attribute",
 						To_UTF8(strValueU32).c_str(),
@@ -4808,10 +4854,18 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 				break;
 			} // switch (GetPropertyType(iPropertyInstance))
 		} // prop:
-		else if (strPropertyName.find("attr:") == 0)
+		else if (strPropertyUniqueName.find("attr:") == 0)
 		{
 			// Attributes
 			assert(GetPropertyType(iPropertyInstance) == DATATYPEPROPERTY_TYPE_WCHAR_T_ARRAY);
+
+			string strPropertyName = strPropertyUniqueName.replace(0, string("attr:str:").size(), "");
+
+			string strPrefix;
+			string strName;
+			getXMLElementPrefixAndName(strPropertyName, strPrefix, strName);
+
+			strPropertyName = getSite()->getPropertyName(strName);
 
 			SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, false);
 
@@ -4829,7 +4883,7 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 			strValueU16.resize(iLength);
 			memcpy((void*)strValueU16.data(), szValue[0], iLength * sizeof(char16_t));
 
-			mapProperties[szPropertyName] = buildPropertySingleValueText(
+			mapProperties[strPropertyName] = buildPropertySingleValueText(
 				strPropertyName.c_str(),
 				"attribute",
 				To_UTF8(strValueU16).c_str(),
@@ -4841,14 +4895,14 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 			strValueU32.resize(iLength);
 			memcpy((void*)strValueU32.data(), szValue[0], iLength * sizeof(wchar_t));
 
-			mapProperties[szPropertyName] = buildPropertySingleValueText(
+			mapProperties[strPropertyName] = buildPropertySingleValueText(
 				strPropertyName.c_str(),
 				"attribute",
 				To_UTF8(strValueU32).c_str(),
 				"IFCTEXT");
 #endif // _WINDOWS	
 		} // attr:
-		else if (strPropertyName == "$relations")
+		else if (strPropertyUniqueName == "$relations")
 		{
 			createObjectProperties(iOwlInstance, iSdaiInstance, mapProperties);
 		}
@@ -4888,6 +4942,14 @@ void _citygml_exporter::createObjectProperties(OwlInstance iOwlInstance, SdaiIns
 
 	for (int64_t iIndex = 0; iIndex < iInstancesCount; iIndex++)
 	{
+		string strTag = getTag(piInstances[iIndex]);
+
+		string strPrefix;
+		string strName;
+		getXMLElementPrefixAndName(strTag, strPrefix, strName);
+
+		strName = getSite()->getPropertyName(strName);
+
 		// value
 		SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, false);
 
@@ -4913,7 +4975,7 @@ void _citygml_exporter::createObjectProperties(OwlInstance iOwlInstance, SdaiIns
 			memcpy((void*)strValueU16.data(), szValue[0], iLength * sizeof(char16_t));
 
 			mapProperties["value"] = buildPropertySingleValueText(
-				"value",
+				strName.c_str(),
 				"property",
 				To_UTF8(strValueU16).c_str(),
 				"IFCTEXT");
@@ -4924,9 +4986,9 @@ void _citygml_exporter::createObjectProperties(OwlInstance iOwlInstance, SdaiIns
 			strValueU32.resize(iLength);
 			memcpy((void*)strValueU32.data(), szValue[0], iLength * sizeof(wchar_t));
 
-			mapProperties[szPropertyName] = buildPropertySingleValueText(
-				strPropertyName.c_str(),
-				"attribute",
+			mapProperties["value"] = buildPropertySingleValueText(
+				strName.c_str(),
+				"property",
 				To_UTF8(strValueU32).c_str(),
 				"IFCTEXT");
 #endif // _WINDOWS		
@@ -4947,7 +5009,7 @@ void _citygml_exporter::createObjectProperties(OwlInstance iOwlInstance, SdaiIns
 				assert(iValuesCount == 1);
 
 				mapProperties["double-value"] = buildPropertySingleValueReal(
-					"value",
+					strName.c_str(),
 					"property",
 					pdValues[0],
 					"IFCREAL");

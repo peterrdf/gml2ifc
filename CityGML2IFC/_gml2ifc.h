@@ -235,8 +235,9 @@ public: // Methods
 	bool getWGS84(int iCRS, float fX, float fY, float fZ, string& strCoordinates);
 
 	// Settings
-	_material* getDefaultMaterial(const string& strEntity);
-	_material* getOverriddenMaterial(const string& strEntity);
+	_material* getDefaultMaterial(const string& strEntity) const;
+	_material* getOverriddenMaterial(const string& strEntity) const;
+	string getPropertyName(const string& strName) const;
 
 	// Log
 	static string dateTimeStamp();
@@ -438,6 +439,7 @@ protected: // Methods
 
 	/* Helpers */
 	string getTag(OwlInstance iInstance) const;
+	void getXMLElementPrefixAndName(const string& strUniqueName, string& strPrefix, string& strName) const;
 	string getStringAttributeValue(OwlInstance iInstance, const string& strName) const;
 	string getStringPropertyValue(OwlInstance iInstance, const string& strName) const;
 	void getDoublePropertyValue(OwlInstance iInstance, const string& strName, vector<double>& vecValue) const;
