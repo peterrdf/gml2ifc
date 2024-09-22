@@ -4955,14 +4955,17 @@ void _citygml_exporter::createObjectProperties(OwlInstance iOwlInstance, map<str
 			GetNameOfClass(iInstanceClass, &szClassName);
 			assert(szClassName != nullptr);
 
-			if (string(szClassName) == "class:LengthType")
+			if (string(szClassName) != "class:Thing")
 			{
-				iUnitInstance = getLengthUnitInstance();
-			}
-			else
-			{
-				assert(false);// TODO
-			}
+				if (string(szClassName) == "class:LengthType")
+				{
+					iUnitInstance = getLengthUnitInstance();
+				}
+				else
+				{
+					assert(false); // TODO
+				}
+			} // if (string(szClassName) != "class:Thing")
 		} // if (!strUOMAttr.empty())
 
 		string strTag = getTag(piInstances[iIndex]);
