@@ -578,6 +578,7 @@ protected:  // Methods
 	void createPolyLine3D(OwlInstance iInstance, vector<SdaiInstance>& vecGeometryInstances, bool bCreateIfcShapeRepresentation);	
 
 	void createProperties(OwlInstance iOwlInstance, SdaiInstance iSdaiInstance);
+	void createObjectProperties(OwlInstance iOwlInstance, SdaiInstance iSdaiInstance, map<string, SdaiInstance>& mapProperties);
 
 	SdaiInstance buildBuildingElementInstance(
 		OwlInstance iOwlInstance,

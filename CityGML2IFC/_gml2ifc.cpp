@@ -4703,7 +4703,7 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 
 					mapProperties[szPropertyName] = buildPropertySingleValueReal(
 						strPropertyName.c_str(),
-						"attribute",
+						"property",
 						pdValue[0],
 						"IFCREAL");
 				}
@@ -4729,7 +4729,7 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 
 					mapProperties[szPropertyName] = buildPropertySingleValueText(
 						strPropertyName.c_str(),
-						"attribute",
+						"property",
 						To_UTF8(strValueU16).c_str(),
 						"IFCTEXT");
 #else
@@ -4801,6 +4801,10 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 				"IFCTEXT");
 #endif // _WINDOWS	
 		} // attr:
+		else if (strPropertyName == "$relations")
+		{
+			createObjectProperties(iOwlInstance, iSdaiInstance, mapProperties);
+		}
 
 		iPropertyInstance = GetInstancePropertyByIterator(iOwlInstance, iPropertyInstance);
 	} // while (iPropertyInstance != 0)
@@ -4811,7 +4815,7 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 	}
 
 	SdaiAggr pHasProperties = nullptr;
-	SdaiInstance iPropertySetInstance = buildPropertySet("Attributes & Properties", pHasProperties);
+	SdaiInstance iPropertySetInstance = buildPropertySet("set_BsSurroundingBuilding", pHasProperties);
 
 	for (auto itProperty : mapProperties)
 	{
@@ -4819,6 +4823,90 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 	}
 
 	buildRelDefinesByProperties(iSdaiInstance, iPropertySetInstance);
+}
+
+void _citygml_exporter::createObjectProperties(OwlInstance iOwlInstance, SdaiInstance iSdaiInstance, map<string, SdaiInstance>& mapProperties)
+{
+	assert(iOwlInstance != 0);
+	assert(iSdaiInstance != 0);
+
+	OwlInstance* piInstances = nullptr;
+	int64_t iInstancesCount = 0;
+	GetObjectProperty(
+		iOwlInstance,
+		GetPropertyByName(getSite()->getOwlModel(), "$relations"),
+		&piInstances,
+		&iInstancesCount);
+	assert(iInstancesCount > 0);
+
+	for (int64_t iIndex = 0; iIndex < iInstancesCount; iIndex++)
+	{
+		// value
+		SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, false);
+
+		wchar_t** szValue = nullptr;
+		int64_t iValuesCount = 0;
+		GetDatatypeProperty(
+			piInstances[iIndex],
+			GetPropertyByName(getSite()->getOwlModel(), "value"),
+			(void**)&szValue,
+			&iValuesCount);
+
+		SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, true);
+		
+		if (iValuesCount > 0)
+		{
+			assert(iValuesCount == 1);			
+
+#ifdef _WINDOWS
+			auto iLength = std::char_traits<char16_t>::length((char16_t*)*szValue);
+
+			u16string strValueU16;
+			strValueU16.resize(iLength);
+			memcpy((void*)strValueU16.data(), szValue[0], iLength * sizeof(char16_t));
+
+			mapProperties["value"] = buildPropertySingleValueText(
+				"value",
+				"property",
+				To_UTF8(strValueU16).c_str(),
+				"IFCTEXT");
+#else
+			auto iLength = std::char_traits<wchar_t>::length((wchar_t*)*szValue);
+
+			u32string strValueU32;
+			strValueU32.resize(iLength);
+			memcpy((void*)strValueU32.data(), szValue[0], iLength * sizeof(wchar_t));
+
+			mapProperties[szPropertyName] = buildPropertySingleValueText(
+				strPropertyName.c_str(),
+				"attribute",
+				To_UTF8(strValueU32).c_str(),
+				"IFCTEXT");
+#endif // _WINDOWS		
+		} // value
+		else
+		{	
+			// double-value
+			double* pdValues = nullptr;
+			iValuesCount = 0;
+			GetDatatypeProperty(
+				piInstances[iIndex],
+				GetPropertyByName(getSite()->getOwlModel(), "double-value"),
+				(void**)&pdValues,
+				&iValuesCount);
+
+			if (iValuesCount > 0)
+			{
+				assert(iValuesCount == 1);
+
+				mapProperties["double-value"] = buildPropertySingleValueReal(
+					"value",
+					"property",
+					pdValues[0],
+					"IFCREAL");
+			}
+		} // double-value
+	} // for (int64_t iIndex = ...
 }
 
 SdaiInstance _citygml_exporter::buildBuildingElementInstance(
@@ -5401,28 +5489,28 @@ bool _citygml_exporter::retrieveEnvelopeSRSData(OwlInstance iEnvelopeInstance, s
 		}
 
 		// lowerCorner
-		wchar_t** szValue = nullptr;
+		double* pdValues = nullptr;
 		int64_t iValuesCount = 0;
 		GetDatatypeProperty(
 			iLowerCornerInstance,
-			GetPropertyByName(getSite()->getOwlModel(), "value"),
-			(void**)&szValue,
+			GetPropertyByName(getSite()->getOwlModel(), "double-value"),
+			(void**)&pdValues,
 			&iValuesCount);
-		assert(iValuesCount == 1);
+		assert(iValuesCount == 3);
 
-		getPosValuesW(szValue[0], vecLowerCorner);
+		vecLowerCorner = vector<double>{ pdValues[0], pdValues[1], pdValues[2] };
 
 		// upperCorner
-		szValue = nullptr;
+		pdValues = nullptr;
 		iValuesCount = 0;
 		GetDatatypeProperty(
 			iUpperCornerInstance,
-			GetPropertyByName(getSite()->getOwlModel(), "value"),
-			(void**)&szValue,
+			GetPropertyByName(getSite()->getOwlModel(), "double-value"),
+			(void**)&pdValues,
 			&iValuesCount);
-		assert(iValuesCount == 1);
+		assert(iValuesCount == 3);
 
-		getPosValuesW(szValue[0], vecUpperCorner);
+		vecUpperCorner = vector<double>{ pdValues[0], pdValues[1], pdValues[2] };
 
 		return true;
 	} // if (!strSrsName.empty() && ...
