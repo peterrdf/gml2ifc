@@ -11,6 +11,7 @@ _settings_provider::_settings_provider(_gml2ifc_exporter* pSite, const wstring& 
 	: m_pSite(pSite)
 	, m_mapDefaultMaterials()
 	, m_mapOverriddenMaterials()
+	, m_mapRenamedProperties()
 {
 	assert(pSite != nullptr);
 
@@ -130,6 +131,52 @@ void _settings_provider::loadSettings(const wstring& strSettingsFile)
 
 			continue;
 		} // $MATERIAL
+		else if (strSetting == "$PROPERTY")
+		{
+			string strType;
+			ssLine >> strType;
+			_string::trim(strType);
+
+			if (strType == "$RENAME")
+			{
+				string strOldName;
+				ssLine >> std::quoted(strOldName);
+
+				if (strOldName.empty())
+				{
+					getSite()->logErr(_string::format("Invalid format: '%s'", strLine.c_str()).c_str());
+
+					return;
+				}
+
+				string strNewName;
+				ssLine >> std::quoted(strNewName);
+
+				if (strNewName.empty())
+				{
+					getSite()->logErr(_string::format("Invalid format: '%s'", strLine.c_str()).c_str());
+
+					return;
+				}
+
+				if (m_mapRenamedProperties.find(strOldName) != m_mapRenamedProperties.end())
+				{
+					assert(false);
+
+					continue;
+				}
+
+				m_mapRenamedProperties[strOldName] = strNewName;
+			}
+			else
+			{
+				getSite()->logErr("Unknown property type.");
+
+				return;
+			}
+
+			continue;
+		} // $PROPERTY
 
 		getSite()->logErr("Unknown setting.");
 

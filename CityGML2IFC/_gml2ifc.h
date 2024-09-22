@@ -180,9 +180,10 @@ private: // Members
 
 	_gml2ifc_exporter* m_pSite;
 
-	// Entity or $ALL : _material*
+	// $ROOF, $DOOR, etc. or $ALL : _material*
 	map<string, _material*> m_mapDefaultMaterials;
 	map<string, _material*> m_mapOverriddenMaterials;
+	map<string, string> m_mapRenamedProperties;
 
 public: // Methods
 
@@ -191,6 +192,7 @@ public: // Methods
 
 	const map<string, _material*>& getDefaultMaterials() const { return m_mapDefaultMaterials; }
 	const map<string, _material*>& getOverriddenMaterials() const { return m_mapOverriddenMaterials; }
+	const map<string, string>& getRenamedProperties() const { return m_mapRenamedProperties; }
 
 private: // Methods
 

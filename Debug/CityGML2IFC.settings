@@ -1,4 +1,4 @@
-# Materials
+### Materials ###
 $VERSION	1.0
 $MATERIAL	$DEFAULT	$ALL	0;0;255;191
 $MATERIAL	$DEFAULT	$ROOF	139;69;19;0
@@ -10,4 +10,7 @@ $MATERIAL	$DEFAULT	$WINDOW	25;25;25;242
 $MATERIAL	$DEFAULT	$DOOR	139;139;139;0
 #$MATERIAL	$OVERRIDE	$DOOR	0;0;255;0
 
-# Properties
+### Properties ###
+$PROPERTY	$RENAME	"storeysAboveGround"	"Storeys Above Ground"
+$PROPERTY	$RENAME	"measuredHeight"	"Measured Height"
+
