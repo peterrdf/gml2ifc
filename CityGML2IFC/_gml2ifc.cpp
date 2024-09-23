@@ -4963,7 +4963,7 @@ void _citygml_exporter::createObjectProperties(OwlInstance iOwlInstance, map<str
 				}
 				else
 				{
-					assert(false); // TODO
+					getSite()->logWarn(_string::format("UOM is not supported: '%s'", strUOMAttr.c_str()).c_str());
 				}
 			} // if (string(szClassName) != "class:Thing")
 		} // if (!strUOMAttr.empty())
