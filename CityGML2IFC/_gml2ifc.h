@@ -173,6 +173,35 @@ public: // Methods
 };
 
 // ************************************************************************************************
+class _property
+{
+
+private: // Members
+
+	string m_strType;
+	string m_strPropertySet;
+	string m_strName;
+	string m_strOverrideName;
+
+public: // Methods
+
+	_property(const string& strType, const string& strPropertySet, const string& strName, const string& strOverrideName)
+		: m_strType(strType)
+		, m_strPropertySet(strPropertySet)
+		, m_strName(strName)
+		, m_strOverrideName(strOverrideName)
+	{}
+
+	virtual ~_property()
+	{}
+
+	const string& getType() const { return m_strType; }
+	const string& getPropertySet() const { return m_strPropertySet; }
+	const string& getName() const { return m_strName; }
+	const string& getOverrideName() const { return m_strOverrideName; }
+};
+
+// ************************************************************************************************
 class _settings_provider
 {
 
@@ -183,7 +212,7 @@ private: // Members
 	// $ROOF, $DOOR, etc. or $ALL : _material*
 	map<string, _material*> m_mapDefaultMaterials;
 	map<string, _material*> m_mapOverriddenMaterials;
-	map<string, string> m_mapRenamedProperties;
+	map<string, _property*> m_mapProperties;
 
 public: // Methods
 
@@ -192,7 +221,7 @@ public: // Methods
 
 	const map<string, _material*>& getDefaultMaterials() const { return m_mapDefaultMaterials; }
 	const map<string, _material*>& getOverriddenMaterials() const { return m_mapOverriddenMaterials; }
-	const map<string, string>& getRenamedProperties() const { return m_mapRenamedProperties; }
+	const map<string, _property*>& getProperties() const { return m_mapProperties; }
 
 private: // Methods
 
