@@ -367,17 +367,22 @@ _material* _gml2ifc_exporter::getOverriddenMaterial(const string& strEntity) con
 	return nullptr;
 }
 
-string _gml2ifc_exporter::getPropertyName(const string& strName) const
+string _gml2ifc_exporter::getPropertyName(const string& strName)
 {
 	assert(!strName.empty());
 
-	auto& itProperty = m_pSettingsProvider->getProperties().find(strName);
-	if (itProperty != m_pSettingsProvider->getProperties().end())
-	{
-		return itProperty->second->getOverrideName();
-	}
+	auto pProperty = m_pSettingsProvider->getProperty(strName, true);
+	assert(pProperty != nullptr);
+	
+	return pProperty->getOverrideName();
+}
 
-	return strName;
+string _gml2ifc_exporter::getPropertySet(const string& strName) const
+{
+	auto pProperty = m_pSettingsProvider->getProperty(strName, true);
+	assert(pProperty != nullptr);
+
+	return pProperty->getPropertySet();
 }
 
 /*static*/ string _gml2ifc_exporter::dateTimeStamp()

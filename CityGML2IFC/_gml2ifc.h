@@ -222,6 +222,24 @@ public: // Methods
 	const map<string, _material*>& getDefaultMaterials() const { return m_mapDefaultMaterials; }
 	const map<string, _material*>& getOverriddenMaterials() const { return m_mapOverriddenMaterials; }
 	const map<string, _property*>& getProperties() const { return m_mapProperties; }
+	_property* getProperty(const string& strName, bool bCreateNewIfNeeded)
+	{
+		_property* pProperty = nullptr;
+
+		auto& itProperty = m_mapProperties.find(strName);
+		if (itProperty != m_mapProperties.end())
+		{
+			pProperty = itProperty->second;
+		}
+
+		if (bCreateNewIfNeeded)
+		{
+			pProperty = new _property("", "set_BsAttributes&Properties", strName, strName);
+			m_mapProperties[strName] = pProperty;
+		}
+
+		return pProperty;
+	}
 
 private: // Methods
 
@@ -266,7 +284,8 @@ public: // Methods
 	// Settings
 	_material* getDefaultMaterial(const string& strEntity) const;
 	_material* getOverriddenMaterial(const string& strEntity) const;
-	string getPropertyName(const string& strName) const;
+	string getPropertyName(const string& strName);
+	string getPropertySet(const string& strName) const;
 
 	// Log
 	static string dateTimeStamp();
