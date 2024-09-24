@@ -367,6 +367,11 @@ _material* _gml2ifc_exporter::getOverriddenMaterial(const string& strEntity) con
 	return nullptr;
 }
 
+_property* _gml2ifc_exporter::getProperty(const string& strName)
+{
+	return m_pSettingsProvider->getProperty(strName, true);
+}
+
 string _gml2ifc_exporter::getPropertyName(const string& strName)
 {
 	assert(!strName.empty());
@@ -1801,7 +1806,7 @@ SdaiInstance _exporter_base::buildColorRgbInstance(double dR, double dG, double 
 	return iColorRgbInstance;
 }
 
-SdaiInstance _exporter_base::buildPropertySet(char* szName, SdaiAggr& pHasProperties)
+SdaiInstance _exporter_base::buildPropertySet(const char* szName, SdaiAggr& pHasProperties)
 {
 	SdaiInstance iPropertySetInstance = sdaiCreateInstanceBN(m_iSdaiModel, "IfcPropertySet");
 	assert(iPropertySetInstance != 0);
@@ -1849,6 +1854,27 @@ SdaiInstance _exporter_base::buildPropertySingleValueText(
 	sdaiPutAttrBN(iPropertySingleValueInstance, "Description", sdaiSTRING, szDescription);
 
 	SdaiADB pNominalValueADB = sdaiCreateADB(sdaiSTRING, szNominalValue);
+	assert(pNominalValueADB != nullptr);
+
+	sdaiPutADBTypePath(pNominalValueADB, 1, szTypePath);
+	sdaiPutAttrBN(iPropertySingleValueInstance, "NominalValue", sdaiADB, (void*)pNominalValueADB);
+
+	return iPropertySingleValueInstance;
+}
+
+SdaiInstance _exporter_base::buildPropertySingleValueInt(
+	const char* szName,
+	const char* szDescription,
+	int64_t iNominalValue,
+	const char* szTypePath)
+{
+	SdaiInstance iPropertySingleValueInstance = sdaiCreateInstanceBN(m_iSdaiModel, "IfcPropertySingleValue");
+	assert(iPropertySingleValueInstance != 0);
+
+	sdaiPutAttrBN(iPropertySingleValueInstance, "Name", sdaiSTRING, szName);
+	sdaiPutAttrBN(iPropertySingleValueInstance, "Description", sdaiSTRING, szDescription);
+
+	SdaiADB pNominalValueADB = sdaiCreateADB(sdaiINTEGER, (void*)&iNominalValue);
 	assert(pNominalValueADB != nullptr);
 
 	sdaiPutADBTypePath(pNominalValueADB, 1, szTypePath);
@@ -4758,7 +4784,8 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 	assert(iOwlInstance != 0);
 	assert(iSdaiInstance != 0);
 
-	map<string, SdaiInstance> mapProperties;
+	// Property Set : Properties
+	map<string, vector<SdaiInstance>> mapPropertySets;
 
 	RdfProperty iPropertyInstance = GetInstancePropertyByIterator(iOwlInstance, 0);
 	while (iPropertyInstance != 0)
@@ -4781,19 +4808,61 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 					string strName;
 					getXMLElementPrefixAndName(strPropertyName, strPrefix, strName);
 
-					strPropertyName = getSite()->getPropertyName(strName);
+					auto pProperty = getSite()->getProperty(strName);
+					assert(pProperty != nullptr);
 
-					double* pdValue = nullptr;
+					strPropertyName = pProperty->getOverrideName();
+
+					double* pdValues = nullptr;
 					int64_t iValuesCount = 0;
-					GetDatatypeProperty(iOwlInstance, iPropertyInstance, (void**)&pdValue, &iValuesCount);
+					GetDatatypeProperty(iOwlInstance, iPropertyInstance, (void**)&pdValues, &iValuesCount);
 
 					assert(iValuesCount == 1);
 
-					mapProperties[strPropertyName] = buildPropertySingleValueReal(
-						strPropertyName.c_str(),
-						"property",
-						pdValue[0],
-						"IFCREAL");
+					SdaiInstance iPropertyInstance = 0;
+					if (!pProperty->getType().empty())
+					{
+						if ((pProperty->getType() == "IFCREAL") ||
+							(pProperty->getType() == "IFCAREAMEASURE"))
+						{
+							iPropertyInstance = buildPropertySingleValueReal(
+								strPropertyName.c_str(),
+								"property",
+								pdValues[0],
+								pProperty->getType().c_str());
+						}
+						else if ((pProperty->getType() == "IFCINTEGER") ||
+							(pProperty->getType() == "IFCLENGTHMEASURE"))
+						{
+							iPropertyInstance = buildPropertySingleValueInt(
+								strPropertyName.c_str(),
+								"property",
+								(int64_t)pdValues[0],
+								pProperty->getType().c_str());
+						}
+						else
+						{
+							assert(false);
+						}
+					} // if (!pProperty->getType().empty())
+					else
+					{
+						iPropertyInstance = buildPropertySingleValueReal(
+							strPropertyName.c_str(),
+							"property",
+							pdValues[0],
+							"IFCREAL");
+					}
+
+					auto itPropertySet = mapPropertySets.find(pProperty->getPropertySet());
+					if (itPropertySet != mapPropertySets.end())
+					{
+						itPropertySet->second.push_back(iPropertyInstance);
+					}
+					else
+					{
+						mapPropertySets[pProperty->getPropertySet()] = vector<SdaiInstance>{ iPropertyInstance };
+					}
 				}
 				break;
 
@@ -4805,7 +4874,10 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 					string strName;
 					getXMLElementPrefixAndName(strPropertyName, strPrefix, strName);
 
-					strPropertyName = getSite()->getPropertyName(strName);
+					auto pProperty = getSite()->getProperty(strName);
+					assert(pProperty != nullptr);
+
+					strPropertyName = pProperty->getOverrideName();
 
 					SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, false);
 
@@ -4815,6 +4887,8 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 					assert(iValuesCount == 1);
 
 					SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, true);
+
+					assert(pProperty->getType().empty() || pProperty->getType() == "IFCTEXT");
 #ifdef _WINDOWS
 					auto iLength = std::char_traits<char16_t>::length((char16_t*)*szValue);
 
@@ -4822,7 +4896,7 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 					strValueU16.resize(iLength);
 					memcpy((void*)strValueU16.data(), szValue[0], iLength * sizeof(char16_t));
 
-					mapProperties[strPropertyName] = buildPropertySingleValueText(
+					SdaiInstance iPropertyInstance = buildPropertySingleValueText(
 						strPropertyName.c_str(),
 						"property",
 						To_UTF8(strValueU16).c_str(),
@@ -4834,12 +4908,21 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 					strValueU32.resize(iLength);
 					memcpy((void*)strValueU32.data(), szValue[0], iLength * sizeof(wchar_t));
 
-					mapProperties[strPropertyName] = buildPropertySingleValueText(
+					SdaiInstance iPropertyInstance = buildPropertySingleValueText(
 						strPropertyName.c_str(),
 						"attribute",
 						To_UTF8(strValueU32).c_str(),
 						"IFCTEXT");
-#endif // _WINDOWS		
+#endif // _WINDOWS	
+					auto itProperty = mapPropertySets.find(pProperty->getPropertySet());
+					if (itProperty != mapPropertySets.end())
+					{
+						itProperty->second.push_back(iPropertyInstance);
+					}
+					else
+					{
+						mapPropertySets[pProperty->getPropertySet()] = vector<SdaiInstance>{ iPropertyInstance };
+					}
 				}
 				break;
 
@@ -4867,7 +4950,10 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 			string strName;
 			getXMLElementPrefixAndName(strPropertyName, strPrefix, strName);
 
-			strPropertyName = getSite()->getPropertyName(strName);
+			auto pProperty = getSite()->getProperty(strName);
+			assert(pProperty != nullptr);
+
+			strPropertyName = pProperty->getOverrideName();
 
 			SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, false);
 
@@ -4878,6 +4964,7 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 
 			SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, true);
 
+			assert(pProperty->getType().empty() || pProperty->getType() == "IFCTEXT");
 #ifdef _WINDOWS
 			auto iLength = std::char_traits<char16_t>::length((char16_t*)*szValue);
 
@@ -4885,7 +4972,7 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 			strValueU16.resize(iLength);
 			memcpy((void*)strValueU16.data(), szValue[0], iLength * sizeof(char16_t));
 
-			mapProperties[strPropertyName] = buildPropertySingleValueText(
+			SdaiInstance iPropertyInstance = buildPropertySingleValueText(
 				strPropertyName.c_str(),
 				"attribute",
 				To_UTF8(strValueU16).c_str(),
@@ -4897,38 +4984,51 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 			strValueU32.resize(iLength);
 			memcpy((void*)strValueU32.data(), szValue[0], iLength * sizeof(wchar_t));
 
-			mapProperties[strPropertyName] = buildPropertySingleValueText(
+			SdaiInstance iPropertyInstance = buildPropertySingleValueText(
 				strPropertyName.c_str(),
 				"attribute",
 				To_UTF8(strValueU32).c_str(),
 				"IFCTEXT");
-#endif // _WINDOWS	
+#endif // _WINDOWS
+			auto itProperty = mapPropertySets.find(pProperty->getPropertySet());
+			if (itProperty != mapPropertySets.end())
+			{
+				itProperty->second.push_back(iPropertyInstance);
+			}
+			else
+			{
+				mapPropertySets[pProperty->getPropertySet()] = vector<SdaiInstance>{ iPropertyInstance };
+			}
 		} // attr:
 		else if (strPropertyUniqueName == "$relations")
 		{
-			createObjectProperties(iOwlInstance, mapProperties);
+			createObjectProperties(iOwlInstance, mapPropertySets);
 		}
 
 		iPropertyInstance = GetInstancePropertyByIterator(iOwlInstance, iPropertyInstance);
 	} // while (iPropertyInstance != 0)
 
-	if (mapProperties.empty())
+	if (mapPropertySets.empty())
 	{
 		return;
 	}
 
-	SdaiAggr pHasProperties = nullptr;
-	SdaiInstance iPropertySetInstance = buildPropertySet("set_BsSurroundingBuilding", pHasProperties);
-
-	for (auto itProperty : mapProperties)
+	// PropertySet-s
+	for (auto& itPropertySet : mapPropertySets)
 	{
-		sdaiAppend(pHasProperties, sdaiINSTANCE, (void*)itProperty.second);
-	}
+		SdaiAggr pHasProperties = nullptr;
+		SdaiInstance iPropertySetInstance = buildPropertySet(itPropertySet.first.c_str(), pHasProperties);
 
-	buildRelDefinesByProperties(iSdaiInstance, iPropertySetInstance);
+		for (auto iPropertyInstance : itPropertySet.second)
+		{
+			sdaiAppend(pHasProperties, sdaiINSTANCE, (void*)iPropertyInstance);
+		}
+
+		buildRelDefinesByProperties(iSdaiInstance, iPropertySetInstance);
+	}	
 }
 
-void _citygml_exporter::createObjectProperties(OwlInstance iOwlInstance, map<string, SdaiInstance>& mapProperties)
+void _citygml_exporter::createObjectProperties(OwlInstance iOwlInstance, map<string, vector<SdaiInstance>>& mapPropertySets)
 {
 	assert(iOwlInstance != 0);
 
@@ -4967,13 +5067,16 @@ void _citygml_exporter::createObjectProperties(OwlInstance iOwlInstance, map<str
 			} // if (string(szClassName) != "class:Thing")
 		} // if (!strUOMAttr.empty())
 
-		string strTag = getTag(piInstances[iIndex]);
+		string strPropertyName = getTag(piInstances[iIndex]);
 
 		string strPrefix;
 		string strName;
-		getXMLElementPrefixAndName(strTag, strPrefix, strName);
+		getXMLElementPrefixAndName(strPropertyName, strPrefix, strName);
 
-		strName = getSite()->getPropertyName(strName);
+		auto pProperty = getSite()->getProperty(strName);
+		assert(pProperty != nullptr);
+
+		strPropertyName = pProperty->getOverrideName();
 
 		// value
 		SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, false);
@@ -4992,6 +5095,7 @@ void _citygml_exporter::createObjectProperties(OwlInstance iOwlInstance, map<str
 		{
 			assert(iValuesCount == 1);			
 
+			assert(pProperty->getType().empty() || pProperty->getType() == "IFCTEXT");
 #ifdef _WINDOWS
 			auto iLength = std::char_traits<char16_t>::length((char16_t*)*szValue);
 
@@ -4999,8 +5103,8 @@ void _citygml_exporter::createObjectProperties(OwlInstance iOwlInstance, map<str
 			strValueU16.resize(iLength);
 			memcpy((void*)strValueU16.data(), szValue[0], iLength * sizeof(char16_t));
 
-			mapProperties["value"] = buildPropertySingleValueText(
-				strName.c_str(),
+			SdaiInstance iPropertyInstance = buildPropertySingleValueText(
+				strPropertyName.c_str(),
 				"property",
 				To_UTF8(strValueU16).c_str(),
 				"IFCTEXT");
@@ -5011,12 +5115,21 @@ void _citygml_exporter::createObjectProperties(OwlInstance iOwlInstance, map<str
 			strValueU32.resize(iLength);
 			memcpy((void*)strValueU32.data(), szValue[0], iLength * sizeof(wchar_t));
 
-			mapProperties["value"] = buildPropertySingleValueText(
-				strName.c_str(),
+			SdaiInstance iPropertyInstance = buildPropertySingleValueText(
+				strPropertyName.c_str(),
 				"property",
 				To_UTF8(strValueU32).c_str(),
-				"IFCTEXT");
-#endif // _WINDOWS		
+				? "IFCTEXT");
+#endif // _WINDOWS
+			auto itPropertySet = mapPropertySets.find(pProperty->getPropertySet());
+			if (itPropertySet != mapPropertySets.end())
+			{
+				itPropertySet->second.push_back(iPropertyInstance);
+			}
+			else
+			{
+				mapPropertySets[pProperty->getPropertySet()] = vector<SdaiInstance>{ iPropertyInstance };
+			}
 		} // value
 		else
 		{	
@@ -5033,19 +5146,56 @@ void _citygml_exporter::createObjectProperties(OwlInstance iOwlInstance, map<str
 			{
 				assert(iValuesCount == 1);
 
-				SdaiInstance iPropertyInstance = buildPropertySingleValueReal(
-					strName.c_str(),
-					"property",
-					pdValues[0],
-					"IFCREAL");
+				SdaiInstance iPropertyInstance = 0;
+				if (!pProperty->getType().empty())
+				{
+					if ((pProperty->getType() == "IFCREAL") ||
+						(pProperty->getType() == "IFCAREAMEASURE"))
+					{
+						iPropertyInstance = buildPropertySingleValueReal(
+							strPropertyName.c_str(),
+							"property",
+							pdValues[0],
+							pProperty->getType().c_str());
+					}
+					else if ((pProperty->getType() == "IFCINTEGER") ||
+						(pProperty->getType() == "IFCLENGTHMEASURE"))
+					{
+						iPropertyInstance = buildPropertySingleValueInt(
+							strPropertyName.c_str(),
+							"property",
+							(int64_t)pdValues[0],
+							pProperty->getType().c_str());
+					}
+					else
+					{
+						assert(false);
+					}
+				} // if (!pProperty->getType().empty())
+				else
+				{
+					iPropertyInstance = buildPropertySingleValueReal(
+						strPropertyName.c_str(),
+						"property",
+						pdValues[0],
+						"IFCREAL");
+				}
 
 				if (iUnitInstance != 0)
 				{
 					sdaiPutAttrBN(iPropertyInstance, "Unit", sdaiINSTANCE, (void*)iUnitInstance);
 				}
 
-				mapProperties["double-value"] = iPropertyInstance;
-			}
+				auto itPropertySet = mapPropertySets.find(pProperty->getPropertySet());
+				if (itPropertySet != mapPropertySets.end())
+				{
+					itPropertySet->second.push_back(iPropertyInstance);
+				}
+				else
+				{
+					mapPropertySets[pProperty->getPropertySet()] = vector<SdaiInstance>{ iPropertyInstance };
+				}
+			} // if (iValuesCount > 0)
 		} // double-value
 	} // for (int64_t iIndex = ...
 }

@@ -231,11 +231,13 @@ public: // Methods
 		{
 			pProperty = itProperty->second;
 		}
-
-		if (bCreateNewIfNeeded)
+		else
 		{
-			pProperty = new _property("", "set_BsAttributes&Properties", strName, strName);
-			m_mapProperties[strName] = pProperty;
+			if (bCreateNewIfNeeded)
+			{
+				m_mapProperties[strName] = 
+					pProperty = new _property("", "set_BsAttributes&Properties", strName, strName);
+			}
 		}
 
 		return pProperty;
@@ -284,6 +286,7 @@ public: // Methods
 	// Settings
 	_material* getDefaultMaterial(const string& strEntity) const;
 	_material* getOverriddenMaterial(const string& strEntity) const;
+	_property* getProperty(const string& strName);
 	string getPropertyName(const string& strName);
 	string getPropertySet(const string& strName) const;
 
@@ -467,12 +470,17 @@ protected: // Methods
 	SdaiInstance buildColorRgbInstance(double dR, double dG, double dB);
 
 	/* Properties */
-	SdaiInstance buildPropertySet(char* szName, SdaiAggr& pHasProperties);
+	SdaiInstance buildPropertySet(const char* szName, SdaiAggr& pHasProperties);
 	SdaiInstance buildRelDefinesByProperties(SdaiInstance iRelatedObject, SdaiInstance iRelatingPropertyDefinition);
 	SdaiInstance buildPropertySingleValueText(
 		const char* szName, 
 		const char* szDescription,
 		const char* szNominalValue,
+		const char* szTypePath);
+	SdaiInstance buildPropertySingleValueInt(
+		const char* szName,
+		const char* szDescription,
+		int64_t iNominalValue,
 		const char* szTypePath);
 	SdaiInstance buildPropertySingleValueReal(
 		const char* szName,
@@ -632,7 +640,7 @@ protected:  // Methods
 	void createPolyLine3D(OwlInstance iInstance, vector<SdaiInstance>& vecGeometryInstances, bool bCreateIfcShapeRepresentation);	
 
 	void createProperties(OwlInstance iOwlInstance, SdaiInstance iSdaiInstance);
-	void createObjectProperties(OwlInstance iOwlInstance, map<string, SdaiInstance>& mapProperties);
+	void createObjectProperties(OwlInstance iOwlInstance, map<string, vector<SdaiInstance>>& mapPropertySets);
 
 	SdaiInstance buildBuildingElementInstance(
 		OwlInstance iOwlInstance,
