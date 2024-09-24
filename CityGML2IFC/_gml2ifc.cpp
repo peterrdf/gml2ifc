@@ -4887,8 +4887,6 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 					assert(iValuesCount == 1);
 
 					SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, true);
-
-					assert(pProperty->getType().empty() || pProperty->getType() == "IFCTEXT");
 #ifdef _WINDOWS
 					auto iLength = std::char_traits<char16_t>::length((char16_t*)*szValue);
 
@@ -4896,11 +4894,31 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 					strValueU16.resize(iLength);
 					memcpy((void*)strValueU16.data(), szValue[0], iLength * sizeof(char16_t));
 
-					SdaiInstance iPropertyInstance = buildPropertySingleValueText(
-						strPropertyName.c_str(),
-						"property",
-						To_UTF8(strValueU16).c_str(),
-						"IFCTEXT");
+					SdaiInstance iPropertyInstance = 0;
+					if (!pProperty->getType().empty())
+					{
+						if ((pProperty->getType() == "IFCTEXT") ||
+							(pProperty->getType() == "IFCIDENTIFIER"))
+						{
+							iPropertyInstance = buildPropertySingleValueText(
+								strPropertyName.c_str(),
+								"property",
+								To_UTF8(strValueU16).c_str(),
+								pProperty->getType().c_str());
+						}
+						else
+						{
+							assert(false);
+						}
+					} // if (!pProperty->getType().empty())
+					else
+					{
+						iPropertyInstance = buildPropertySingleValueText(
+							strPropertyName.c_str(),
+							"property",
+							To_UTF8(strValueU16).c_str(),
+							"IFCTEXT");
+					}
 #else
 					auto iLength = std::char_traits<wchar_t>::length((wchar_t*)*szValue);
 
@@ -4908,11 +4926,31 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 					strValueU32.resize(iLength);
 					memcpy((void*)strValueU32.data(), szValue[0], iLength * sizeof(wchar_t));
 
-					SdaiInstance iPropertyInstance = buildPropertySingleValueText(
-						strPropertyName.c_str(),
-						"attribute",
-						To_UTF8(strValueU32).c_str(),
-						"IFCTEXT");
+					SdaiInstance iPropertyInstance = 0;
+					if (!pProperty->getType().empty())
+					{
+						if ((pProperty->getType() == "IFCTEXT") ||
+							(pProperty->getType() == "IFCIDENTIFIER"))
+						{
+							iPropertyInstance = buildPropertySingleValueText(
+								strPropertyName.c_str(),
+								"property",
+								To_UTF8(strValueU32).c_str(),
+								pProperty->getType().c_str());
+						}
+						else
+						{
+							assert(false);
+						}
+					} // if (!pProperty->getType().empty())
+					else
+					{
+						iPropertyInstance = buildPropertySingleValueText(
+							strPropertyName.c_str(),
+							"property",
+							To_UTF8(strValueU32).c_str(),
+							"IFCTEXT");
+					}
 #endif // _WINDOWS	
 					auto itProperty = mapPropertySets.find(pProperty->getPropertySet());
 					if (itProperty != mapPropertySets.end())
@@ -4963,8 +5001,6 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 			assert(iValuesCount == 1);
 
 			SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, true);
-
-			assert(pProperty->getType().empty() || pProperty->getType() == "IFCTEXT");
 #ifdef _WINDOWS
 			auto iLength = std::char_traits<char16_t>::length((char16_t*)*szValue);
 
@@ -4972,11 +5008,31 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 			strValueU16.resize(iLength);
 			memcpy((void*)strValueU16.data(), szValue[0], iLength * sizeof(char16_t));
 
-			SdaiInstance iPropertyInstance = buildPropertySingleValueText(
-				strPropertyName.c_str(),
-				"attribute",
-				To_UTF8(strValueU16).c_str(),
-				"IFCTEXT");
+			SdaiInstance iPropertyInstance = 0;
+			if (!pProperty->getType().empty())
+			{
+				if ((pProperty->getType() == "IFCTEXT") ||
+					(pProperty->getType() == "IFCIDENTIFIER"))
+				{
+					iPropertyInstance = buildPropertySingleValueText(
+						strPropertyName.c_str(),
+						"attribute",
+						To_UTF8(strValueU16).c_str(),
+						pProperty->getType().c_str());
+				}
+				else
+				{
+					assert(false);
+				}
+			} // if (!pProperty->getType().empty())
+			else
+			{
+				iPropertyInstance = buildPropertySingleValueText(
+					strPropertyName.c_str(),
+					"attribute",
+					To_UTF8(strValueU16).c_str(),
+					"IFCTEXT");
+			}
 #else
 			auto iLength = std::char_traits<wchar_t>::length((wchar_t*)*szValue);
 
@@ -4984,11 +5040,31 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 			strValueU32.resize(iLength);
 			memcpy((void*)strValueU32.data(), szValue[0], iLength * sizeof(wchar_t));
 
-			SdaiInstance iPropertyInstance = buildPropertySingleValueText(
-				strPropertyName.c_str(),
-				"attribute",
-				To_UTF8(strValueU32).c_str(),
-				"IFCTEXT");
+			SdaiInstance iPropertyInstance = 0;
+			if (!pProperty->getType().empty())
+			{
+				if ((pProperty->getType() == "IFCTEXT") ||
+					(pProperty->getType() == "IFCIDENTIFIER"))
+				{
+					iPropertyInstance = buildPropertySingleValueText(
+						strPropertyName.c_str(),
+						"attribute",
+						To_UTF8(strValueU32).c_str(),
+						pProperty->getType().c_str());
+				}
+				else
+				{
+					assert(false);
+				}
+			} // if (!pProperty->getType().empty())
+			else
+			{
+				iPropertyInstance = buildPropertySingleValueText(
+					strPropertyName.c_str(),
+					"attribute",
+					To_UTF8(strValueU32).c_str(),
+					"IFCTEXT");
+			}
 #endif // _WINDOWS
 			auto itProperty = mapPropertySets.find(pProperty->getPropertySet());
 			if (itProperty != mapPropertySets.end())
@@ -5093,9 +5169,7 @@ void _citygml_exporter::createObjectProperties(OwlInstance iOwlInstance, map<str
 		
 		if (iValuesCount > 0)
 		{
-			assert(iValuesCount == 1);			
-
-			assert(pProperty->getType().empty() || pProperty->getType() == "IFCTEXT");
+			assert(iValuesCount == 1);
 #ifdef _WINDOWS
 			auto iLength = std::char_traits<char16_t>::length((char16_t*)*szValue);
 
@@ -5103,11 +5177,31 @@ void _citygml_exporter::createObjectProperties(OwlInstance iOwlInstance, map<str
 			strValueU16.resize(iLength);
 			memcpy((void*)strValueU16.data(), szValue[0], iLength * sizeof(char16_t));
 
-			SdaiInstance iPropertyInstance = buildPropertySingleValueText(
-				strPropertyName.c_str(),
-				"property",
-				To_UTF8(strValueU16).c_str(),
-				"IFCTEXT");
+			SdaiInstance iPropertyInstance = 0;
+			if (!pProperty->getType().empty())
+			{
+				if ((pProperty->getType() == "IFCTEXT") ||
+					(pProperty->getType() == "IFCIDENTIFIER"))
+				{
+					iPropertyInstance = buildPropertySingleValueText(
+						strPropertyName.c_str(),
+						"property",
+						To_UTF8(strValueU16).c_str(),
+						pProperty->getType().c_str());
+				}
+				else
+				{
+					assert(false);
+				}
+			} // if (!pProperty->getType().empty())
+			else
+			{
+				iPropertyInstance = buildPropertySingleValueText(
+					strPropertyName.c_str(),
+					"property",
+					To_UTF8(strValueU16).c_str(),
+					"IFCTEXT");
+			}
 #else
 			auto iLength = std::char_traits<wchar_t>::length((wchar_t*)*szValue);
 
@@ -5115,11 +5209,31 @@ void _citygml_exporter::createObjectProperties(OwlInstance iOwlInstance, map<str
 			strValueU32.resize(iLength);
 			memcpy((void*)strValueU32.data(), szValue[0], iLength * sizeof(wchar_t));
 
-			SdaiInstance iPropertyInstance = buildPropertySingleValueText(
-				strPropertyName.c_str(),
-				"property",
-				To_UTF8(strValueU32).c_str(),
-				? "IFCTEXT");
+			SdaiInstance iPropertyInstance = 0;
+			if (!pProperty->getType().empty())
+			{
+				if ((pProperty->getType() == "IFCTEXT") ||
+					(pProperty->getType() == "IFCIDENTIFIER"))
+				{
+					iPropertyInstance = buildPropertySingleValueText(
+						strPropertyName.c_str(),
+						"property",
+						To_UTF8(strValueU32).c_str(),
+						pProperty->getType().c_str());
+				}
+				else
+				{
+					assert(false);
+				}
+			} // if (!pProperty->getType().empty())
+			else
+			{
+				iPropertyInstance = buildPropertySingleValueText(
+					strPropertyName.c_str(),
+					"property",
+					To_UTF8(strValueU32).c_str(),
+					"IFCTEXT");
+			}
 #endif // _WINDOWS
 			auto itPropertySet = mapPropertySets.find(pProperty->getPropertySet());
 			if (itPropertySet != mapPropertySets.end())

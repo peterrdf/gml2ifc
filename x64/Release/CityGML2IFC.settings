@@ -10,7 +10,14 @@ $MATERIAL	$DEFAULT	$WINDOW	25;25;25;242
 $MATERIAL	$DEFAULT	$DOOR	139;139;139;0
 #$MATERIAL	$OVERRIDE	$DOOR	0;0;255;0
 
-### Properties ###
-$PROPERTY	$RENAME	"storeysAboveGround"	"Storeys Above Ground"
-$PROPERTY	$RENAME	"measuredHeight"	"Measured Height"
+### Properties - set_BsSurroundingBuilding ###
+$PROPERTY	IFCINTEGER	"set_BsSurroundingBuilding"	"NumberOfFloorsAboveGround"	"Number of floors above ground"
+$PROPERTY	IFCINTEGER	"set_BsSurroundingBuilding"	"NumberOfFloorsBelowGround"	"Number of floors below ground"
+$PROPERTY	IFCLENGTHMEASURE	"set_BsSurroundingBuilding"	"TotalHeight"	"Total Height"
+$PROPERTY	IFCINTEGER	"set_BsSurroundingBuilding"	"storeysAboveGround"	"Storeys Above Ground"
+$PROPERTY	IFCLENGTHMEASURE	"set_BsSurroundingBuilding"	"measuredHeight"	"Measured Height"
+
+### Properties set_BsParcel ###
+$PROPERTY	IFCIDENTIFIER	"set_BsParcel"	"NationalCadastralReference"	"Parcel Cadastral Reference"
+$PROPERTY	IFCAREAMEASURE	"set_BsParcel"	"AreaValue"	"Parcel Area Value"
 
