@@ -6124,22 +6124,8 @@ _cityjson_exporter::_cityjson_exporter(_gml2ifc_exporter* pSite)
 			string strSRS = "EPSG:";
 			strSRS += strEPSGCode;
 
-			SdaiInstance iGeometricRepresentationContextInstance = sdaiCreateInstanceBN(getSdaiModel(), "IfcGeometricRepresentationContext");
-			assert(iGeometricRepresentationContextInstance != 0);
-
-			sdaiPutAttrBN(iGeometricRepresentationContextInstance, "ContextType", sdaiSTRING, "Model");
-
-			int_t iCoordinateSpaceDimension = 3;
-			sdaiPutAttrBN(iGeometricRepresentationContextInstance, "CoordinateSpaceDimension", sdaiINTEGER, &iCoordinateSpaceDimension);
-
-			double dPrecision = 0.00001;
-			sdaiPutAttrBN(iGeometricRepresentationContextInstance, "Precision", sdaiREAL, &dPrecision);
-
-			sdaiPutAttrBN(iGeometricRepresentationContextInstance, "WorldCoordinateSystem", sdaiINSTANCE, (void*)getWorldCoordinateSystemInstance());
-			sdaiPutAttrBN(iGeometricRepresentationContextInstance, "TrueNorth", sdaiINSTANCE, (void*)buildDirectionInstance2D(0., 1.));
-
-			SdaiInstance iTargetCRS = buildProjectedCRS(strSRS);
-			SdaiInstance iMapConversion = buildMapConversion(iGeometricRepresentationContextInstance, iTargetCRS);
+			SdaiInstance iMapConversion = buildMapConversion(getGeometricRepresentationContextInstance(), buildProjectedCRS(strSRS));
+			assert(iMapConversion != 0);
 		} // if (retrieveMetadataSRSData(...
 	} // if (m_iMetadataInstance != 0)
 }
