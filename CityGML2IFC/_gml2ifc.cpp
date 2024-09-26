@@ -4815,44 +4815,83 @@ void _citygml_exporter::createProperties(OwlInstance iOwlInstance, SdaiInstance 
 
 					double* pdValues = nullptr;
 					int64_t iValuesCount = 0;
-					GetDatatypeProperty(iOwlInstance, iPropertyInstance, (void**)&pdValues, &iValuesCount);
-
-					assert(iValuesCount == 1);
+					GetDatatypeProperty(iOwlInstance, iPropertyInstance, (void**)&pdValues, &iValuesCount);					
 
 					SdaiInstance iPropertyInstance = 0;
-					if (!pProperty->getType().empty())
+					if (iValuesCount == 1)
 					{
-						if ((pProperty->getType() == "IFCREAL") ||
-							(pProperty->getType() == "IFCAREAMEASURE"))
+						if (!pProperty->getType().empty())
+						{
+							if ((pProperty->getType() == "IFCREAL") ||
+								(pProperty->getType() == "IFCAREAMEASURE"))
+							{
+								iPropertyInstance = buildPropertySingleValueReal(
+									strPropertyName.c_str(),
+									"property",
+									pdValues[0],
+									pProperty->getType().c_str());
+							}
+							else if ((pProperty->getType() == "IFCINTEGER") ||
+								(pProperty->getType() == "IFCLENGTHMEASURE"))
+							{
+								iPropertyInstance = buildPropertySingleValueInt(
+									strPropertyName.c_str(),
+									"property",
+									(int64_t)pdValues[0],
+									pProperty->getType().c_str());
+							}
+							else
+							{
+								assert(false);
+							}
+						} // if (!pProperty->getType().empty())
+						else
 						{
 							iPropertyInstance = buildPropertySingleValueReal(
 								strPropertyName.c_str(),
 								"property",
 								pdValues[0],
-								pProperty->getType().c_str());
+								"IFCREAL");
 						}
-						else if ((pProperty->getType() == "IFCINTEGER") ||
-							(pProperty->getType() == "IFCLENGTHMEASURE"))
-						{
-							iPropertyInstance = buildPropertySingleValueInt(
-								strPropertyName.c_str(),
-								"property",
-								(int64_t)pdValues[0],
-								pProperty->getType().c_str());
-						}
-						else
-						{
-							assert(false);
-						}
-					} // if (!pProperty->getType().empty())
+					} // if (iValuesCount == 1)
 					else
 					{
-						iPropertyInstance = buildPropertySingleValueReal(
+						wstring strValue;
+						for (int64_t iValue = 0; iValue < iValuesCount; iValue++)
+						{
+							if (!strValue.empty())
+							{
+								strValue += L", ";
+							}
+
+							strValue += to_wstring(pdValues[iValue]);
+						}
+#ifdef _WINDOWS
+						auto iLength = std::char_traits<char16_t>::length((char16_t*)strValue.c_str());
+
+						u16string strValueU16;
+						strValueU16.resize(iLength);
+						memcpy((void*)strValueU16.data(), strValue.data(), iLength * sizeof(char16_t));
+
+						iPropertyInstance = buildPropertySingleValueText(
 							strPropertyName.c_str(),
 							"property",
-							pdValues[0],
-							"IFCREAL");
-					}
+							To_UTF8(strValueU16).c_str(),
+							"IFCTEXT");
+#else
+						auto iLength = std::char_traits<wchar_t>::length((wchar_t*)strValue.c_str());
+
+						u32string strValueU32;
+						strValueU32.resize(iLength);
+						memcpy((void*)strValueU32.data(), strValue.data(), iLength * sizeof(wchar_t));
+
+						iPropertyInstance = buildPropertySingleValueText(
+							strPropertyName.c_str(),
+							"property",
+							To_UTF8(strValueU32).c_str(),
+							"IFCTEXT");
+#endif // _WINDOWS
+					} // else if (iValuesCount == 1)					
 
 					auto itPropertySet = mapPropertySets.find(pProperty->getPropertySet());
 					if (itPropertySet != mapPropertySets.end())
@@ -5256,10 +5295,8 @@ void _citygml_exporter::createObjectProperties(OwlInstance iOwlInstance, map<str
 				(void**)&pdValues,
 				&iValuesCount);
 
-			if (iValuesCount > 0)
+			if (iValuesCount == 1)
 			{
-				assert(iValuesCount == 1);
-
 				SdaiInstance iPropertyInstance = 0;
 				if (!pProperty->getType().empty())
 				{
@@ -5309,7 +5346,14 @@ void _citygml_exporter::createObjectProperties(OwlInstance iOwlInstance, map<str
 				{
 					mapPropertySets[pProperty->getPropertySet()] = vector<SdaiInstance>{ iPropertyInstance };
 				}
-			} // if (iValuesCount > 0)
+			} // if (iValuesCount == 1)
+			else
+			{
+				if (iValuesCount > 1)
+				{
+					assert(false); // TODO
+				}				
+			}
 		} // double-value
 	} // for (int64_t iIndex = ...
 }
