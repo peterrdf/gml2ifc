@@ -325,7 +325,7 @@ void _gml2ifc_exporter::execute(unsigned char* szData, size_t iSize, const wstri
 	}
 }
 
-_material* _gml2ifc_exporter::getDefaultMaterial(const string& strEntity) const
+_material* _gml2ifc_exporter::getDefaultMaterial(const string& strEntity)
 {
 	assert(!strEntity.empty());
 
@@ -337,7 +337,7 @@ _material* _gml2ifc_exporter::getDefaultMaterial(const string& strEntity) const
 
 	const auto& mapDefaultMaterials = m_pSettingsProvider->getDefaultMaterials();
 
-	auto& itDefaultMaterial = mapDefaultMaterials.find(strEntity);
+	auto itDefaultMaterial = mapDefaultMaterials.find(strEntity);
 	if (itDefaultMaterial != mapDefaultMaterials.end())
 	{
 		return itDefaultMaterial->second;
@@ -352,13 +352,13 @@ _material* _gml2ifc_exporter::getDefaultMaterial(const string& strEntity) const
 	return nullptr;
 }
 
-_material* _gml2ifc_exporter::getOverriddenMaterial(const string& strEntity) const
+_material* _gml2ifc_exporter::getOverriddenMaterial(const string& strEntity)
 {
 	assert(!strEntity.empty());
 
 	const auto& mapOverriddenMaterials = m_pSettingsProvider->getOverriddenMaterials();
 
-	auto& itOverriddenMaterial = mapOverriddenMaterials.find(strEntity);
+	const auto& itOverriddenMaterial = mapOverriddenMaterials.find(strEntity);
 	if (itOverriddenMaterial != mapOverriddenMaterials.end())
 	{
 		return itOverriddenMaterial->second;
@@ -2261,6 +2261,7 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 	, m_iCityObjectGroupMemberClass(0)
 	, m_iGeometryMemberClass(0)
 	, m_iBuildingClass(0)
+	, m_iBuildingPartClass(0)
 	, m_iWallSurfaceClass(0)
 	, m_iRoofSurfaceClass(0)
 	, m_iDoorClass(0)
@@ -2312,6 +2313,7 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 
 	// Building
 	m_iBuildingClass = GetClassByName(getSite()->getOwlModel(), "class:Building");
+	m_iBuildingPartClass = GetClassByName(getSite()->getOwlModel(), "class:BuildingPart");
 	m_iWallSurfaceClass = GetClassByName(getSite()->getOwlModel(), "class:WallSurface");
 	m_iRoofSurfaceClass = GetClassByName(getSite()->getOwlModel(), "class:RoofSurface");
 	m_iDoorClass = GetClassByName(getSite()->getOwlModel(), "class:Door");
@@ -2671,7 +2673,7 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 						{
 							m_iEnvelopeInstance = iEnvelopeInstance;
 						}
-						else if (isBuildingClass(iParentInstanceClass))
+						else if (isBuildingClass(iParentInstanceClass) || isBuildingPartClass(iParentInstanceClass))
 						{
 							assert(m_mapBuildingSRS.find(iParentInstance) == m_mapBuildingSRS.end());
 							m_mapBuildingSRS[iParentInstance] = iEnvelopeInstance;
@@ -2794,7 +2796,7 @@ void _citygml_exporter::createBuildings(SdaiInstance iSiteInstance, SdaiInstance
 		{
 			if (iInstanceClass != iSchemasClass)
 			{
-				if (isBuildingClass(iInstanceClass))
+				if (isBuildingClass(iInstanceClass) || isBuildingPartClass(iInstanceClass))
 				{
 					if (m_mapBuildings.find(iInstance) == m_mapBuildings.end())
 					{
@@ -2942,7 +2944,7 @@ void _citygml_exporter::createBuildings()
 		{
 			if (iInstanceClass != iSchemasClass)
 			{
-				if (isBuildingClass(iInstanceClass))
+				if (isBuildingClass(iInstanceClass) || isBuildingPartClass(iInstanceClass))
 				{
 					if (m_mapBuildings.find(iInstance) == m_mapBuildings.end())
 					{
@@ -3162,7 +3164,7 @@ void _citygml_exporter::createBuildingsRecursively(OwlInstance iInstance)
 					continue; // Ignore
 				}
 
-				if (isBuildingClass(iInstanceClass))
+				if (isBuildingClass(iInstanceClass) || isBuildingPartClass(iInstanceClass))
 				{
 					if (m_mapBuildings.find(piValues[iValue]) == m_mapBuildings.end())
 					{
@@ -5555,6 +5557,13 @@ bool _citygml_exporter::isBuildingClass(OwlClass iInstanceClass) const
 	assert(iInstanceClass != 0);
 
 	return (iInstanceClass == m_iBuildingClass) || IsClassAncestor(iInstanceClass, m_iBuildingClass);
+}
+
+bool _citygml_exporter::isBuildingPartClass(OwlClass iInstanceClass) const
+{
+	assert(iInstanceClass != 0);
+
+	return (iInstanceClass == m_iBuildingPartClass) || IsClassAncestor(iInstanceClass, m_iBuildingPartClass);
 }
 
 bool _citygml_exporter::isWallSurfaceClass(OwlClass iInstanceClass) const

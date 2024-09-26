@@ -226,7 +226,7 @@ public: // Methods
 	{
 		_property* pProperty = nullptr;
 
-		auto& itProperty = m_mapProperties.find(strName);
+		auto itProperty = m_mapProperties.find(strName);
 		if (itProperty != m_mapProperties.end())
 		{
 			pProperty = itProperty->second;
@@ -284,8 +284,8 @@ public: // Methods
 	bool getWGS84(int iCRS, float fX, float fY, float fZ, string& strCoordinates);
 
 	// Settings
-	_material* getDefaultMaterial(const string& strEntity) const;
-	_material* getOverriddenMaterial(const string& strEntity) const;
+	_material* getDefaultMaterial(const string& strEntity);
+	_material* getOverriddenMaterial(const string& strEntity);
 	_property* getProperty(const string& strName);
 	string getPropertyName(const string& strName);
 	string getPropertySet(const string& strName) const;
@@ -544,6 +544,7 @@ private: // Members
 
 	// Building
 	OwlClass m_iBuildingClass;
+	OwlClass m_iBuildingPartClass;
 	OwlClass m_iWallSurfaceClass;
 	OwlClass m_iRoofSurfaceClass;
 	OwlClass m_iDoorClass;
@@ -664,6 +665,7 @@ protected:  // Methods
 	// Building
 	bool isBuildingElement(OwlInstance iInstance) const;
 	bool isBuildingClass(OwlClass iInstanceClass) const;
+	bool isBuildingPartClass(OwlClass iInstanceClass) const;
 	bool isWallSurfaceClass(OwlClass iInstanceClass) const;
 	bool isRoofSurfaceClass(OwlInstance iInstanceClass) const;
 	bool isDoorClass(OwlInstance iInstanceClass) const;
