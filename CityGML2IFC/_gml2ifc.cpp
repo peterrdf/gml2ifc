@@ -268,12 +268,10 @@ int _gml2ifc_exporter::retrieveSRSData(unsigned char* szData, size_t iSize)
 	return 0;
 }
 
-void _gml2ifc_exporter::execute(const wstring& strInputFile, const wstring& strOuputFile)
+void _gml2ifc_exporter::import(const wstring& strInputFile)
 {
 	assert(!strInputFile.empty());
-	assert(!strOuputFile.empty());
 
-	/* Import */
 	if (m_iOwlModel != 0)
 	{
 		CloseModel(m_iOwlModel);
@@ -286,6 +284,34 @@ void _gml2ifc_exporter::execute(const wstring& strInputFile, const wstring& strO
 	setFormatSettings(m_iOwlModel);
 
 	m_iOwlRootInstance = ImportGISModelW(m_iOwlModel, strInputFile.c_str());
+}
+
+void _gml2ifc_exporter::import(unsigned char* szData, size_t iSize)
+{
+	assert(szData != nullptr);
+	assert(iSize > 0);
+
+	if (m_iOwlModel != 0)
+	{
+		CloseModel(m_iOwlModel);
+		m_iOwlModel = 0;
+	}
+
+	m_iOwlModel = CreateModel();
+	assert(m_iOwlModel != 0);
+
+	setFormatSettings(m_iOwlModel);
+
+	m_iOwlRootInstance = ImportGISModelA(m_iOwlModel, szData, iSize);
+}
+
+void _gml2ifc_exporter::execute(const wstring& strInputFile, const wstring& strOuputFile)
+{
+	assert(!strInputFile.empty());
+	assert(!strOuputFile.empty());
+
+	import(strInputFile);
+
 	if (m_iOwlRootInstance != 0)
 	{
 		executeCore(m_iOwlRootInstance, strOuputFile);
@@ -302,22 +328,11 @@ void _gml2ifc_exporter::execute(unsigned char* szData, size_t iSize, const wstri
 	assert(iSize > 0);
 	assert(!strOuputFile.empty());
 
-	/* Import */
-	if (m_iOwlModel != 0)
+	import(szData, iSize);
+
+	if (m_iOwlRootInstance != 0)
 	{
-		CloseModel(m_iOwlModel);
-		m_iOwlModel = 0;
-	}
-
-	m_iOwlModel = CreateModel();
-	assert(m_iOwlModel != 0);
-
-	setFormatSettings(m_iOwlModel);
-
-	OwlInstance iRootInstance = ImportGISModelA(m_iOwlModel, szData, iSize);
-	if (iRootInstance != 0)
-	{
-		executeCore(iRootInstance, strOuputFile);
+		executeCore(m_iOwlRootInstance, strOuputFile);
 	}
 	else
 	{
@@ -2268,6 +2283,7 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 	, m_iWindowClass(0)
 	, m_mapBuildings()
 	, m_mapBuildingElements()
+	, m_setLODs()
 	, m_iCadastralParcelClass(0)
 	, m_iPointPropertyClass(0)
 	, m_iReferencePointIndicatorClass(0)
@@ -2415,6 +2431,7 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 
 	m_mapBuildings.clear();
 	m_mapBuildingElements.clear();
+	m_setLODs.clear();
 
 	m_mapFeatures.clear();
 	m_mapFeatureElements.clear();

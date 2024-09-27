@@ -275,6 +275,10 @@ public: // Methods
 	int retrieveSRSData(const wstring& strInputFile);
 	int retrieveSRSData(unsigned char* szData, size_t iSize);
 
+	// import
+	void import(const wstring& strInputFile);
+	void import(unsigned char* szData, size_t iSize);
+
 	// export
 	void execute(const wstring& strInputFile, const wstring& strOuputFile);
 	void execute(unsigned char* szData, size_t iSize, const wstring& strOuputFile);
@@ -341,6 +345,9 @@ public: // Methods
 
 	// pre-processing
 	virtual int retrieveSRSData(OwlInstance iRootInstance) { return 0; }
+
+	// import
+	//void import
 
 	// export
 	void execute(OwlInstance iRootInstance, const wstring& strOuputFile);
@@ -551,6 +558,7 @@ private: // Members
 	OwlClass m_iWindowClass;
 	map<OwlInstance, vector<OwlInstance>> m_mapBuildings; // Building : Supported Elements
 	map<OwlInstance, vector<OwlInstance>> m_mapBuildingElements; // Building Supported Element : Geometries
+	set<string> m_setLODs;
 	
 	// Parcel
 	OwlClass m_iCadastralParcelClass;
