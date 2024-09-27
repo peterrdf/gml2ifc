@@ -15,8 +15,8 @@
 #endif
 
 // ************************************************************************************************
-static TCHAR SUPPORTED_FILES[] = _T("CityGML Files (*.gml;*.xml;citygml)|*.gml;*.xml;*citygml|\
-CityJSON Files (*.city.json)|*.city.json|\
+static TCHAR SUPPORTED_FILES[] = _T("CityGML Files (*.gml;*.xml;*.citygml)|*.gml;*.xml;*.citygml|\
+CityJSON Files (*.json;*.city.json)|*.json;*.city.json|\
 All Files (*.*)|*.*||");
 
 // ************************************************************************************************
@@ -91,12 +91,15 @@ void CCityGML2IFCDlg::ExportFile(const wstring& strInputFile)
 	wstring strOutputFile = strInputFile;
 	strOutputFile += L".ifc";
 
+	// I. Import & Export
+	// _gml2ifc_exporter exporter(m_strRootFolder, LogCallbackImpl, nullptr);	
+	//exporter.retrieveSRSData(strInputFile);// TEST
+	//exporter.execute(strInputFile, strOutputFile);
+
+	// II. Import & Export on demand Target LODs only
 	_gml2ifc_exporter exporter(m_strRootFolder, LogCallbackImpl, nullptr);
-
-	// TEST
-	//exporter.retrieveSRSData(strInputFile);
-
-	exporter.execute(strInputFile, strOutputFile);
+	exporter.importGML(strInputFile);
+	exporter.exportAsIFC(strOutputFile);
 }
 
 void CCityGML2IFCDlg::ExportFiles(const fs::path& pthInputFolder)

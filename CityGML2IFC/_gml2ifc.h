@@ -262,6 +262,7 @@ private: // Members
 	CSRSTransformer* m_pSRSTransformer;
 	OwlModel m_iOwlModel;
 	OwlInstance m_iOwlRootInstance;
+	set<string> m_setLODs;
 
 public: // Methods
 
@@ -276,10 +277,13 @@ public: // Methods
 	int retrieveSRSData(unsigned char* szData, size_t iSize);
 
 	// import
-	void import(const wstring& strInputFile);
-	void import(unsigned char* szData, size_t iSize);
+	void importGML(const wstring& strInputFile);
+	void importGML(unsigned char* szData, size_t iSize);
 
 	// export
+	void exportAsIFC(const wstring& strOuputFile);
+
+	// import & export
 	void execute(const wstring& strInputFile, const wstring& strOuputFile);
 	void execute(unsigned char* szData, size_t iSize, const wstring& strOuputFile);
 
@@ -345,11 +349,9 @@ public: // Methods
 
 	// pre-processing
 	virtual int retrieveSRSData(OwlInstance iRootInstance) { return 0; }
+	virtual void retrieveLODs(set<string>& setLODs) { setLODs.clear(); }
 
-	// import
-	//void import
-
-	// export
+	// import & export
 	void execute(OwlInstance iRootInstance, const wstring& strOuputFile);
 
 	_gml2ifc_exporter* getSite() const { return m_pSite; }
@@ -557,8 +559,7 @@ private: // Members
 	OwlClass m_iDoorClass;
 	OwlClass m_iWindowClass;
 	map<OwlInstance, vector<OwlInstance>> m_mapBuildings; // Building : Supported Elements
-	map<OwlInstance, vector<OwlInstance>> m_mapBuildingElements; // Building Supported Element : Geometries
-	set<string> m_setLODs;
+	map<OwlInstance, vector<OwlInstance>> m_mapBuildingElements; // Building Supported Element : Geometries	
 	
 	// Parcel
 	OwlClass m_iCadastralParcelClass;
@@ -602,6 +603,7 @@ public: // Methods
 	virtual ~_citygml_exporter();
 
 	virtual int retrieveSRSData(OwlInstance iRootInstance) override;
+	virtual void retrieveLODs(set<string>& setLODs) override;
 
 protected:  // Methods	
 

@@ -189,6 +189,7 @@ _gml2ifc_exporter::_gml2ifc_exporter(
 	, m_pSRSTransformer(pSRSTransformer)
 	, m_iOwlModel(0)
 	, m_iOwlRootInstance(0)
+	, m_setLODs()
 {
 	assert(!m_strRootFolder.empty());
 	assert(m_pLogCallback != nullptr);
@@ -268,15 +269,19 @@ int _gml2ifc_exporter::retrieveSRSData(unsigned char* szData, size_t iSize)
 	return 0;
 }
 
-void _gml2ifc_exporter::import(const wstring& strInputFile)
+void _gml2ifc_exporter::importGML(const wstring& strInputFile)
 {
 	assert(!strInputFile.empty());
+
+	logInfo("Importing...");
 
 	if (m_iOwlModel != 0)
 	{
 		CloseModel(m_iOwlModel);
 		m_iOwlModel = 0;
 	}
+
+	m_setLODs.clear();
 
 	m_iOwlModel = CreateModel();
 	assert(m_iOwlModel != 0);
@@ -284,12 +289,26 @@ void _gml2ifc_exporter::import(const wstring& strInputFile)
 	setFormatSettings(m_iOwlModel);
 
 	m_iOwlRootInstance = ImportGISModelW(m_iOwlModel, strInputFile.c_str());
+	if (m_iOwlRootInstance == 0)
+	{
+		logErr("Not supported format.");
+	}
+
+	if (IsCityJSON(m_iOwlModel))
+	{
+		_cityjson_exporter exporter(this);
+		exporter.retrieveLODs(m_setLODs);
+	}
+
+	logInfo("Done.");
 }
 
-void _gml2ifc_exporter::import(unsigned char* szData, size_t iSize)
+void _gml2ifc_exporter::importGML(unsigned char* szData, size_t iSize)
 {
 	assert(szData != nullptr);
 	assert(iSize > 0);
+
+	logInfo("Importing...");
 
 	if (m_iOwlModel != 0)
 	{
@@ -297,12 +316,48 @@ void _gml2ifc_exporter::import(unsigned char* szData, size_t iSize)
 		m_iOwlModel = 0;
 	}
 
+	m_setLODs.clear();
+
 	m_iOwlModel = CreateModel();
 	assert(m_iOwlModel != 0);
 
 	setFormatSettings(m_iOwlModel);
 
 	m_iOwlRootInstance = ImportGISModelA(m_iOwlModel, szData, iSize);
+	if (m_iOwlRootInstance == 0)
+	{
+		logErr("Not supported format.");
+	}
+
+	if (IsCityJSON(m_iOwlModel))
+	{
+		_cityjson_exporter exporter(this);
+		exporter.retrieveLODs(m_setLODs);
+	}
+
+	logInfo("Done.");
+}
+
+void _gml2ifc_exporter::exportAsIFC(const wstring& strOuputFile)
+{
+	assert(!strOuputFile.empty());
+
+	assert(m_iOwlModel != 0);
+	assert(m_iOwlRootInstance != 0);
+
+	logInfo("Exporting...");
+
+	if (IsCityJSON(m_iOwlModel))
+	{
+		_cityjson_exporter exporter(this);
+		exporter.execute(m_iOwlRootInstance, strOuputFile);
+
+		logInfo("Done.");
+	}
+	else
+	{
+		logErr("Not supported format.");
+	}
 }
 
 void _gml2ifc_exporter::execute(const wstring& strInputFile, const wstring& strOuputFile)
@@ -310,7 +365,7 @@ void _gml2ifc_exporter::execute(const wstring& strInputFile, const wstring& strO
 	assert(!strInputFile.empty());
 	assert(!strOuputFile.empty());
 
-	import(strInputFile);
+	importGML(strInputFile);
 
 	if (m_iOwlRootInstance != 0)
 	{
@@ -328,7 +383,7 @@ void _gml2ifc_exporter::execute(unsigned char* szData, size_t iSize, const wstri
 	assert(iSize > 0);
 	assert(!strOuputFile.empty());
 
-	import(szData, iSize);
+	importGML(szData, iSize);
 
 	if (m_iOwlRootInstance != 0)
 	{
@@ -2283,7 +2338,6 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 	, m_iWindowClass(0)
 	, m_mapBuildings()
 	, m_mapBuildingElements()
-	, m_setLODs()
 	, m_iCadastralParcelClass(0)
 	, m_iPointPropertyClass(0)
 	, m_iReferencePointIndicatorClass(0)
@@ -2392,6 +2446,28 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 	return iTransformationsCount;
 }
 
+/*virtual*/ void _citygml_exporter::retrieveLODs(set<string>& setLODs) /*override*/
+{
+	assert(setLODs.empty());
+
+	OwlInstance iInstance = GetInstancesByIterator(getSite()->getOwlModel(), 0);
+	while (iInstance != 0)
+	{
+		string strLOD = getStringPropertyValue(iInstance, "lod");
+		if (!strLOD.empty() && (setLODs.find(strLOD) == setLODs.end()))
+		{
+			string strEvent = "LOD: '";
+			strEvent += strLOD;
+			strEvent += "'";
+			getSite()->logInfo(strEvent);
+
+			setLODs.insert(strLOD);
+		}
+
+		iInstance = GetInstancesByIterator(getSite()->getOwlModel(), iInstance);
+	} // while (iInstance != 0)
+}
+
 /*virtual*/ void _citygml_exporter::preProcessing() /*override*/
 {
 	getInstancesDefaultState();
@@ -2431,7 +2507,6 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 
 	m_mapBuildings.clear();
 	m_mapBuildingElements.clear();
-	m_setLODs.clear();
 
 	m_mapFeatures.clear();
 	m_mapFeatureElements.clear();
