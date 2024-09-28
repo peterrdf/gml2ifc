@@ -338,7 +338,7 @@ void _gml2ifc_exporter::importGML(unsigned char* szData, size_t iSize)
 	logInfo("Done.");
 }
 
-void _gml2ifc_exporter::exportAsIFC(const wstring& strOuputFile)
+void _gml2ifc_exporter::exportAsIFC(const char* szTargetLODs, const wstring& strOuputFile)
 {
 	assert(!strOuputFile.empty());
 
@@ -350,7 +350,7 @@ void _gml2ifc_exporter::exportAsIFC(const wstring& strOuputFile)
 	if (IsCityJSON(m_iOwlModel))
 	{
 		_cityjson_exporter exporter(this);
-		exporter.execute(m_iOwlRootInstance, strOuputFile);
+		exporter.execute(m_iOwlRootInstance, strOuputFile, szTargetLODs);
 
 		logInfo("Done.");
 	}
@@ -620,6 +620,7 @@ _exporter_base::_exporter_base(_gml2ifc_exporter* pSite)
 	, m_iSiteInstance(0) 
 	, m_iSiteInstancePlacement(0) 
 	, m_iGeometricRepresentationContextInstance(0)
+	, m_setTargetLODs()
 {
 	assert(m_pSite != nullptr);
 
@@ -636,8 +637,30 @@ _exporter_base::_exporter_base(_gml2ifc_exporter* pSite)
 	}
 }
 
-void _exporter_base::execute(OwlInstance iRootInstance, const wstring& strOuputFile)
+void _exporter_base::execute(OwlInstance iRootInstance, const wstring& strOuputFile, const char* szTargetLODs/* = nullptr*/)
 {
+	// LODs
+	m_setTargetLODs.clear();
+	if (szTargetLODs != nullptr)
+	{
+		string strTargetLODs = szTargetLODs;
+		_string::trim(strTargetLODs);
+
+		if (!strTargetLODs.empty())
+		{
+			vector<string> vecLODs;
+			_string::split(strTargetLODs, ";", vecLODs);
+
+			if (!vecLODs.empty())
+			{
+				for (auto strLOD : vecLODs)
+				{
+					m_setTargetLODs.insert(strLOD);
+				}
+			}
+		}		
+	}
+
 	preProcessing();
 
 	executeCore(iRootInstance, strOuputFile);
@@ -2450,22 +2473,24 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 {
 	assert(setLODs.empty());
 
-	OwlInstance iInstance = GetInstancesByIterator(getSite()->getOwlModel(), 0);
-	while (iInstance != 0)
-	{
-		string strLOD = getStringPropertyValue(iInstance, "lod");
-		if (!strLOD.empty() && (setLODs.find(strLOD) == setLODs.end()))
-		{
-			string strEvent = "LOD: '";
-			strEvent += strLOD;
-			strEvent += "'";
-			getSite()->logInfo(strEvent);
+	assert(false);
 
-			setLODs.insert(strLOD);
-		}
+	//OwlInstance iInstance = GetInstancesByIterator(getSite()->getOwlModel(), 0);
+	//while (iInstance != 0)
+	//{
+	//	string strLOD = getStringPropertyValue(iInstance, "lod");
+	//	if (!strLOD.empty() && (setLODs.find(strLOD) == setLODs.end()))
+	//	{
+	//		string strEvent = "LOD: '";
+	//		strEvent += strLOD;
+	//		strEvent += "'";
+	//		getSite()->logInfo(strEvent);
 
-		iInstance = GetInstancesByIterator(getSite()->getOwlModel(), iInstance);
-	} // while (iInstance != 0)
+	//		setLODs.insert(strLOD);
+	//	}
+
+	//	iInstance = GetInstancesByIterator(getSite()->getOwlModel(), iInstance);
+	//} // while (iInstance != 0)
 }
 
 /*virtual*/ void _citygml_exporter::preProcessing() /*override*/
@@ -2494,6 +2519,24 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 
 		iInstance = GetInstancesByIterator(getSite()->getOwlModel(), iInstance);
 	} // while (iInstance != 0)
+}
+
+bool _citygml_exporter::isFiltered(OwlInstance iInstance) const
+{
+	assert(iInstance != 0);
+
+	// LODs
+	assert(false);
+	/*if (!m_setTargetLODs.empty())
+	{
+		string strLOD = getStringPropertyValue(iInstance, "lod");
+		if (!strLOD.empty() && (m_setTargetLODs.find(strLOD) == m_setTargetLODs.end()))
+		{
+			return true;
+		}
+	}*/
+
+	return false;
 }
 
 /*virtual*/ void _citygml_exporter::executeCore(OwlInstance iRootInstance, const wstring& strOuputFile)
@@ -3285,6 +3328,11 @@ void _citygml_exporter::searchForBuildingElements(OwlInstance iBuildingInstance,
 	assert(iBuildingInstance != 0);
 	assert(iInstance != 0);
 
+	if (isFiltered(iInstance))
+	{
+		return;
+	}
+
 	RdfProperty iProperty = GetInstancePropertyByIterator(iInstance, 0);
 	while (iProperty != 0)
 	{
@@ -3328,6 +3376,11 @@ void _citygml_exporter::searchForProxyBuildingElements(OwlInstance iBuildingInst
 {
 	assert(iBuildingInstance != 0);
 	assert(iInstance != 0);
+
+	if (isFiltered(iInstance))
+	{
+		return;
+	}
 
 	RdfProperty iProperty = GetInstancePropertyByIterator(iInstance, 0);
 	while (iProperty != 0)
@@ -3882,6 +3935,11 @@ void _citygml_exporter::searchForFeatureElements(OwlInstance iFeatureInstance, O
 {
 	assert(iFeatureInstance != 0);
 	assert(iInstance != 0);
+
+	if (isFiltered(iInstance))
+	{
+		return;
+	}
 
 	RdfProperty iProperty = GetInstancePropertyByIterator(iInstance, 0);
 	while (iProperty != 0)
@@ -6197,6 +6255,45 @@ _cityjson_exporter::_cityjson_exporter(_gml2ifc_exporter* pSite)
 	}
 
 	return iTransformationsCount;
+}
+
+/*virtual*/ void _cityjson_exporter::retrieveLODs(set<string>& setLODs) /*override*/
+{
+	assert(setLODs.empty());
+
+	OwlInstance iInstance = GetInstancesByIterator(getSite()->getOwlModel(), 0);
+	while (iInstance != 0)
+	{
+		string strLOD = getStringPropertyValue(iInstance, "lod");
+		if (!strLOD.empty() && (setLODs.find(strLOD) == setLODs.end()))
+		{
+			string strEvent = "LOD: '";
+			strEvent += strLOD;
+			strEvent += "'";
+			getSite()->logInfo(strEvent);
+
+			setLODs.insert(strLOD);
+		}
+
+		iInstance = GetInstancesByIterator(getSite()->getOwlModel(), iInstance);
+	} // while (iInstance != 0)
+}
+
+/*virtual*/ bool _cityjson_exporter::isFiltered(OwlInstance iInstance) const /*override*/
+{
+	assert(iInstance != 0);
+
+	// LODs
+	if (!getTargetLODs().empty())
+	{
+		string strLOD = getStringPropertyValue(iInstance, "lod");
+		if (!strLOD.empty() && (getTargetLODs().find(strLOD) == getTargetLODs().end()))
+		{
+			return true;
+		}
+	}
+
+	return false;
 }
 
 /*virtual*/ void _cityjson_exporter::onPreCreateSite(_matrix* pSiteMatrix) /*override*/

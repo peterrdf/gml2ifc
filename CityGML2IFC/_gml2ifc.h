@@ -281,7 +281,7 @@ public: // Methods
 	void importGML(unsigned char* szData, size_t iSize);
 
 	// export
-	void exportAsIFC(const wstring& strOuputFile);
+	void exportAsIFC(const char* szTargetLODs, const wstring& strOuputFile);
 
 	// import & export
 	void execute(const wstring& strInputFile, const wstring& strOuputFile);
@@ -342,6 +342,8 @@ private: // Members
 	SdaiInstance m_iSiteInstancePlacement;	
 	SdaiInstance m_iGeometricRepresentationContextInstance;
 
+	set<string> m_setTargetLODs;
+
 public: // Methods
 
 	_exporter_base(_gml2ifc_exporter* pSite);
@@ -349,10 +351,10 @@ public: // Methods
 
 	// pre-processing
 	virtual int retrieveSRSData(OwlInstance iRootInstance) { return 0; }
-	virtual void retrieveLODs(set<string>& setLODs) { setLODs.clear(); }
+	virtual void retrieveLODs(set<string>& setLODs) { setLODs.clear(); }	
 
-	// import & export
-	void execute(OwlInstance iRootInstance, const wstring& strOuputFile);
+	// export
+	void execute(OwlInstance iRootInstance, const wstring& strOuputFile, const char* szTargetLODs = nullptr);
 
 	_gml2ifc_exporter* getSite() const { return m_pSite; }
 	SdaiModel getSdaiModel() const { return m_iSdaiModel; }
@@ -370,7 +372,11 @@ public: // Methods
 	SdaiInstance getSiteInstance(SdaiInstance& iSiteInstancePlacement);
 	SdaiInstance getGeometricRepresentationContextInstance();
 
+	const set<string>& getTargetLODs() const { return m_setTargetLODs; }
+
 protected: // Methods
+
+	virtual bool isFiltered(OwlInstance iInstance) const = 0;
 
 	virtual void preProcessing() {}
 	virtual void executeCore(OwlInstance iRootInstance, const wstring& strOuputFile) = 0;
@@ -607,6 +613,8 @@ public: // Methods
 
 protected:  // Methods	
 
+	virtual bool isFiltered(OwlInstance iInstance) const override;
+
 	virtual void preProcessing() override;
 	virtual void executeCore(OwlInstance iRootInstance, const wstring& strOuputFile) override;
 	virtual void postProcessing() override;
@@ -739,8 +747,11 @@ public: // Methods
 	virtual ~_cityjson_exporter();
 
 	virtual int retrieveSRSData(OwlInstance iRootInstance) override;
+	virtual void retrieveLODs(set<string>& setLODs) override;
 
 protected: // Methods
+
+	virtual bool isFiltered(OwlInstance iInstance) const override;
 
 	virtual void onPreCreateSite(_matrix* pSiteMatrix) override;
 	virtual void onPostCreateSite(SdaiInstance iSiteInstance) override;

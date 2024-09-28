@@ -99,7 +99,7 @@ void CCityGML2IFCDlg::ExportFile(const wstring& strInputFile)
 	// II. Import & Export on demand Target LODs only
 	_gml2ifc_exporter exporter(m_strRootFolder, LogCallbackImpl, nullptr);
 	exporter.importGML(strInputFile);
-	exporter.exportAsIFC(strOutputFile);
+	exporter.exportAsIFC("0", strOutputFile);
 }
 
 void CCityGML2IFCDlg::ExportFiles(const fs::path& pthInputFolder)
