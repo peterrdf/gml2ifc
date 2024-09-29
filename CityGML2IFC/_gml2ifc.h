@@ -291,6 +291,9 @@ public: // Methods
 	bool toWGS84Async(int iCRS, float fX, float fY, float fZ);
 	bool getWGS84(int iCRS, float fX, float fY, float fZ, string& strCoordinates);
 
+	// LODs
+	const set<string>& getLODs() { return m_setLODs; }
+
 	// Settings
 	_material* getDefaultMaterial(const string& strEntity);
 	_material* getOverriddenMaterial(const string& strEntity);

@@ -69,4 +69,5 @@ public:
 	afx_msg void OnBnClickedButtonInputFile();
 	CEdit m_edtProgress;
 	afx_msg void OnBnClickedButtonClose();
+	CListBox m_lbLODs;
 };

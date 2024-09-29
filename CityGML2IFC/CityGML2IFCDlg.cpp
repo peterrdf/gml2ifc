@@ -74,7 +74,7 @@ void STDCALL LogCallbackImpl(enumLogEvent enLogEvent, const char* szEvent)
 		pDialog->ExportFiles(strInputFolder);
 	}*/
 
-	//::EnableWindow(pDialog->GetDlgItem(IDOK)->GetSafeHwnd(), TRUE);
+	::EnableWindow(pDialog->GetDlgItem(IDOK)->GetSafeHwnd(), TRUE);
 
 	return 0;
 }
@@ -115,6 +115,8 @@ void CCityGML2IFCDlg::ExportFiles(const fs::path& pthInputFolder)
 
 void CCityGML2IFCDlg::ImportFile(const wstring& strInputFile)
 {
+	m_lbLODs.ResetContent();
+
 	::EnableWindow(GetDlgItem(IDOK)->GetSafeHwnd(), FALSE);
 
 	assert(!m_strRootFolder.empty());
@@ -136,7 +138,13 @@ void CCityGML2IFCDlg::ImportFile(const wstring& strInputFile)
 	}
 
 	m_pExporter = new _gml2ifc_exporter(m_strRootFolder, LogCallbackImpl, nullptr);
-	m_pExporter->importGML(strInputFile);
+	m_pExporter->importGML(strInputFile);	
+
+	auto& setLODs = m_pExporter->getLODs();
+	for (const auto& strLOD : setLODs)
+	{
+		m_lbLODs.AddString((LPCWSTR)CA2W(strLOD.c_str()));
+	}
 }
 
 // ************************************************************************************************
@@ -196,6 +204,7 @@ void CCityGML2IFCDlg::DoDataExchange(CDataExchange* pDX)
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Text(pDX, IDC_EDIT_INPUT_FILE, m_strInputFile);
 	DDX_Control(pDX, IDC_EDIT_PROGRESS, m_edtProgress);
+	DDX_Control(pDX, IDC_LIST_LODS, m_lbLODs);
 }
 
 BEGIN_MESSAGE_MAP(CCityGML2IFCDlg, CDialogEx)
