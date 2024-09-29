@@ -354,7 +354,7 @@ public: // Methods
 	virtual void retrieveLODs(set<string>& setLODs) { setLODs.clear(); }	
 
 	// export
-	void execute(OwlInstance iRootInstance, const wstring& strOuputFile, const char* szTargetLODs = nullptr);
+	void execute(OwlInstance iRootInstance, const char* szTargetLODs, const wstring& strOuputFile);
 
 	_gml2ifc_exporter* getSite() const { return m_pSite; }
 	SdaiModel getSdaiModel() const { return m_iSdaiModel; }
@@ -719,6 +719,7 @@ private: // Methods
 	bool transformEnvelopeSRSDataAsync(OwlInstance iEnvelopeInstance);
 	bool retrieveReferencePointSRSData(OwlInstance iReferencePointInstance, string& strEPSGCode, vector<double>& vecCenter);
 	bool transformReferencePointSRSDataAsync(OwlInstance iReferencePointInstance);
+	string getLOD(OwlInstance iInstance) const;
 };
 
 // ************************************************************************************************

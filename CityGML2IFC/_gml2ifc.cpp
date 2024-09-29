@@ -294,7 +294,12 @@ void _gml2ifc_exporter::importGML(const wstring& strInputFile)
 		logErr("Not supported format.");
 	}
 
-	if (IsCityJSON(m_iOwlModel))
+	if (IsCityGML(m_iOwlModel))
+	{
+		_citygml_exporter exporter(this);
+		exporter.retrieveLODs(m_setLODs);
+	}
+	else if (IsCityJSON(m_iOwlModel))
 	{
 		_cityjson_exporter exporter(this);
 		exporter.retrieveLODs(m_setLODs);
@@ -347,10 +352,17 @@ void _gml2ifc_exporter::exportAsIFC(const char* szTargetLODs, const wstring& str
 
 	logInfo("Exporting...");
 
-	if (IsCityJSON(m_iOwlModel))
+	if (IsCityGML(m_iOwlModel))
+	{
+		_citygml_exporter exporter(this);
+		exporter.execute(m_iOwlRootInstance, szTargetLODs, strOuputFile);
+
+		logInfo("Done.");
+	}
+	else if (IsCityJSON(m_iOwlModel))
 	{
 		_cityjson_exporter exporter(this);
-		exporter.execute(m_iOwlRootInstance, strOuputFile, szTargetLODs);
+		exporter.execute(m_iOwlRootInstance, szTargetLODs, strOuputFile);
 
 		logInfo("Done.");
 	}
@@ -540,21 +552,21 @@ void _gml2ifc_exporter::executeCore(OwlInstance iRootInstance, const wstring& st
 	if (IsGML(m_iOwlModel))
 	{
 		_gml_exporter exporter(this);
-		exporter.execute(iRootInstance, strOuputFile);
+		exporter.execute(iRootInstance, nullptr, strOuputFile);
 
 		logInfo("Done.");
 	}
 	else if (IsCityGML(m_iOwlModel))
 	{
 		_citygml_exporter exporter(this);
-		exporter.execute(iRootInstance, strOuputFile);
+		exporter.execute(iRootInstance, nullptr, strOuputFile);
 
 		logInfo("Done.");
 	}
 	else if (IsCityJSON(m_iOwlModel))
 	{
 		_cityjson_exporter exporter(this);
-		exporter.execute(iRootInstance, strOuputFile);
+		exporter.execute(iRootInstance, nullptr, strOuputFile);
 
 		logInfo("Done.");
 	}
@@ -637,7 +649,7 @@ _exporter_base::_exporter_base(_gml2ifc_exporter* pSite)
 	}
 }
 
-void _exporter_base::execute(OwlInstance iRootInstance, const wstring& strOuputFile, const char* szTargetLODs/* = nullptr*/)
+void _exporter_base::execute(OwlInstance iRootInstance, const char* szTargetLODs, const wstring& strOuputFile)
 {
 	// LODs
 	m_setTargetLODs.clear();
@@ -2131,7 +2143,8 @@ string _exporter_base::getStringAttributeValue(OwlInstance iInstance, const stri
 		GetNameOfProperty(iPropertyInstance, &szPropertyUniqueName);
 
 		string strPropertyUniqueName = szPropertyUniqueName;
-		if (strPropertyUniqueName == "attr:str:" + strName)
+		if ((strPropertyUniqueName == "attr:str:" + strName) ||
+			_string::startsEndsWith(strPropertyUniqueName, "attr:str:", ":" + strName, false))
 		{
 			assert(GetPropertyType(iPropertyInstance) == DATATYPEPROPERTY_TYPE_WCHAR_T_ARRAY);
 
@@ -2185,7 +2198,8 @@ string _exporter_base::getStringPropertyValue(OwlInstance iInstance, const strin
 		GetNameOfProperty(iPropertyInstance, &szPropertyUniqueName);
 
 		string strPropertyUniqueName = szPropertyUniqueName;
-		if (strPropertyUniqueName == "prop:str:" + strName)
+		if ((strPropertyUniqueName == "prop:str:" + strName) || 
+			_string::startsEndsWith(strPropertyUniqueName, "prop:str:", ":" + strName, false))
 		{
 			assert((GetPropertyType(iPropertyInstance) == DATATYPEPROPERTY_TYPE_WCHAR_T_ARRAY) ||
 				(GetPropertyType(iPropertyInstance) == DATATYPEPROPERTY_TYPE_STRING));
@@ -2242,7 +2256,8 @@ void _exporter_base::getDoublePropertyValue(OwlInstance iInstance, const string&
 		GetNameOfProperty(iPropertyInstance, &szPropertyUniqueName);
 
 		string strPropertyUniqueName = szPropertyUniqueName;
-		if (strPropertyUniqueName == "prop:dbl:" + strName)
+		if ((strPropertyUniqueName == "prop:dbl:" + strName) ||
+			_string::startsEndsWith(strPropertyUniqueName, "prop:dbl:", ":" + strName, false))
 		{
 			assert(GetPropertyType(iPropertyInstance) == DATATYPEPROPERTY_TYPE_DOUBLE);
 
@@ -2473,24 +2488,22 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 {
 	assert(setLODs.empty());
 
-	assert(false);
+	OwlInstance iInstance = GetInstancesByIterator(getSite()->getOwlModel(), 0);
+	while (iInstance != 0)
+	{
+		string strLOD = getLOD(iInstance);
+		if (!strLOD.empty() && (setLODs.find(strLOD) == setLODs.end()))
+		{
+			string strEvent = "LOD: '";
+			strEvent += strLOD;
+			strEvent += "'";
+			getSite()->logInfo(strEvent);
 
-	//OwlInstance iInstance = GetInstancesByIterator(getSite()->getOwlModel(), 0);
-	//while (iInstance != 0)
-	//{
-	//	string strLOD = getStringPropertyValue(iInstance, "lod");
-	//	if (!strLOD.empty() && (setLODs.find(strLOD) == setLODs.end()))
-	//	{
-	//		string strEvent = "LOD: '";
-	//		strEvent += strLOD;
-	//		strEvent += "'";
-	//		getSite()->logInfo(strEvent);
+			setLODs.insert(strLOD);
+		}
 
-	//		setLODs.insert(strLOD);
-	//	}
-
-	//	iInstance = GetInstancesByIterator(getSite()->getOwlModel(), iInstance);
-	//} // while (iInstance != 0)
+		iInstance = GetInstancesByIterator(getSite()->getOwlModel(), iInstance);
+	} // while (iInstance != 0)
 }
 
 /*virtual*/ void _citygml_exporter::preProcessing() /*override*/
@@ -2526,15 +2539,14 @@ bool _citygml_exporter::isFiltered(OwlInstance iInstance) const
 	assert(iInstance != 0);
 
 	// LODs
-	assert(false);
-	/*if (!m_setTargetLODs.empty())
+	if (!getTargetLODs().empty())
 	{
-		string strLOD = getStringPropertyValue(iInstance, "lod");
-		if (!strLOD.empty() && (m_setTargetLODs.find(strLOD) == m_setTargetLODs.end()))
+		string strLOD = getLOD(iInstance);
+		if (!strLOD.empty() && (getTargetLODs().find(strLOD) == getTargetLODs().end()))
 		{
 			return true;
 		}
-	}*/
+	}
 
 	return false;
 }
@@ -6213,6 +6225,76 @@ bool _citygml_exporter::transformReferencePointSRSDataAsync(OwlInstance iReferen
 	}
 
 	return false;
+}
+
+string _citygml_exporter::getLOD(OwlInstance iInstance) const
+{
+	assert(iInstance != 0);
+
+	string strLOD;
+
+	// Property
+	vector<double> vecValues;
+	getDoublePropertyValue(iInstance, "lod", vecValues);
+
+	if (!vecValues.empty())
+	{
+		assert(vecValues.size() == 1);
+
+		strLOD = _string::format("lod%d", (int)vecValues[0]);
+	}
+
+	// XML Element
+	if (strLOD.empty())
+	{
+		string strTag = getTag(iInstance);
+
+		vector<string> vecTokens;
+		_string::tokenize(strTag, ":", vecTokens);
+
+		assert(!vecTokens.empty());
+
+		string strName;
+		if (vecTokens.size() == 1)
+		{
+			strName = vecTokens[0];
+		}
+		else if (vecTokens.size() == 2)
+		{
+			strName = vecTokens[1];
+		}
+
+		if (!strName.empty())
+		{
+			if (_string::startsWith(strName, "lod0") ||
+				_string::contains(strName, ":lod0"))
+			{
+				strLOD = "lod0";
+			}
+			else if (_string::startsWith(strName, "lod1") ||
+				_string::contains(strName, ":lod1"))
+			{
+				strLOD = "lod1";
+			}
+			else if (_string::startsWith(strName, "lod2") ||
+				_string::contains(strName, ":lod2"))
+			{
+				strLOD = "lod2";
+			}
+			else if (_string::startsWith(strName, "lod3") ||
+				_string::contains(strName, ":lod3"))
+			{
+				strLOD = "lod3";
+			}
+			else if (_string::startsWith(strName, "lod4") ||
+				_string::contains(strName, ":lod4"))
+			{
+				strLOD = "lod4";
+			}
+		} // if (!strName.empty())			
+	} // if (strLOD.empty())
+
+	return strLOD;
 }
 
 // ************************************************************************************************
