@@ -203,6 +203,8 @@ _gml2ifc_exporter::_gml2ifc_exporter(
 
 /*virtual*/ _gml2ifc_exporter::~_gml2ifc_exporter()
 {
+	delete m_pSettingsProvider;
+
 	if (m_iOwlModel != 0)
 	{
 		CloseModel(m_iOwlModel);

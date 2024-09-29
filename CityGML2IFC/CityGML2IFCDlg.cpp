@@ -8,8 +8,6 @@
 #include "CityGML2IFCDlg.h"
 #include "afxdialogex.h"
 
-#include "_gml2ifc.h"
-
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -55,10 +53,14 @@ void STDCALL LogCallbackImpl(enumLogEvent enLogEvent, const char* szEvent)
 	auto pDialog = (CCityGML2IFCDlg*)pParam;
 	ASSERT(pDialog != nullptr);
 
-	if (!pDialog->m_strInputFile.IsEmpty())
+	// I. Import & Export
+	/*if (!pDialog->m_strInputFile.IsEmpty())
 	{
 		pDialog->ExportFile((LPCTSTR)pDialog->m_strInputFile);
-	}	
+	}*/
+
+	// II. Import
+	pDialog->ImportFile((LPCTSTR)pDialog->m_strInputFile);
 
 	/* TEST 1 */
 	/*{
@@ -72,7 +74,7 @@ void STDCALL LogCallbackImpl(enumLogEvent enLogEvent, const char* szEvent)
 		pDialog->ExportFiles(strInputFolder);
 	}*/
 
-	::EnableWindow(pDialog->GetDlgItem(IDOK)->GetSafeHwnd(), TRUE);
+	//::EnableWindow(pDialog->GetDlgItem(IDOK)->GetSafeHwnd(), TRUE);
 
 	return 0;
 }
@@ -91,15 +93,9 @@ void CCityGML2IFCDlg::ExportFile(const wstring& strInputFile)
 	wstring strOutputFile = strInputFile;
 	strOutputFile += L".ifc";
 
-	// I. Import & Export
-	// _gml2ifc_exporter exporter(m_strRootFolder, LogCallbackImpl, nullptr);	
+	_gml2ifc_exporter exporter(m_strRootFolder, LogCallbackImpl, nullptr);	
 	//exporter.retrieveSRSData(strInputFile);// TEST
-	//exporter.execute(strInputFile, strOutputFile);
-
-	// II. Import & Export on demand Target LODs only
-	_gml2ifc_exporter exporter(m_strRootFolder, LogCallbackImpl, nullptr);
-	exporter.importGML(strInputFile);
-	exporter.exportAsIFC("0", strOutputFile);
+	exporter.execute(strInputFile, strOutputFile);	
 }
 
 void CCityGML2IFCDlg::ExportFiles(const fs::path& pthInputFolder)
@@ -115,6 +111,32 @@ void CCityGML2IFCDlg::ExportFiles(const fs::path& pthInputFolder)
 
 		ExportFile(entry.path());
 	}
+}
+
+void CCityGML2IFCDlg::ImportFile(const wstring& strInputFile)
+{
+	::EnableWindow(GetDlgItem(IDOK)->GetSafeHwnd(), FALSE);
+
+	assert(!m_strRootFolder.empty());
+	assert(!strInputFile.empty());
+
+	string strEvent = "Input file: '";
+	strEvent += CW2A(strInputFile.c_str());
+	strEvent += "'";
+
+	LogCallbackImpl(enumLogEvent::info, strEvent.c_str());
+
+	wstring strOutputFile = strInputFile;
+	strOutputFile += L".ifc";
+
+	if (m_pExporter != nullptr)
+	{
+		delete m_pExporter;
+		m_pExporter = nullptr;
+	}
+
+	m_pExporter = new _gml2ifc_exporter(m_strRootFolder, LogCallbackImpl, nullptr);
+	m_pExporter->importGML(strInputFile);
 }
 
 // ************************************************************************************************
@@ -155,6 +177,7 @@ CCityGML2IFCDlg::CCityGML2IFCDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_CITYGML2IFC_DIALOG, pParent)
 	, m_pThread(nullptr)
 	, m_strRootFolder(L"")
+	, m_pExporter(nullptr)
 	, m_strInputFile(_T(""))
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
@@ -164,10 +187,8 @@ CCityGML2IFCDlg::CCityGML2IFCDlg(CWnd* pParent /*=nullptr*/)
 
 CCityGML2IFCDlg::~CCityGML2IFCDlg()
 {
-	if (m_pThread != nullptr)
-	{
-		delete m_pThread;
-	}
+	delete m_pThread;
+	delete m_pExporter;
 }
 
 void CCityGML2IFCDlg::DoDataExchange(CDataExchange* pDX)
@@ -304,6 +325,23 @@ void CCityGML2IFCDlg::OnBnClickedButtonInputFile()
 	m_strInputFile = dlgFile.GetPathName();
 
 	UpdateData(FALSE);
+
+	wchar_t szAppPath[_MAX_PATH];
+	::GetModuleFileName(::GetModuleHandle(nullptr), szAppPath, sizeof(szAppPath));
+
+	fs::path pthExe = szAppPath;
+	auto pthRootFolder = pthExe.parent_path();
+	m_strRootFolder = pthRootFolder.wstring();
+	m_strRootFolder += L"\\";
+
+	if (m_pThread != nullptr)
+	{
+		delete m_pThread;
+		m_pThread = nullptr;
+	}
+
+	m_pThread = ::AfxBeginThread(ThreadProc, this);
+	m_pThread->m_bAutoDelete = FALSE;
 }
 
 void CCityGML2IFCDlg::OnBnClickedButtonClose()

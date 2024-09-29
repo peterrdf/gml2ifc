@@ -7,6 +7,7 @@
 #include "engine.h"
 #include "ifcengine.h"
 #include "gisengine.h"
+#include "_gml2ifc.h"
 
 #include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
@@ -29,12 +30,14 @@ private: // Members
 	CWinThread* m_pThread;
 
 	wstring m_strRootFolder;
+	_gml2ifc_exporter* m_pExporter;
 
 protected: // Methods
 	
 	static UINT ThreadProc(LPVOID pParam);
 	void ExportFile(const wstring& strInputFile);
 	void ExportFiles(const fs::path& pthInputFolder);
+	void ImportFile(const wstring& strInputFile);
 
 // Construction
 public:
