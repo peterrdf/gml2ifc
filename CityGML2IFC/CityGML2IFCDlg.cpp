@@ -53,14 +53,10 @@ void STDCALL LogCallbackImpl(enumLogEvent enLogEvent, const char* szEvent)
 	auto pDialog = (CCityGML2IFCDlg*)pParam;
 	ASSERT(pDialog != nullptr);
 
-	// I. Import & Export
-	/*if (!pDialog->m_strInputFile.IsEmpty())
+	if (!pDialog->m_strInputFile.IsEmpty())
 	{
 		pDialog->ExportFile((LPCTSTR)pDialog->m_strInputFile);
-	}*/
-
-	// II. Import
-	pDialog->ImportFile((LPCTSTR)pDialog->m_strInputFile);
+	}
 
 	/* TEST 1 */
 	/*{
@@ -75,6 +71,28 @@ void STDCALL LogCallbackImpl(enumLogEvent enLogEvent, const char* szEvent)
 	}*/
 
 	::EnableWindow(pDialog->GetDlgItem(IDOK)->GetSafeHwnd(), TRUE);
+
+	return 0;
+}
+
+/*static*/ UINT CCityGML2IFCDlg::ThreadProcImport(LPVOID pParam)
+{
+	auto pDialog = (CCityGML2IFCDlg*)pParam;
+	ASSERT(pDialog != nullptr);
+
+	pDialog->ImportFile((LPCTSTR)pDialog->m_strInputFile);
+
+	::EnableWindow(pDialog->GetDlgItem(IDOK)->GetSafeHwnd(), TRUE);
+
+	return 0;
+}
+
+/*static*/ UINT CCityGML2IFCDlg::ThreadProcExport(LPVOID pParam)
+{
+	auto pDialog = (CCityGML2IFCDlg*)pParam;
+	ASSERT(pDialog != nullptr);
+
+	pDialog->ExportFileAsIFC((LPCTSTR)pDialog->m_strInputFile);
 
 	return 0;
 }
@@ -145,6 +163,52 @@ void CCityGML2IFCDlg::ImportFile(const wstring& strInputFile)
 	{
 		m_lbLODs.AddString((LPCWSTR)CA2W(strLOD.c_str()));
 	}
+}
+
+void CCityGML2IFCDlg::ExportFileAsIFC(const wstring& strInputFile)
+{
+	assert(!m_strRootFolder.empty());
+	assert(!strInputFile.empty());
+	assert(m_pExporter != nullptr);
+
+	string strEvent = "Input file: '";
+	strEvent += CW2A(strInputFile.c_str());
+	strEvent += "'";
+
+	LogCallbackImpl(enumLogEvent::info, strEvent.c_str());	
+
+	// LODs
+	int iSelectedItems = m_lbLODs.GetSelCount();
+	CArray<int, int> arSelection;
+	if (iSelectedItems > 0)
+	{
+		arSelection.SetSize(iSelectedItems);
+		m_lbLODs.GetSelItems(iSelectedItems, arSelection.GetData());
+	}
+
+	string strLODs;
+	if ((iSelectedItems > 0) && (iSelectedItems < m_pExporter->getLODs().size()))
+	{
+		for (int64_t i = 0; i < arSelection.GetCount(); i++)
+		{
+			if (!strLODs.empty())
+			{
+				strLODs += ";";
+			}
+
+			CString strLOD;
+			m_lbLODs.GetText(arSelection[i], strLOD);
+
+			strLODs += (LPCSTR)CW2A(strLOD);
+		}
+	}
+
+	wstring strOutputFile = strInputFile;
+	strOutputFile += L"_LODs_";
+	strOutputFile += !strLODs.empty() ? (LPCWSTR)CA2W(strLODs.c_str()) : L"ALL";
+	strOutputFile += L".ifc";
+
+	m_pExporter->exportAsIFC(!strLODs.empty() ? strLODs.c_str() : nullptr, strOutputFile);
 }
 
 // ************************************************************************************************
@@ -303,7 +367,8 @@ HCURSOR CCityGML2IFCDlg::OnQueryDragIcon()
 
 void CCityGML2IFCDlg::OnBnClickedOk()
 {
-	::EnableWindow(GetDlgItem(IDOK)->GetSafeHwnd(), FALSE);	
+	// I. Import & Export
+	/*::EnableWindow(GetDlgItem(IDOK)->GetSafeHwnd(), FALSE);	
 
 	wchar_t szAppPath[_MAX_PATH];
 	::GetModuleFileName(::GetModuleHandle(nullptr), szAppPath, sizeof(szAppPath));
@@ -320,6 +385,16 @@ void CCityGML2IFCDlg::OnBnClickedOk()
 	}
 
 	m_pThread = ::AfxBeginThread(ThreadProc, this);
+	m_pThread->m_bAutoDelete = FALSE;*/
+
+	// II. Export
+	if (m_pThread != nullptr)
+	{
+		delete m_pThread;
+		m_pThread = nullptr;
+	}
+
+	m_pThread = ::AfxBeginThread(ThreadProcExport, this);
 	m_pThread->m_bAutoDelete = FALSE;
 }
 
@@ -349,7 +424,7 @@ void CCityGML2IFCDlg::OnBnClickedButtonInputFile()
 		m_pThread = nullptr;
 	}
 
-	m_pThread = ::AfxBeginThread(ThreadProc, this);
+	m_pThread = ::AfxBeginThread(ThreadProcImport, this);
 	m_pThread->m_bAutoDelete = FALSE;
 }
 

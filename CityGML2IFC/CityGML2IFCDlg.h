@@ -35,9 +35,12 @@ private: // Members
 protected: // Methods
 	
 	static UINT ThreadProc(LPVOID pParam);
+	static UINT ThreadProcImport(LPVOID pParam);
+	static UINT ThreadProcExport(LPVOID pParam);
 	void ExportFile(const wstring& strInputFile);
 	void ExportFiles(const fs::path& pthInputFolder);
 	void ImportFile(const wstring& strInputFile);
+	void ExportFileAsIFC(const wstring& strInputFile);
 
 // Construction
 public:
