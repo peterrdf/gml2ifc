@@ -193,7 +193,7 @@ void CCityGML2IFCDlg::ExportFileAsIFC(const wstring& strInputFile)
 	}
 
 	string strLODs;
-	if ((iSelectedItems > 0) && (iSelectedItems < m_pExporter->getLODs().size()))
+	if ((iSelectedItems > 0) && (iSelectedItems < (int)m_pExporter->getLODs().size()))
 	{
 		for (int64_t i = 0; i < arSelection.GetCount(); i++)
 		{
@@ -203,7 +203,7 @@ void CCityGML2IFCDlg::ExportFileAsIFC(const wstring& strInputFile)
 			}
 
 			CString strLOD;
-			m_lbLODs.GetText(arSelection[i], strLOD);
+			m_lbLODs.GetText(arSelection[(INT_PTR)i], strLOD);
 
 			strLODs += (LPCSTR)CW2A(strLOD);
 		}
