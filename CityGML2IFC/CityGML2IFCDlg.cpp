@@ -215,6 +215,8 @@ void CCityGML2IFCDlg::ExportFileAsIFC(const wstring& strInputFile)
 	strOutputFile += L".ifc";
 
 	m_pExporter->exportAsIFC(!strLODs.empty() ? strLODs.c_str() : nullptr, strOutputFile);
+
+	::EnableWindow(GetDlgItem(IDOK)->GetSafeHwnd(), TRUE);
 }
 
 // ************************************************************************************************
