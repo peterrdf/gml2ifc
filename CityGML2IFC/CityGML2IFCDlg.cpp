@@ -193,7 +193,7 @@ void CCityGML2IFCDlg::ExportFileAsIFC(const wstring& strInputFile)
 	}
 
 	string strLODs;
-	if ((iSelectedItems > 0) && (iSelectedItems < (int)m_pExporter->getLODs().size()))
+	if (iSelectedItems > 0)
 	{
 		for (int64_t i = 0; i < arSelection.GetCount(); i++)
 		{
@@ -208,11 +208,29 @@ void CCityGML2IFCDlg::ExportFileAsIFC(const wstring& strInputFile)
 			strLODs += (LPCSTR)CW2A(strLOD);
 		}
 	}
+	else
+	{
+		auto& setLODs = m_pExporter->getLODs();
+		for (const auto& strLOD : setLODs)
+		{
+			if (!strLODs.empty())
+			{
+				strLODs += ";";
+			}
+
+			strLODs += strLOD;
+		}
+	}
 
 	wstring strOutputFile = strInputFile;
 	strOutputFile += L"_LODs_";
-	strOutputFile += !strLODs.empty() ? (LPCWSTR)CA2W(strLODs.c_str()) : L"ALL";
+	strOutputFile += !strLODs.empty() ? (LPCWSTR)CA2W(strLODs.c_str()) : L"NONE";
 	strOutputFile += L".ifc";
+
+	if ((iSelectedItems == 0) || (iSelectedItems == (int)m_pExporter->getLODs().size()))
+	{
+		strLODs = "";
+	}
 
 	m_pExporter->exportAsIFC(!strLODs.empty() ? strLODs.c_str() : nullptr, strOutputFile);
 
