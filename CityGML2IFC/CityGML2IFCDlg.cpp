@@ -82,8 +82,6 @@ void STDCALL LogCallbackImpl(enumLogEvent enLogEvent, const char* szEvent)
 
 	pDialog->ImportFile((LPCTSTR)pDialog->m_strInputFile);
 
-	::EnableWindow(pDialog->GetDlgItem(IDOK)->GetSafeHwnd(), TRUE);
-
 	return 0;
 }
 
@@ -144,6 +142,7 @@ void CCityGML2IFCDlg::ImportFile(const wstring& strInputFile)
 	strEvent += CW2A(strInputFile.c_str());
 	strEvent += "'";
 
+	LogCallbackImpl(enumLogEvent::info, "**************************************");
 	LogCallbackImpl(enumLogEvent::info, strEvent.c_str());
 
 	wstring strOutputFile = strInputFile;
@@ -163,6 +162,11 @@ void CCityGML2IFCDlg::ImportFile(const wstring& strInputFile)
 	{
 		m_lbLODs.AddString((LPCWSTR)CA2W(strLOD.c_str()));
 	}
+
+	if (m_pExporter->getOwlRootInstance() != 0)
+	{
+		::EnableWindow(GetDlgItem(IDOK)->GetSafeHwnd(), TRUE);
+	}
 }
 
 void CCityGML2IFCDlg::ExportFileAsIFC(const wstring& strInputFile)
@@ -170,6 +174,8 @@ void CCityGML2IFCDlg::ExportFileAsIFC(const wstring& strInputFile)
 	assert(!m_strRootFolder.empty());
 	assert(!strInputFile.empty());
 	assert(m_pExporter != nullptr);
+
+	::EnableWindow(GetDlgItem(IDOK)->GetSafeHwnd(), FALSE);
 
 	string strEvent = "Input file: '";
 	strEvent += CW2A(strInputFile.c_str());
