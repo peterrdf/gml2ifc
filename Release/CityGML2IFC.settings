@@ -18,6 +18,6 @@ $PROPERTY	IFCINTEGER	"set_BsSurroundingBuilding"	"storeysAboveGround"	"Storeys A
 $PROPERTY	IFCLENGTHMEASURE	"set_BsSurroundingBuilding"	"measuredHeight"	"Measured Height"
 
 ### Properties set_BsParcel ###
-$PROPERTY	IFCIDENTIFIER	"set_BsParcel"	"NationalCadastralReference"	"Parcel Cadastral Reference"
-$PROPERTY	IFCAREAMEASURE	"set_BsParcel"	"AreaValue"	"Parcel Area Value"
+$PROPERTY	IFCIDENTIFIER	"set_BsParcel"	"nationalCadastralReference"	"Parcel Cadastral Reference"
+$PROPERTY	IFCAREAMEASURE	"set_BsParcel"	"areaValue"	"Parcel Area Value"
 
