@@ -339,6 +339,7 @@ private: // Members
 	SdaiInstance m_iConversionBasedUnitInstance;
 	SdaiInstance m_iUnitAssignmentInstance;
 	SdaiInstance m_iLengthUnitInstance;
+	SdaiInstance m_iAreaUnitInstance;
 	SdaiInstance m_iWorldCoordinateSystemInstance;
 	SdaiInstance m_iProjectInstance;
 	SdaiInstance m_iSiteInstance;
@@ -370,6 +371,7 @@ public: // Methods
 	SdaiInstance getConversionBasedUnitInstance();
 	SdaiInstance getUnitAssignmentInstance();
 	SdaiInstance getLengthUnitInstance() const { return m_iLengthUnitInstance; }
+	SdaiInstance getAreaUnitInstance() const { return m_iAreaUnitInstance; }
 	SdaiInstance getWorldCoordinateSystemInstance();	
 	SdaiInstance getProjectInstance();
 	SdaiInstance getSiteInstance(SdaiInstance& iSiteInstancePlacement);

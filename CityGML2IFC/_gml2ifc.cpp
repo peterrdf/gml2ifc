@@ -629,6 +629,7 @@ _exporter_base::_exporter_base(_gml2ifc_exporter* pSite)
 	, m_iConversionBasedUnitInstance(0)
 	, m_iUnitAssignmentInstance(0)
 	, m_iLengthUnitInstance(0)
+	, m_iAreaUnitInstance(0)
 	, m_iWorldCoordinateSystemInstance(0)
 	, m_iProjectInstance(0)
 	, m_iSiteInstance(0) 
@@ -815,7 +816,9 @@ SdaiInstance _exporter_base::getUnitAssignmentInstance()
 		m_iLengthUnitInstance = buildSIUnitInstance("LENGTHUNIT", nullptr, "METRE");
 		sdaiAppend(pUnits, sdaiINSTANCE, (void*)m_iLengthUnitInstance);
 
-		sdaiAppend(pUnits, sdaiINSTANCE, (void*)buildSIUnitInstance("AREAUNIT", nullptr, "SQUARE_METRE"));
+		m_iAreaUnitInstance = buildSIUnitInstance("AREAUNIT", nullptr, "SQUARE_METRE");
+		sdaiAppend(pUnits, sdaiINSTANCE, (void*)m_iAreaUnitInstance);
+
 		sdaiAppend(pUnits, sdaiINSTANCE, (void*)buildSIUnitInstance("VOLUMEUNIT", nullptr, "CUBIC_METRE"));
 		sdaiAppend(pUnits, sdaiINSTANCE, (void*)getConversionBasedUnitInstance());
 		sdaiAppend(pUnits, sdaiINSTANCE, (void*)buildSIUnitInstance("SOLIDANGLEUNIT", nullptr, "STERADIAN"));
@@ -5340,6 +5343,10 @@ void _citygml_exporter::createObjectProperties(OwlInstance iOwlInstance, map<str
 				if (string(szClassName) == "class:LengthType")
 				{
 					iUnitInstance = getLengthUnitInstance();
+				}
+				else if (string(szClassName) == "class:areaValue")
+				{
+					iUnitInstance = getAreaUnitInstance();
 				}
 				else
 				{
