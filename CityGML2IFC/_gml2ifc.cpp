@@ -296,7 +296,12 @@ void _gml2ifc_exporter::importGML(const wstring& strInputFile)
 		logErr("Not supported format.");
 	}
 
-	if (IsCityGML(m_iOwlModel))
+	if (IsGML(m_iOwlModel))
+	{
+		_gml_exporter exporter(this);
+		exporter.retrieveLODs(m_setLODs);
+	}
+	else if (IsCityGML(m_iOwlModel))
 	{
 		_citygml_exporter exporter(this);
 		exporter.retrieveLODs(m_setLODs);
@@ -354,24 +359,27 @@ void _gml2ifc_exporter::exportAsIFC(const char* szTargetLODs, const wstring& str
 
 	logInfo("Exporting...");
 
-	if (IsCityGML(m_iOwlModel))
+	if (IsGML(m_iOwlModel))
+	{
+		_gml_exporter exporter(this);
+		exporter.execute(m_iOwlRootInstance, szTargetLODs, strOuputFile);
+	}
+	else if (IsCityGML(m_iOwlModel))
 	{
 		_citygml_exporter exporter(this);
 		exporter.execute(m_iOwlRootInstance, szTargetLODs, strOuputFile);
-
-		logInfo("Done.");
 	}
 	else if (IsCityJSON(m_iOwlModel))
 	{
 		_cityjson_exporter exporter(this);
 		exporter.execute(m_iOwlRootInstance, szTargetLODs, strOuputFile);
-
-		logInfo("Done.");
 	}
 	else
 	{
 		logErr("Not supported format.");
 	}
+
+	logInfo("Done.");
 }
 
 void _gml2ifc_exporter::execute(const wstring& strInputFile, const wstring& strOuputFile)
@@ -555,27 +563,23 @@ void _gml2ifc_exporter::executeCore(OwlInstance iRootInstance, const wstring& st
 	{
 		_gml_exporter exporter(this);
 		exporter.execute(iRootInstance, nullptr, strOuputFile);
-
-		logInfo("Done.");
 	}
 	else if (IsCityGML(m_iOwlModel))
 	{
 		_citygml_exporter exporter(this);
 		exporter.execute(iRootInstance, nullptr, strOuputFile);
-
-		logInfo("Done.");
 	}
 	else if (IsCityJSON(m_iOwlModel))
 	{
 		_cityjson_exporter exporter(this);
 		exporter.execute(iRootInstance, nullptr, strOuputFile);
-
-		logInfo("Done.");
 	}
 	else
 	{
 		logErr("Not supported format.");
 	}
+
+	logInfo("Done.");
 }
 
 int _gml2ifc_exporter::retrieveSRSDataCore(OwlInstance iRootInstance)
