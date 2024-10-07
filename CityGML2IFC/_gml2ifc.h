@@ -347,6 +347,7 @@ private: // Members
 	SdaiInstance m_iGeometricRepresentationContextInstance;
 
 	set<string> m_setTargetLODs;
+	bool m_bHighestLOD;	
 
 public: // Methods
 
@@ -378,10 +379,11 @@ public: // Methods
 	SdaiInstance getGeometricRepresentationContextInstance();
 
 	const set<string>& getTargetLODs() const { return m_setTargetLODs; }
+	bool getHighestLOD() const { return m_bHighestLOD; }
 
 protected: // Methods
 
-	virtual bool isFiltered(OwlInstance iInstance) const = 0;
+	virtual bool isFiltered(OwlInstance iBuildingInstance, OwlInstance iInstance) const = 0;
 
 	virtual void preProcessing() {}
 	virtual void executeCore(OwlInstance iRootInstance, const wstring& strOuputFile) = 0;
@@ -591,6 +593,7 @@ private: // Members
 	OwlClass m_iThingClass; // Unknown
 	map<OwlInstance, vector<OwlInstance>> m_mapFeatures; // Feature : Supported Elements
 	map<OwlInstance, vector<OwlInstance>> m_mapFeatureElements; // Feature Supported Element : Geometries
+	map<OwlInstance, double> m_mapHighestLODs; // Building : Highest LOD
 
 	// Sites
 	vector<SdaiInstance> m_vecSiteInstances;
@@ -618,7 +621,9 @@ public: // Methods
 
 protected:  // Methods	
 
-	virtual bool isFiltered(OwlInstance iInstance) const override;
+	virtual bool isFiltered(OwlInstance iBuildingInstance, OwlInstance iInstance) const override;
+	virtual string getLOD(OwlInstance iInstance) const;
+	virtual double getLODAsDouble(OwlInstance iInstance) const;
 
 	virtual void preProcessing() override;
 	virtual void executeCore(OwlInstance iRootInstance, const wstring& strOuputFile) override;
@@ -724,7 +729,9 @@ private: // Methods
 	bool transformEnvelopeSRSDataAsync(OwlInstance iEnvelopeInstance);
 	bool retrieveReferencePointSRSData(OwlInstance iReferencePointInstance, string& strEPSGCode, vector<double>& vecCenter);
 	bool transformReferencePointSRSDataAsync(OwlInstance iReferencePointInstance);
-	string getLOD(OwlInstance iInstance) const;
+	void calculateHighestLODForBuildingElements(OwlInstance iBuildingInstance, OwlInstance iInstance);
+	void calculateHighestLODForProxyBuildingElements(OwlInstance iBuildingInstance, OwlInstance iInstance);
+	void updateHighestLOD(OwlInstance iBuildingInstance, OwlInstance iBuildingElementInstance);
 };
 
 // ************************************************************************************************
@@ -757,7 +764,8 @@ public: // Methods
 
 protected: // Methods
 
-	virtual bool isFiltered(OwlInstance iInstance) const override;
+	virtual string getLOD(OwlInstance iInstance) const override;
+	virtual double getLODAsDouble(OwlInstance iInstance) const override;
 
 	virtual void onPreCreateSite(_matrix* pSiteMatrix) override;
 	virtual void onPostCreateSite(SdaiInstance iSiteInstance) override;

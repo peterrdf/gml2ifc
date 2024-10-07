@@ -640,6 +640,7 @@ _exporter_base::_exporter_base(_gml2ifc_exporter* pSite)
 	, m_iSiteInstancePlacement(0) 
 	, m_iGeometricRepresentationContextInstance(0)
 	, m_setTargetLODs()
+	, m_bHighestLOD(false)
 {
 	assert(m_pSite != nullptr);
 
@@ -660,6 +661,7 @@ void _exporter_base::execute(OwlInstance iRootInstance, const char* szTargetLODs
 {
 	// LODs
 	m_setTargetLODs.clear();
+	m_bHighestLOD = false;
 	if (szTargetLODs != nullptr)
 	{
 		string strTargetLODs = szTargetLODs;
@@ -667,16 +669,20 @@ void _exporter_base::execute(OwlInstance iRootInstance, const char* szTargetLODs
 
 		if (!strTargetLODs.empty())
 		{
-			vector<string> vecLODs;
-			_string::split(strTargetLODs, ";", vecLODs);
-
-			if (!vecLODs.empty())
+			m_bHighestLOD = strTargetLODs == "HIGHEST_LOD";
+			if (!m_bHighestLOD)
 			{
-				for (auto strLOD : vecLODs)
+				vector<string> vecLODs;
+				_string::split(strTargetLODs, ";", vecLODs);
+
+				if (!vecLODs.empty())
 				{
-					m_setTargetLODs.insert(strLOD);
+					for (auto strLOD : vecLODs)
+					{
+						m_setTargetLODs.insert(strLOD);
+					}
 				}
-			}
+			}		
 		}		
 	}
 
@@ -2401,6 +2407,7 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 	, m_iThingClass(0)
 	, m_mapFeatures()
 	, m_mapFeatureElements()
+	, m_mapHighestLODs()
 	, m_vecSiteInstances()
 	, m_iCurrentOwlBuildingElementInstance(0)	
 	, m_dXOffset(0.)
@@ -2543,21 +2550,178 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 	} // while (iInstance != 0)
 }
 
-bool _citygml_exporter::isFiltered(OwlInstance iInstance) const
+bool _citygml_exporter::isFiltered(OwlInstance iBuildingInstance, OwlInstance iInstance) const
 {
+	assert(iBuildingInstance != 0);
 	assert(iInstance != 0);
 
-	// LODs
-	if (!getTargetLODs().empty())
+	string strLOD = getLOD(iInstance);
+	if (strLOD.empty())
 	{
-		string strLOD = getLOD(iInstance);
-		if (!strLOD.empty() && (getTargetLODs().find(strLOD) == getTargetLODs().end()))
+		return false;
+	}
+
+	// LODs
+	if (!getHighestLOD())
+	{
+		if (!getTargetLODs().empty() && (getTargetLODs().find(strLOD) == getTargetLODs().end()))
 		{
 			return true;
 		}
 	}
+	else
+	{
+		auto itHighestLOD = m_mapHighestLODs.find(iBuildingInstance);
+		assert(itHighestLOD != m_mapHighestLODs.end());
+
+		string strHighestLOD = _string::format("%f.1", itHighestLOD->second);
+		if (strLOD == strHighestLOD)
+		{
+			return true;
+		}
+	}	
 
 	return false;
+}
+
+/*virtual*/ string _citygml_exporter::getLOD(OwlInstance iInstance) const
+{
+	assert(iInstance != 0);
+
+	string strLOD;
+
+	// Property
+	vector<double> vecValues;
+	getDoublePropertyValue(iInstance, "lod", vecValues);
+
+	if (!vecValues.empty())
+	{
+		assert(vecValues.size() == 1);
+
+		strLOD = _string::format("lod%d", (int)vecValues[0]);
+	}
+
+	// XML Element
+	if (strLOD.empty())
+	{
+		string strTag = getTag(iInstance);
+
+		vector<string> vecTokens;
+		_string::tokenize(strTag, ":", vecTokens);
+
+		assert(!vecTokens.empty());
+
+		string strName;
+		if (vecTokens.size() == 1)
+		{
+			strName = vecTokens[0];
+		}
+		else if (vecTokens.size() == 2)
+		{
+			strName = vecTokens[1];
+		}
+
+		if (!strName.empty())
+		{
+			if (_string::startsWith(strName, "lod0") ||
+				_string::contains(strName, ":lod0"))
+			{
+				strLOD = "lod0";
+			}
+			else if (_string::startsWith(strName, "lod1") ||
+				_string::contains(strName, ":lod1"))
+			{
+				strLOD = "lod1";
+			}
+			else if (_string::startsWith(strName, "lod2") ||
+				_string::contains(strName, ":lod2"))
+			{
+				strLOD = "lod2";
+			}
+			else if (_string::startsWith(strName, "lod3") ||
+				_string::contains(strName, ":lod3"))
+			{
+				strLOD = "lod3";
+			}
+			else if (_string::startsWith(strName, "lod4") ||
+				_string::contains(strName, ":lod4"))
+			{
+				strLOD = "lod4";
+			}
+		} // if (!strName.empty())			
+	} // if (strLOD.empty())
+
+	return strLOD;
+}
+
+/*virtual*/ double _citygml_exporter::getLODAsDouble(OwlInstance iInstance) const
+{
+	assert(iInstance != 0);
+
+	double dLOD = DBL_MAX;
+
+	// Property
+	vector<double> vecValues;
+	getDoublePropertyValue(iInstance, "lod", vecValues);
+
+	if (!vecValues.empty())
+	{
+		assert(vecValues.size() == 1);
+
+		dLOD = vecValues[0];
+	}
+
+	// XML Element
+	if (dLOD == DBL_MAX)
+	{
+		string strTag = getTag(iInstance);
+
+		vector<string> vecTokens;
+		_string::tokenize(strTag, ":", vecTokens);
+
+		assert(!vecTokens.empty());
+
+		string strName;
+		if (vecTokens.size() == 1)
+		{
+			strName = vecTokens[0];
+		}
+		else if (vecTokens.size() == 2)
+		{
+			strName = vecTokens[1];
+		}
+
+		if (!strName.empty())
+		{
+			if (_string::startsWith(strName, "lod0") ||
+				_string::contains(strName, ":lod0"))
+			{
+				dLOD = 0.;
+			}
+			else if (_string::startsWith(strName, "lod1") ||
+				_string::contains(strName, ":lod1"))
+			{
+				dLOD = 1.;
+			}
+			else if (_string::startsWith(strName, "lod2") ||
+				_string::contains(strName, ":lod2"))
+			{
+				dLOD = 2.;
+			}
+			else if (_string::startsWith(strName, "lod3") ||
+				_string::contains(strName, ":lod3"))
+			{
+				dLOD = 3.;
+			}
+			else if (_string::startsWith(strName, "lod4") ||
+				_string::contains(strName, ":lod4"))
+			{
+				dLOD = 4.;
+			}
+		} // if (!strName.empty())			
+	} // if (dLOD == DBL_MAX)
+
+	return dLOD;
 }
 
 /*virtual*/ void _citygml_exporter::executeCore(OwlInstance iRootInstance, const wstring& strOuputFile)
@@ -2574,6 +2738,8 @@ bool _citygml_exporter::isFiltered(OwlInstance iInstance) const
 
 	m_mapFeatures.clear();
 	m_mapFeatureElements.clear();
+
+	m_mapHighestLODs.clear();
 
 	m_vecSiteInstances.clear();
 
@@ -3127,6 +3293,15 @@ void _citygml_exporter::createBuildings()
 	{
 		return;
 	}
+
+	if (getHighestLOD())
+	{
+		for (auto& itBuilding : m_mapBuildings)
+		{
+			calculateHighestLODForBuildingElements(itBuilding.first, itBuilding.first);
+			calculateHighestLODForProxyBuildingElements(itBuilding.first, itBuilding.first);
+		}
+	}
 	
 	map<SdaiInstance, vector<SdaiInstance>> mapSite2Instances;
 	for (auto& itBuilding : m_mapBuildings)
@@ -3211,7 +3386,7 @@ void _citygml_exporter::createBuildings()
 		if (itBuilding.second.empty())
 		{
 			continue;
-		}
+		}		
 
 		vector<SdaiInstance> vecBuildingElementInstances;
 		for (auto iOwlBuildingElementInstance : itBuilding.second)
@@ -3349,7 +3524,7 @@ void _citygml_exporter::searchForBuildingElements(OwlInstance iBuildingInstance,
 	assert(iBuildingInstance != 0);
 	assert(iInstance != 0);
 
-	if (isFiltered(iInstance))
+	if (isFiltered(iBuildingInstance, iInstance))
 	{
 		return;
 	}
@@ -3398,7 +3573,7 @@ void _citygml_exporter::searchForProxyBuildingElements(OwlInstance iBuildingInst
 	assert(iBuildingInstance != 0);
 	assert(iInstance != 0);
 
-	if (isFiltered(iInstance))
+	if (isFiltered(iBuildingInstance, iInstance))
 	{
 		return;
 	}
@@ -3957,7 +4132,7 @@ void _citygml_exporter::searchForFeatureElements(OwlInstance iFeatureInstance, O
 	assert(iFeatureInstance != 0);
 	assert(iInstance != 0);
 
-	if (isFiltered(iInstance))
+	if (isFiltered(iFeatureInstance, iInstance))
 	{
 		return;
 	}
@@ -6239,75 +6414,103 @@ bool _citygml_exporter::transformReferencePointSRSDataAsync(OwlInstance iReferen
 
 	return false;
 }
-
-string _citygml_exporter::getLOD(OwlInstance iInstance) const
+void _citygml_exporter::calculateHighestLODForBuildingElements(OwlInstance iBuildingInstance, OwlInstance iInstance)
 {
+	assert(iBuildingInstance != 0);
 	assert(iInstance != 0);
 
-	string strLOD;
+	updateHighestLOD(iBuildingInstance, iInstance);
 
-	// Property
-	vector<double> vecValues;
-	getDoublePropertyValue(iInstance, "lod", vecValues);
-
-	if (!vecValues.empty())
+	RdfProperty iProperty = GetInstancePropertyByIterator(iInstance, 0);
+	while (iProperty != 0)
 	{
-		assert(vecValues.size() == 1);
+		if (GetPropertyType(iProperty) == OBJECTPROPERTY_TYPE)
+		{
+			int64_t iValuesCount = 0;
+			OwlInstance* piValues = nullptr;
+			GetObjectProperty(iInstance, iProperty, &piValues, &iValuesCount);
 
-		strLOD = _string::format("lod%d", (int)vecValues[0]);
-	}
+			for (int64_t iValue = 0; iValue < iValuesCount; iValue++)
+			{
+				if (piValues[iValue] == 0)
+				{
+					continue;
+				}
 
-	// XML Element
-	if (strLOD.empty())
+				if (isBuildingElement(piValues[iValue]))
+				{
+					// TODO: Check Geometry?
+				}
+
+				calculateHighestLODForBuildingElements(iBuildingInstance, piValues[iValue]);
+			} // for (int64_t iValue = ...
+		} // if (GetPropertyType(iProperty) == OBJECTPROPERTY_TYPE)
+
+		iProperty = GetInstancePropertyByIterator(iInstance, iProperty);
+	} // while (iProperty != 0)
+}
+
+void _citygml_exporter::calculateHighestLODForProxyBuildingElements(OwlInstance iBuildingInstance, OwlInstance iInstance)
+{
+	assert(iBuildingInstance != 0);
+	assert(iInstance != 0);
+
+	updateHighestLOD(iBuildingInstance, iInstance);
+
+	RdfProperty iProperty = GetInstancePropertyByIterator(iInstance, 0);
+	while (iProperty != 0)
 	{
-		string strTag = getTag(iInstance);
-
-		vector<string> vecTokens;
-		_string::tokenize(strTag, ":", vecTokens);
-
-		assert(!vecTokens.empty());
-
-		string strName;
-		if (vecTokens.size() == 1)
+		if (GetPropertyType(iProperty) == OBJECTPROPERTY_TYPE)
 		{
-			strName = vecTokens[0];
+			int64_t iValuesCount = 0;
+			OwlInstance* piValues = nullptr;
+			GetObjectProperty(iInstance, iProperty, &piValues, &iValuesCount);
+
+			for (int64_t iValue = 0; iValue < iValuesCount; iValue++)
+			{
+				if (piValues[iValue] == 0)
+				{
+					continue;
+				}
+
+				if (isBuildingElement(piValues[iValue]))
+				{
+					continue;
+				}
+
+				if (!GetInstanceGeometryClass(piValues[iValue]) ||
+					!GetBoundingBox(piValues[iValue], nullptr, nullptr))
+				{
+					calculateHighestLODForProxyBuildingElements(iBuildingInstance, piValues[iValue]);
+				}
+			} // for (int64_t iValue = ...
+		} // if (GetPropertyType(iProperty) == OBJECTPROPERTY_TYPE)
+
+		iProperty = GetInstancePropertyByIterator(iInstance, iProperty);
+	} // while (iProperty != 0)
+}
+
+void _citygml_exporter::updateHighestLOD(OwlInstance iBuildingInstance, OwlInstance iBuildingElementInstance)
+{
+	assert(iBuildingInstance != 0);
+	assert(iBuildingElementInstance != 0);
+
+	double dLOD = getLODAsDouble(iBuildingElementInstance);
+	if (dLOD != DBL_MAX)
+	{
+		auto& itHighestLOD = m_mapHighestLODs.find(iBuildingInstance);
+		if (itHighestLOD != m_mapHighestLODs.end())
+		{
+			if (itHighestLOD->second < dLOD)
+			{
+				itHighestLOD->second = dLOD;
+			}
 		}
-		else if (vecTokens.size() == 2)
+		else
 		{
-			strName = vecTokens[1];
+			m_mapHighestLODs[iBuildingInstance] = dLOD;
 		}
-
-		if (!strName.empty())
-		{
-			if (_string::startsWith(strName, "lod0") ||
-				_string::contains(strName, ":lod0"))
-			{
-				strLOD = "lod0";
-			}
-			else if (_string::startsWith(strName, "lod1") ||
-				_string::contains(strName, ":lod1"))
-			{
-				strLOD = "lod1";
-			}
-			else if (_string::startsWith(strName, "lod2") ||
-				_string::contains(strName, ":lod2"))
-			{
-				strLOD = "lod2";
-			}
-			else if (_string::startsWith(strName, "lod3") ||
-				_string::contains(strName, ":lod3"))
-			{
-				strLOD = "lod3";
-			}
-			else if (_string::startsWith(strName, "lod4") ||
-				_string::contains(strName, ":lod4"))
-			{
-				strLOD = "lod4";
-			}
-		} // if (!strName.empty())			
-	} // if (strLOD.empty())
-
-	return strLOD;
+	} // if (dLOD != DBL_MAX)
 }
 
 // ************************************************************************************************
@@ -6359,7 +6562,7 @@ _cityjson_exporter::_cityjson_exporter(_gml2ifc_exporter* pSite)
 	OwlInstance iInstance = GetInstancesByIterator(getSite()->getOwlModel(), 0);
 	while (iInstance != 0)
 	{
-		string strLOD = getStringPropertyValue(iInstance, "lod");
+		string strLOD = getLOD(iInstance);
 		if (!strLOD.empty() && (setLODs.find(strLOD) == setLODs.end()))
 		{
 			string strEvent = "LOD: '";
@@ -6374,21 +6577,22 @@ _cityjson_exporter::_cityjson_exporter(_gml2ifc_exporter* pSite)
 	} // while (iInstance != 0)
 }
 
-/*virtual*/ bool _cityjson_exporter::isFiltered(OwlInstance iInstance) const /*override*/
+/*virtual */string _cityjson_exporter::getLOD(OwlInstance iInstance) const /*override*/
 {
-	assert(iInstance != 0);
+	return getStringPropertyValue(iInstance, "lod");
+}
 
-	// LODs
-	if (!getTargetLODs().empty())
+/*virtual*/ double _cityjson_exporter::getLODAsDouble(OwlInstance iInstance) const /*override*/
+{
+	double dLOD = DBL_MAX;
+
+	string strLOD = getLOD(iInstance);
+	if (!strLOD.empty())
 	{
-		string strLOD = getStringPropertyValue(iInstance, "lod");
-		if (!strLOD.empty() && (getTargetLODs().find(strLOD) == getTargetLODs().end()))
-		{
-			return true;
-		}
+		dLOD = atof(strLOD.c_str());
 	}
 
-	return false;
+	return dLOD;
 }
 
 /*virtual*/ void _cityjson_exporter::onPreCreateSite(_matrix* pSiteMatrix) /*override*/

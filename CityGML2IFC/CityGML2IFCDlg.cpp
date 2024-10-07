@@ -183,53 +183,65 @@ void CCityGML2IFCDlg::ExportFileAsIFC(const wstring& strInputFile)
 
 	LogCallbackImpl(enumLogEvent::info, strEvent.c_str());	
 
-	// LODs
-	int iSelectedItems = m_lbLODs.GetSelCount();
-	CArray<int, int> arSelection;
-	if (iSelectedItems > 0)
-	{
-		arSelection.SetSize(iSelectedItems);
-		m_lbLODs.GetSelItems(iSelectedItems, arSelection.GetData());
-	}
-
+	/* LODs */
 	string strLODs;
-	if (iSelectedItems > 0)
+
+	wstring strOutputFile = strInputFile;
+	strOutputFile += L"_LODs_";
+
+	if (false)
 	{
-		for (int64_t i = 0; i < arSelection.GetCount(); i++)
+		int iSelectedItems = m_lbLODs.GetSelCount();
+		CArray<int, int> arSelection;
+		if (iSelectedItems > 0)
 		{
-			if (!strLODs.empty())
+			arSelection.SetSize(iSelectedItems);
+			m_lbLODs.GetSelItems(iSelectedItems, arSelection.GetData());
+		}
+
+		if (iSelectedItems > 0)
+		{
+			for (int64_t i = 0; i < arSelection.GetCount(); i++)
 			{
-				strLODs += ";";
+				if (!strLODs.empty())
+				{
+					strLODs += ";";
+				}
+
+				CString strLOD;
+				m_lbLODs.GetText(arSelection[(INT_PTR)i], strLOD);
+
+				strLODs += (LPCSTR)CW2A(strLOD);
 			}
+		}
+		else
+		{
+			auto& setLODs = m_pExporter->getLODs();
+			for (const auto& strLOD : setLODs)
+			{
+				if (!strLODs.empty())
+				{
+					strLODs += ";";
+				}
 
-			CString strLOD;
-			m_lbLODs.GetText(arSelection[(INT_PTR)i], strLOD);
+				strLODs += strLOD;
+			}
+		}
 
-			strLODs += (LPCSTR)CW2A(strLOD);
+		strOutputFile += !strLODs.empty() ? (LPCWSTR)CA2W(strLODs.c_str()) : L"NONE";
+		strOutputFile += L".ifc";
+
+		if ((iSelectedItems == 0) || (iSelectedItems == (int)m_pExporter->getLODs().size()))
+		{
+			strLODs = "";
 		}
 	}
 	else
 	{
-		auto& setLODs = m_pExporter->getLODs();
-		for (const auto& strLOD : setLODs)
-		{
-			if (!strLODs.empty())
-			{
-				strLODs += ";";
-			}
+		strOutputFile += L"HIGHEST_LOD";
+		strOutputFile += L".ifc";
 
-			strLODs += strLOD;
-		}
-	}
-
-	wstring strOutputFile = strInputFile;
-	strOutputFile += L"_LODs_";
-	strOutputFile += !strLODs.empty() ? (LPCWSTR)CA2W(strLODs.c_str()) : L"NONE";
-	strOutputFile += L".ifc";
-
-	if ((iSelectedItems == 0) || (iSelectedItems == (int)m_pExporter->getLODs().size()))
-	{
-		strLODs = "";
+		strLODs = "HIGHEST_LOD";
 	}
 
 	m_pExporter->exportAsIFC(!strLODs.empty() ? strLODs.c_str() : nullptr, strOutputFile);
