@@ -4191,7 +4191,7 @@ void _citygml_exporter::searchForFeatureElements(OwlInstance iFeatureInstance, O
 	assert(iFeatureInstance != 0);
 	assert(iInstance != 0);
 
-	if (isBuildingElementFiltered(iFeatureInstance, iInstance))
+	if (isFeatureElementFiltered(iFeatureInstance, iInstance))
 	{
 		return;
 	}
@@ -4210,6 +4210,11 @@ void _citygml_exporter::searchForFeatureElements(OwlInstance iFeatureInstance, O
 				if (piValues[iValue] == 0)
 				{
 					continue;
+				}
+
+				if (isFeatureElementFiltered(iFeatureInstance, piValues[iValue]))
+				{
+					return;
 				}
 
 				if (GetInstanceGeometryClass(piValues[iValue]) &&
@@ -6732,7 +6737,128 @@ void _citygml_exporter::updateBuildingHighestLOD(OwlInstance iBuildingInstance, 
 
 void _citygml_exporter::calculateHighestLODForFeatures()
 {
+	m_mapFeatureHighestLOD.clear();
 
+	OwlClass iSchemasClass = GetClassByName(getSite()->getOwlModel(), "class:Schemas");
+	assert(iSchemasClass != 0);
+
+	OwlInstance iInstance = GetInstancesByIterator(getSite()->getOwlModel(), 0);
+	while (iInstance != 0)
+	{
+		if (GetInstanceInverseReferencesByIterator(iInstance, 0) == 0)
+		{
+			OwlClass iInstanceClass = GetInstanceClass(iInstance);
+			assert(iInstanceClass != 0);
+
+			if (iInstanceClass != iSchemasClass)
+			{
+				if (isFeatureClass(iInstanceClass))
+				{
+					if (m_mapFeatureHighestLOD.find(iInstance) == m_mapFeatureHighestLOD.end())
+					{
+						m_mapFeatureHighestLOD[iInstance] = -DBL_MAX;
+
+						calculateHighestLODForFeatureElements(iInstance, iInstance);
+					}
+					else
+					{
+						assert(false); // Internal error!
+					}
+				}
+				else
+				{
+					calculateHighestLODForFeaturesRecursively(iInstance);
+				}
+			}
+		} // if (GetInstanceInverseReferencesByIterator(iInstance, 0) == 0)
+
+		iInstance = GetInstancesByIterator(getSite()->getOwlModel(), iInstance);
+	} // while (iInstance != 0)
+}
+
+void _citygml_exporter::calculateHighestLODForFeaturesRecursively(OwlInstance iInstance)
+{
+	assert(iInstance != 0);
+
+	RdfProperty iProperty = GetInstancePropertyByIterator(iInstance, 0);
+	while (iProperty != 0)
+	{
+		if (GetPropertyType(iProperty) == OBJECTPROPERTY_TYPE)
+		{
+			int64_t iValuesCount = 0;
+			OwlInstance* piValues = nullptr;
+			GetObjectProperty(iInstance, iProperty, &piValues, &iValuesCount);
+
+			for (int64_t iValue = 0; iValue < iValuesCount; iValue++)
+			{
+				if (piValues[iValue] == 0)
+				{
+					continue;
+				}
+
+				OwlClass iInstanceClass = GetInstanceClass(piValues[iValue]);
+				assert(iInstanceClass != 0);
+
+				if (isCityObjectGroupMemberClass(iInstanceClass))
+				{
+					continue; // Ignore
+				}
+
+				if (isFeatureClass(iInstanceClass))
+				{
+					if (m_mapFeatureHighestLOD.find(piValues[iValue]) == m_mapFeatureHighestLOD.end())
+					{
+						m_mapFeatureHighestLOD[piValues[iValue]] = -DBL_MAX;
+
+						calculateHighestLODForFeatureElements(piValues[iValue], piValues[iValue]);
+					}
+				}
+				else
+				{
+					calculateHighestLODForFeaturesRecursively(piValues[iValue]);
+				}
+			} // for (int64_t iValue = ...
+		} // if (GetPropertyType(iProperty) == OBJECTPROPERTY_TYPE)
+
+		iProperty = GetInstancePropertyByIterator(iInstance, iProperty);
+	} // while (iProperty != 0)
+}
+
+void _citygml_exporter::calculateHighestLODForFeatureElements(OwlInstance iFeatureInstance, OwlInstance iInstance)
+{
+	assert(iFeatureInstance != 0);
+	assert(iInstance != 0);
+
+	updateFeatureHighestLOD(iFeatureInstance, iInstance);
+
+	RdfProperty iProperty = GetInstancePropertyByIterator(iInstance, 0);
+	while (iProperty != 0)
+	{
+		if (GetPropertyType(iProperty) == OBJECTPROPERTY_TYPE)
+		{
+			int64_t iValuesCount = 0;
+			OwlInstance* piValues = nullptr;
+			GetObjectProperty(iInstance, iProperty, &piValues, &iValuesCount);
+
+			for (int64_t iValue = 0; iValue < iValuesCount; iValue++)
+			{
+				if (piValues[iValue] == 0)
+				{
+					continue;
+				}
+
+				updateBuildingHighestLOD(iFeatureInstance, piValues[iValue]);
+
+				if (!GetInstanceGeometryClass(piValues[iValue]) ||
+					!GetBoundingBox(piValues[iValue], nullptr, nullptr))
+				{
+					calculateHighestLODForFeatureElements(iFeatureInstance, piValues[iValue]);
+				}
+			} // for (int64_t iValue = ...
+		} // if (GetPropertyType(iProperty) == OBJECTPROPERTY_TYPE)
+
+		iProperty = GetInstancePropertyByIterator(iInstance, iProperty);
+	} // while (iProperty != 0)
 }
 
 void _citygml_exporter::updateFeatureHighestLOD(OwlInstance iFeatureInstance, OwlInstance iFeatureElementInstance)

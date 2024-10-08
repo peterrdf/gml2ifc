@@ -750,6 +750,8 @@ private: // Methods
 	void calculateHighestLODForProxyBuildingElements(OwlInstance iBuildingInstance, OwlInstance iInstance);
 	void updateBuildingHighestLOD(OwlInstance iBuildingInstance, OwlInstance iBuildingElementInstance);
 	void calculateHighestLODForFeatures();
+	void calculateHighestLODForFeaturesRecursively(OwlInstance iInstance);
+	void calculateHighestLODForFeatureElements(OwlInstance iFeatureInstance, OwlInstance iInstance);
 	void updateFeatureHighestLOD(OwlInstance iFeatureInstance, OwlInstance iFeatureElementInstance);
 };
 
