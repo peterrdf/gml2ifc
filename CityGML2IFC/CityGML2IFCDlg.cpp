@@ -176,7 +176,8 @@ void CCityGML2IFCDlg::ExportFileAsIFC(const wstring& strInputFile)
 	assert(m_pExporter != nullptr);
 
 	::EnableWindow(GetDlgItem(IDOK)->GetSafeHwnd(), FALSE);
-	//#todo UI
+	m_chkHihgestLOD.EnableWindow(FALSE);
+	m_lbLODs.EnableWindow(FALSE);
 
 	string strEvent = "Input file: '";
 	strEvent += CW2A(strInputFile.c_str());
@@ -190,7 +191,7 @@ void CCityGML2IFCDlg::ExportFileAsIFC(const wstring& strInputFile)
 	wstring strOutputFile = strInputFile;
 	strOutputFile += L"_LODs_";
 
-	if (false) //#todo UI
+	if (!m_chkHihgestLOD.GetCheck())
 	{
 		int iSelectedItems = m_lbLODs.GetSelCount();
 		CArray<int, int> arSelection;
@@ -248,6 +249,8 @@ void CCityGML2IFCDlg::ExportFileAsIFC(const wstring& strInputFile)
 	m_pExporter->exportAsIFC(!strLODs.empty() ? strLODs.c_str() : nullptr, strOutputFile);
 
 	::EnableWindow(GetDlgItem(IDOK)->GetSafeHwnd(), TRUE);
+	m_chkHihgestLOD.EnableWindow(TRUE);
+	m_lbLODs.EnableWindow(!m_chkHihgestLOD.GetCheck());
 }
 
 // ************************************************************************************************
@@ -308,6 +311,7 @@ void CCityGML2IFCDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_INPUT_FILE, m_strInputFile);
 	DDX_Control(pDX, IDC_EDIT_PROGRESS, m_edtProgress);
 	DDX_Control(pDX, IDC_LIST_LODS, m_lbLODs);
+	DDX_Control(pDX, IDC_CHECK_HIGHEST_LOD, m_chkHihgestLOD);
 }
 
 BEGIN_MESSAGE_MAP(CCityGML2IFCDlg, CDialogEx)
@@ -317,6 +321,7 @@ BEGIN_MESSAGE_MAP(CCityGML2IFCDlg, CDialogEx)
 	ON_BN_CLICKED(IDOK, &CCityGML2IFCDlg::OnBnClickedOk)
 	ON_BN_CLICKED(IDC_BUTTON_INPUT_FILE, &CCityGML2IFCDlg::OnBnClickedButtonInputFile)
 	ON_BN_CLICKED(IDC_BUTTON_CLOSE, &CCityGML2IFCDlg::OnBnClickedButtonClose)
+	ON_BN_CLICKED(IDC_CHECK_HIGHEST_LOD, &CCityGML2IFCDlg::OnBnClickedCheckHighestLod)
 END_MESSAGE_MAP()
 
 // ************************************************************************************************
@@ -470,4 +475,9 @@ void CCityGML2IFCDlg::OnBnClickedButtonInputFile()
 void CCityGML2IFCDlg::OnBnClickedButtonClose()
 {
 	PostQuitMessage(0);
+}
+
+void CCityGML2IFCDlg::OnBnClickedCheckHighestLod()
+{
+	m_lbLODs.EnableWindow(!m_chkHihgestLOD.GetCheck());
 }

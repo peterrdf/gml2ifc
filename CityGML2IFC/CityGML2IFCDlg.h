@@ -73,4 +73,6 @@ public:
 	CEdit m_edtProgress;
 	afx_msg void OnBnClickedButtonClose();
 	CListBox m_lbLODs;
+	CButton m_chkHihgestLOD;
+	afx_msg void OnBnClickedCheckHighestLod();
 };
