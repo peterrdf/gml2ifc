@@ -6734,12 +6734,12 @@ void _citygml_exporter::updateBuildingHighestLOD(OwlInstance iBuildingInstance, 
 
 	double dLOD = getLODAsDouble(iBuildingElementInstance);
 
-	auto& itHighestLOD = m_mapBuildingHighestLOD.find(iBuildingInstance);
+	auto itHighestLOD = m_mapBuildingHighestLOD.find(iBuildingInstance);
 	if (itHighestLOD != m_mapBuildingHighestLOD.end())
 	{
 		if (itHighestLOD->second < dLOD)
 		{
-			itHighestLOD->second = dLOD;
+			m_mapBuildingHighestLOD.at(iBuildingInstance) = dLOD;
 		}
 	}
 	else
@@ -6882,12 +6882,12 @@ void _citygml_exporter::updateFeatureHighestLOD(OwlInstance iFeatureInstance, Ow
 
 	double dLOD = getLODAsDouble(iFeatureElementInstance);
 
-	auto& itHighestLOD = m_mapFeatureHighestLOD.find(iFeatureInstance);
+	auto itHighestLOD = m_mapFeatureHighestLOD.find(iFeatureInstance);
 	if (itHighestLOD != m_mapFeatureHighestLOD.end())
 	{
 		if (itHighestLOD->second < dLOD)
 		{
-			itHighestLOD->second = dLOD;
+			m_mapFeatureHighestLOD.at(iFeatureInstance) = dLOD;
 		}
 	}
 	else
