@@ -646,7 +646,7 @@ protected:  // Methods
 	void createBuildingsRecursively(OwlInstance iInstance);
 	void searchForBuildingElements(OwlInstance iBuildingInstance, OwlInstance iInstance);
 	void searchForProxyBuildingElements(OwlInstance iBuildingInstance, OwlInstance iInstance);
-	void searchForBuildingElementGeometry(OwlInstance iBuildingElementInstance, OwlInstance iInstance);
+	void searchForBuildingElementGeometry(OwlInstance iBuildingInstance, OwlInstance iBuildingElementInstance, OwlInstance iInstance);
 
 	// Features
 	void createFeatures(SdaiInstance iSiteInstance, SdaiInstance iSiteInstancePlacement);

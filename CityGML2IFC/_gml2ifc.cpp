@@ -3561,7 +3561,7 @@ void _citygml_exporter::searchForBuildingElements(OwlInstance iBuildingInstance,
 						m_mapBuildings[iBuildingInstance] = vector<OwlInstance>{ piValues[iValue] };
 					}
 
-					searchForBuildingElementGeometry(piValues[iValue], piValues[iValue]);
+					searchForBuildingElementGeometry(iBuildingInstance, piValues[iValue], piValues[iValue]);
 				}
 
 				searchForBuildingElements(iBuildingInstance, piValues[iValue]);
@@ -3651,10 +3651,16 @@ void _citygml_exporter::searchForProxyBuildingElements(OwlInstance iBuildingInst
 	} // while (iProperty != 0)
 }
 
-void _citygml_exporter::searchForBuildingElementGeometry(OwlInstance iBuildingElementInstance, OwlInstance iInstance)
+void _citygml_exporter::searchForBuildingElementGeometry(OwlInstance iBuildingInstance, OwlInstance iBuildingElementInstance, OwlInstance iInstance)
 {
+	assert(iBuildingInstance != 0);
 	assert(iBuildingElementInstance != 0);
 	assert(iInstance != 0);
+
+	if (isFiltered(iBuildingInstance, iInstance))
+	{
+		return;
+	}
 
 	RdfProperty iProperty = GetInstancePropertyByIterator(iInstance, 0);
 	while (iProperty != 0)
@@ -3670,6 +3676,11 @@ void _citygml_exporter::searchForBuildingElementGeometry(OwlInstance iBuildingEl
 				if (piValues[iValue] == 0)
 				{
 					continue;
+				}
+
+				if (isFiltered(iBuildingInstance, piValues[iValue]))
+				{
+					return;
 				}
 
 				if (isBuildingElement(piValues[iValue]))
@@ -3692,7 +3703,7 @@ void _citygml_exporter::searchForBuildingElementGeometry(OwlInstance iBuildingEl
 				}
 				else
 				{
-					searchForBuildingElementGeometry(iBuildingElementInstance, piValues[iValue]);
+					searchForBuildingElementGeometry(iBuildingInstance, iBuildingElementInstance, piValues[iValue]);
 				}
 			} // for (int64_t iValue = ...
 		} // if (GetPropertyType(iProperty) == OBJECTPROPERTY_TYPE)
