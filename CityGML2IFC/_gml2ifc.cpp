@@ -3598,12 +3598,12 @@ void _citygml_exporter::searchForProxyBuildingElements(OwlInstance iBuildingInst
 					continue;
 				}
 
-				if (isBuildingElement(piValues[iValue]))
+				if (isFiltered(iBuildingInstance, piValues[iValue]))
 				{
 					continue;
 				}
 
-				if (isFiltered(iBuildingInstance, piValues[iValue]))
+				if (isBuildingElement(piValues[iValue]))
 				{
 					continue;
 				}
