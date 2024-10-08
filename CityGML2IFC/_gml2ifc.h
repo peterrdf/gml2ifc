@@ -383,7 +383,8 @@ public: // Methods
 
 protected: // Methods
 
-	virtual bool isFiltered(OwlInstance iBuildingInstance, OwlInstance iInstance) const = 0;
+	virtual bool isBuildingElementFiltered(OwlInstance iBuildingInstance, OwlInstance iInstance) const = 0;
+	virtual bool isFeatureElementFiltered(OwlInstance iFeatureInstance, OwlInstance iInstance) const = 0;
 
 	virtual void preProcessing() {}
 	virtual void executeCore(OwlInstance iRootInstance, const wstring& strOuputFile) = 0;
@@ -593,8 +594,11 @@ private: // Members
 	OwlClass m_iThingClass; // Unknown
 	map<OwlInstance, vector<OwlInstance>> m_mapFeatures; // Feature : Supported Elements
 	map<OwlInstance, vector<OwlInstance>> m_mapFeatureElements; // Feature Supported Element : Geometries
-	map<OwlInstance, double> m_mapHighestLODs; // Building : Highest LOD
 
+	// LODs
+	map<OwlInstance, double> m_mapBuildingHighestLOD; // Building : Highest LOD
+	map<OwlInstance, double> m_mapFeatureHighestLOD; // Feature : Highest LOD
+	
 	// Sites
 	vector<SdaiInstance> m_vecSiteInstances;
 	
@@ -621,7 +625,8 @@ public: // Methods
 
 protected:  // Methods	
 
-	virtual bool isFiltered(OwlInstance iBuildingInstance, OwlInstance iInstance) const override;
+	virtual bool isBuildingElementFiltered(OwlInstance iBuildingInstance, OwlInstance iInstance) const override;
+	virtual bool isFeatureElementFiltered(OwlInstance iFeatureInstance, OwlInstance iInstance) const override;
 	virtual string getLOD(OwlInstance iInstance) const;
 	virtual double getLODAsDouble(OwlInstance iInstance) const;
 
@@ -743,7 +748,9 @@ private: // Methods
 	void calculateHighestLODForBuildingElements(OwlInstance iBuildingInstance, OwlInstance iInstance);
 	void calculateHighestLODForBuildingElementGeometry(OwlInstance iBuildingInstance, OwlInstance iBuildingElementInstance, OwlInstance iInstance);
 	void calculateHighestLODForProxyBuildingElements(OwlInstance iBuildingInstance, OwlInstance iInstance);
-	void updateHighestLOD(OwlInstance iBuildingInstance, OwlInstance iBuildingElementInstance);
+	void updateBuildingHighestLOD(OwlInstance iBuildingInstance, OwlInstance iBuildingElementInstance);
+	void calculateHighestLODForFeatures();
+	void updateFeatureHighestLOD(OwlInstance iFeatureInstance, OwlInstance iFeatureElementInstance);
 };
 
 // ************************************************************************************************
