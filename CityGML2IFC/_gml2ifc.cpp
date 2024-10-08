@@ -2408,7 +2408,9 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 	, m_mapFeatures()
 	, m_mapFeatureElements()
 	, m_mapBuildingHighestLOD()
+	, m_iFilteredBuildingElements(0)
 	, m_mapFeatureHighestLOD()
+	, m_iFilteredFeatureElements(0)
 	, m_vecSiteInstances()
 	, m_iCurrentOwlBuildingElementInstance(0)	
 	, m_dXOffset(0.)
@@ -2557,7 +2559,7 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 	}
 }
 
-/*virtual*/ bool _citygml_exporter::isBuildingElementFiltered(OwlInstance iBuildingInstance, OwlInstance iInstance) const /*override*/
+/*virtual*/ bool _citygml_exporter::isBuildingElementFiltered(OwlInstance iBuildingInstance, OwlInstance iInstance) /*override*/
 {
 	assert(iBuildingInstance != 0);
 	assert(iInstance != 0);
@@ -2574,6 +2576,8 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 		{
 			if ((itHighestLOD->second - dLOD) > 0.0001)
 			{
+				m_iFilteredBuildingElements++;
+
 				return true;
 			}
 		}
@@ -2585,6 +2589,8 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 			string strLOD = getLOD(iInstance);
 			if (!strLOD.empty() && (getTargetLODs().find(strLOD) == getTargetLODs().end()))
 			{
+				m_iFilteredBuildingElements++;
+
 				return true;
 			}
 		}		
@@ -2593,7 +2599,7 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 	return false;
 }
 
-/*virtual*/ bool _citygml_exporter::isFeatureElementFiltered(OwlInstance iFeatureInstance, OwlInstance iInstance) const /*override*/
+/*virtual*/ bool _citygml_exporter::isFeatureElementFiltered(OwlInstance iFeatureInstance, OwlInstance iInstance) /*override*/
 {
 	assert(iFeatureInstance != 0);
 	assert(iInstance != 0);
@@ -2610,6 +2616,8 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 		{
 			if ((itHighestLOD->second - dLOD) > 0.0001)
 			{
+				m_iFilteredFeatureElements++;
+
 				return true;
 			}
 		}
@@ -2621,6 +2629,8 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 			string strLOD = getLOD(iInstance);
 			if (!strLOD.empty() && (getTargetLODs().find(strLOD) == getTargetLODs().end()))
 			{
+				m_iFilteredFeatureElements++;
+
 				return true;
 			}
 		}
@@ -2812,6 +2822,8 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 
 /*virtual*/ void _citygml_exporter::postProcessing() /*override*/
 {
+	getSite()->logInfo(_string::format("Filtered Building Elements: %d", m_iFilteredBuildingElements));
+	getSite()->logInfo(_string::format("Filtered Feature Elements: %d", m_iFilteredFeatureElements));
 }
 
 /*virtual*/ void _citygml_exporter::onPreCreateSite(_matrix* pSiteMatrix) /*override*/
@@ -6496,6 +6508,7 @@ bool _citygml_exporter::transformReferencePointSRSDataAsync(OwlInstance iReferen
 void _citygml_exporter::calculateHighestLODForBuildings()
 {
 	m_mapBuildingHighestLOD.clear();
+	m_iFilteredBuildingElements = 0;
 
 	OwlClass iSchemasClass = GetClassByName(getSite()->getOwlModel(), "class:Schemas");
 	assert(iSchemasClass != 0);
@@ -6738,6 +6751,7 @@ void _citygml_exporter::updateBuildingHighestLOD(OwlInstance iBuildingInstance, 
 void _citygml_exporter::calculateHighestLODForFeatures()
 {
 	m_mapFeatureHighestLOD.clear();
+	m_iFilteredFeatureElements = 0;
 
 	OwlClass iSchemasClass = GetClassByName(getSite()->getOwlModel(), "class:Schemas");
 	assert(iSchemasClass != 0);

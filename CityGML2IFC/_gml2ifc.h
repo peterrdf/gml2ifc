@@ -347,7 +347,7 @@ private: // Members
 	SdaiInstance m_iGeometricRepresentationContextInstance;
 
 	set<string> m_setTargetLODs;
-	bool m_bHighestLOD;	
+	bool m_bHighestLOD;
 
 public: // Methods
 
@@ -383,8 +383,8 @@ public: // Methods
 
 protected: // Methods
 
-	virtual bool isBuildingElementFiltered(OwlInstance iBuildingInstance, OwlInstance iInstance) const = 0;
-	virtual bool isFeatureElementFiltered(OwlInstance iFeatureInstance, OwlInstance iInstance) const = 0;
+	virtual bool isBuildingElementFiltered(OwlInstance iBuildingInstance, OwlInstance iInstance) = 0;
+	virtual bool isFeatureElementFiltered(OwlInstance iFeatureInstance, OwlInstance iInstance) = 0;
 
 	virtual void preProcessing() {}
 	virtual void executeCore(OwlInstance iRootInstance, const wstring& strOuputFile) = 0;
@@ -597,7 +597,9 @@ private: // Members
 
 	// LODs
 	map<OwlInstance, double> m_mapBuildingHighestLOD; // Building : Highest LOD
+	int m_iFilteredBuildingElements;
 	map<OwlInstance, double> m_mapFeatureHighestLOD; // Feature : Highest LOD
+	int m_iFilteredFeatureElements;
 	
 	// Sites
 	vector<SdaiInstance> m_vecSiteInstances;
@@ -625,8 +627,8 @@ public: // Methods
 
 protected:  // Methods	
 
-	virtual bool isBuildingElementFiltered(OwlInstance iBuildingInstance, OwlInstance iInstance) const override;
-	virtual bool isFeatureElementFiltered(OwlInstance iFeatureInstance, OwlInstance iInstance) const override;
+	virtual bool isBuildingElementFiltered(OwlInstance iBuildingInstance, OwlInstance iInstance) override;
+	virtual bool isFeatureElementFiltered(OwlInstance iFeatureInstance, OwlInstance iInstance) override;
 	virtual string getLOD(OwlInstance iInstance) const;
 	virtual double getLODAsDouble(OwlInstance iInstance) const;
 
