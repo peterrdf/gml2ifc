@@ -720,6 +720,7 @@ protected:  // Methods
 
 private: // Methods
 
+	// SRS
 	void getEnvelopeCenter(OwlInstance iEnvelopeInstance, double& dX, double& dY, double& dZ);
 	void getReferencePoint(OwlInstance iReferencePointInstance, double& dX, double& dY, double& dZ);
 	void setSiteEnvelopeSRSData(SdaiInstance iSiteInstance, OwlInstance iEnvelopeInstance);
@@ -729,9 +730,12 @@ private: // Methods
 	bool transformEnvelopeSRSDataAsync(OwlInstance iEnvelopeInstance);
 	bool retrieveReferencePointSRSData(OwlInstance iReferencePointInstance, string& strEPSGCode, vector<double>& vecCenter);
 	bool transformReferencePointSRSDataAsync(OwlInstance iReferencePointInstance);
+
+	// LODs
 	void calculateHighestLODForBuildings();
 	void calculateHighestLODForBuildingsRecursively(OwlInstance iInstance);
 	void calculateHighestLODForBuildingElements(OwlInstance iBuildingInstance, OwlInstance iInstance);
+	void calculateHighestLODForBuildingElementGeometry(OwlInstance iBuildingElementInstance, OwlInstance iInstance);
 	void calculateHighestLODForProxyBuildingElements(OwlInstance iBuildingInstance, OwlInstance iInstance);
 	void updateHighestLOD(OwlInstance iBuildingInstance, OwlInstance iBuildingElementInstance);
 };

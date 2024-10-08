@@ -3544,6 +3544,11 @@ void _citygml_exporter::searchForBuildingElements(OwlInstance iBuildingInstance,
 					continue;
 				}
 
+				if (isFiltered(iBuildingInstance, piValues[iValue]))
+				{
+					continue;
+				}
+
 				if (isBuildingElement(piValues[iValue]))
 				{
 					auto itBuilding = m_mapBuildings.find(iBuildingInstance);
@@ -3594,6 +3599,11 @@ void _citygml_exporter::searchForProxyBuildingElements(OwlInstance iBuildingInst
 				}
 
 				if (isBuildingElement(piValues[iValue]))
+				{
+					continue;
+				}
+
+				if (isFiltered(iBuildingInstance, piValues[iValue]))
 				{
 					continue;
 				}
@@ -6530,6 +6540,8 @@ void _citygml_exporter::calculateHighestLODForBuildingElements(OwlInstance iBuil
 					continue;
 				}
 
+				updateHighestLOD(iBuildingInstance, piValues[iValue]);
+
 				if (isBuildingElement(piValues[iValue]))
 				{
 					// TODO: Check Geometry?
@@ -6566,6 +6578,8 @@ void _citygml_exporter::calculateHighestLODForProxyBuildingElements(OwlInstance 
 					continue;
 				}
 
+				updateHighestLOD(iBuildingInstance, piValues[iValue]);
+
 				if (isBuildingElement(piValues[iValue]))
 				{
 					continue;
@@ -6589,21 +6603,19 @@ void _citygml_exporter::updateHighestLOD(OwlInstance iBuildingInstance, OwlInsta
 	assert(iBuildingElementInstance != 0);
 
 	double dLOD = getLODAsDouble(iBuildingElementInstance);
-	if (dLOD != -DBL_MAX)
+
+	auto& itHighestLOD = m_mapHighestLODs.find(iBuildingInstance);
+	if (itHighestLOD != m_mapHighestLODs.end())
 	{
-		auto& itHighestLOD = m_mapHighestLODs.find(iBuildingInstance);
-		if (itHighestLOD != m_mapHighestLODs.end())
+		if (itHighestLOD->second < dLOD)
 		{
-			if (itHighestLOD->second < dLOD)
-			{
-				itHighestLOD->second = dLOD;
-			}
+			itHighestLOD->second = dLOD;
 		}
-		else
-		{
-			m_mapHighestLODs[iBuildingInstance] = dLOD;
-		}
-	} // if (dLOD != -DBL_MAX)
+	}
+	else
+	{
+		m_mapHighestLODs[iBuildingInstance] = dLOD;
+	}
 }
 
 // ************************************************************************************************
