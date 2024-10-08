@@ -3489,7 +3489,7 @@ void _citygml_exporter::createBuildingsRecursively(OwlInstance iInstance)
 				OwlClass iInstanceClass = GetInstanceClass(piValues[iValue]);
 				assert(iInstanceClass != 0);
 
-				if ((iInstanceClass == m_iCityObjectGroupMemberClass) || IsClassAncestor(iInstanceClass, m_iCityObjectGroupMemberClass))
+				if (isCityObjectGroupMemberClass(iInstanceClass))
 				{
 					continue; // Ignore
 				}
@@ -4122,7 +4122,7 @@ void _citygml_exporter::createFeaturesRecursively(OwlInstance iInstance)
 				OwlClass iInstanceClass = GetInstanceClass(piValues[iValue]);
 				assert(iInstanceClass != 0);
 
-				if ((iInstanceClass == m_iCityObjectGroupMemberClass) || IsClassAncestor(iInstanceClass, m_iCityObjectGroupMemberClass))
+				if (isCityObjectGroupMemberClass(iInstanceClass))
 				{					
 					continue; // Ignore
 				}
@@ -5892,6 +5892,20 @@ OwlClass _citygml_exporter::isEnvelopeClass(OwlClass iInstanceClass) const
 	return (iInstanceClass == m_iEnvelopeClass) || IsClassAncestor(iInstanceClass, m_iEnvelopeClass);
 }
 
+bool _citygml_exporter::isCityObjectGroupMemberClass(OwlClass iInstanceClass) const
+{
+	assert(iInstanceClass != 0);
+
+	return ((iInstanceClass == m_iCityObjectGroupMemberClass) || IsClassAncestor(iInstanceClass, m_iCityObjectGroupMemberClass));
+}
+
+bool _citygml_exporter::isGeometryMemberClass(OwlClass iInstanceClass) const
+{
+	assert(iInstanceClass != 0);
+
+	return ((iInstanceClass == m_iGeometryMemberClass) || IsClassAncestor(iInstanceClass, m_iGeometryMemberClass));
+}
+
 bool _citygml_exporter::isBuildingElement(OwlInstance iInstance) const
 {
 	assert(iInstance != 0);
@@ -6499,7 +6513,7 @@ void _citygml_exporter::calculateHighestLODForBuildingsRecursively(OwlInstance i
 				OwlClass iInstanceClass = GetInstanceClass(piValues[iValue]);
 				assert(iInstanceClass != 0);
 
-				if ((iInstanceClass == m_iCityObjectGroupMemberClass) || IsClassAncestor(iInstanceClass, m_iCityObjectGroupMemberClass))
+				if (isCityObjectGroupMemberClass(iInstanceClass))
 				{
 					continue; // Ignore
 				}

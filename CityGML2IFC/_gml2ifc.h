@@ -689,6 +689,12 @@ protected:  // Methods
 	OwlClass isCityModelClass(OwlClass iInstanceClass) const;
 	OwlClass isBoundingShapeClass(OwlClass iInstanceClass) const;
 	OwlClass isEnvelopeClass(OwlClass iInstanceClass) const;
+
+	// CityObjectGroup
+	bool isCityObjectGroupMemberClass(OwlClass iInstanceClass) const;
+
+	// relativeGMLGeometry (class:GeometryPropertyType => class:geometryMember)
+	bool isGeometryMemberClass(OwlClass iInstanceClass) const;
 		
 	// Building
 	bool isBuildingElement(OwlInstance iInstance) const;
