@@ -176,6 +176,7 @@ void CCityGML2IFCDlg::ExportFileAsIFC(const wstring& strInputFile)
 	assert(m_pExporter != nullptr);
 
 	::EnableWindow(GetDlgItem(IDOK)->GetSafeHwnd(), FALSE);
+	//#todo UI
 
 	string strEvent = "Input file: '";
 	strEvent += CW2A(strInputFile.c_str());
@@ -189,7 +190,7 @@ void CCityGML2IFCDlg::ExportFileAsIFC(const wstring& strInputFile)
 	wstring strOutputFile = strInputFile;
 	strOutputFile += L"_LODs_";
 
-	if (false)
+	if (false) //#todo UI
 	{
 		int iSelectedItems = m_lbLODs.GetSelCount();
 		CArray<int, int> arSelection;

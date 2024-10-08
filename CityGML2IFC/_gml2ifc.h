@@ -729,6 +729,8 @@ private: // Methods
 	bool transformEnvelopeSRSDataAsync(OwlInstance iEnvelopeInstance);
 	bool retrieveReferencePointSRSData(OwlInstance iReferencePointInstance, string& strEPSGCode, vector<double>& vecCenter);
 	bool transformReferencePointSRSDataAsync(OwlInstance iReferencePointInstance);
+	void calculateHighestLODForBuildings();
+	void calculateHighestLODForBuildingsRecursively(OwlInstance iInstance);
 	void calculateHighestLODForBuildingElements(OwlInstance iBuildingInstance, OwlInstance iInstance);
 	void calculateHighestLODForProxyBuildingElements(OwlInstance iBuildingInstance, OwlInstance iInstance);
 	void updateHighestLOD(OwlInstance iBuildingInstance, OwlInstance iBuildingElementInstance);
