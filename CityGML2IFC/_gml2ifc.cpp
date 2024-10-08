@@ -6555,10 +6555,58 @@ void _citygml_exporter::calculateHighestLODForBuildingElements(OwlInstance iBuil
 
 				if (isBuildingElement(piValues[iValue]))
 				{
-					// TODO: Check Geometry?
+					if (m_mapHighestLODs.find(piValues[iValue]) == m_mapHighestLODs.end())
+					{
+						m_mapHighestLODs[piValues[iValue]] = -DBL_MAX;
+					}
+
+					calculateHighestLODForBuildingElementGeometry(iBuildingInstance, piValues[iValue], piValues[iValue]);
 				}
 
 				calculateHighestLODForBuildingElements(iBuildingInstance, piValues[iValue]);
+			} // for (int64_t iValue = ...
+		} // if (GetPropertyType(iProperty) == OBJECTPROPERTY_TYPE)
+
+		iProperty = GetInstancePropertyByIterator(iInstance, iProperty);
+	} // while (iProperty != 0)
+}
+
+void _citygml_exporter::calculateHighestLODForBuildingElementGeometry(OwlInstance iBuildingInstance, OwlInstance iBuildingElementInstance, OwlInstance iInstance)
+{
+	assert(iBuildingInstance != 0);
+	assert(iBuildingElementInstance != 0);
+	assert(iInstance != 0);
+
+	updateHighestLOD(iBuildingInstance, iInstance);
+
+	RdfProperty iProperty = GetInstancePropertyByIterator(iInstance, 0);
+	while (iProperty != 0)
+	{
+		if (GetPropertyType(iProperty) == OBJECTPROPERTY_TYPE)
+		{
+			int64_t iValuesCount = 0;
+			OwlInstance* piValues = nullptr;
+			GetObjectProperty(iInstance, iProperty, &piValues, &iValuesCount);
+
+			for (int64_t iValue = 0; iValue < iValuesCount; iValue++)
+			{
+				if (piValues[iValue] == 0)
+				{
+					continue;
+				}
+
+				updateHighestLOD(iBuildingInstance, piValues[iValue]);
+
+				if (isBuildingElement(piValues[iValue]))
+				{
+					continue;
+				}
+
+				if (!GetInstanceGeometryClass(piValues[iValue]) ||
+					!GetBoundingBox(piValues[iValue], nullptr, nullptr))
+				{
+					calculateHighestLODForBuildingElementGeometry(iBuildingInstance, iBuildingElementInstance, piValues[iValue]);
+				}
 			} // for (int64_t iValue = ...
 		} // if (GetPropertyType(iProperty) == OBJECTPROPERTY_TYPE)
 

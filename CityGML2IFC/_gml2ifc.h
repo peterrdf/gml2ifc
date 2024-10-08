@@ -735,7 +735,7 @@ private: // Methods
 	void calculateHighestLODForBuildings();
 	void calculateHighestLODForBuildingsRecursively(OwlInstance iInstance);
 	void calculateHighestLODForBuildingElements(OwlInstance iBuildingInstance, OwlInstance iInstance);
-	void calculateHighestLODForBuildingElementGeometry(OwlInstance iBuildingElementInstance, OwlInstance iInstance);
+	void calculateHighestLODForBuildingElementGeometry(OwlInstance iBuildingInstance, OwlInstance iBuildingElementInstance, OwlInstance iInstance);
 	void calculateHighestLODForProxyBuildingElements(OwlInstance iBuildingInstance, OwlInstance iInstance);
 	void updateHighestLOD(OwlInstance iBuildingInstance, OwlInstance iBuildingElementInstance);
 };
