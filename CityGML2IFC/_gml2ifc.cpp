@@ -3386,6 +3386,8 @@ void _citygml_exporter::createBuildings()
 		vector<SdaiInstance> vecBuildingElementInstances;
 		for (auto iOwlBuildingElementInstance : itBuilding.second)
 		{
+			assert(!isFiltered(itBuilding.first, iOwlBuildingElementInstance));
+
 			_auto_var<OwlInstance> owlBuildingElementInstance(m_iCurrentOwlBuildingElementInstance, iOwlBuildingElementInstance, 0);
 
 			auto itBuildingElement = m_mapBuildingElements.find(iOwlBuildingElementInstance);
@@ -3395,6 +3397,8 @@ void _citygml_exporter::createBuildings()
 			vector<SdaiInstance> vecSdaiBuildingElementGeometryInstances;
 			for (auto iOwlBuildingElementGeometryInstance : itBuildingElement->second)
 			{
+				assert(!isFiltered(itBuilding.first, iOwlBuildingElementGeometryInstance));
+
 				vector<SdaiInstance> vecNewGeometryInstances;
 				createGeometry(iOwlBuildingElementGeometryInstance, vecNewGeometryInstances, true);
 
