@@ -2216,12 +2216,11 @@ string _exporter_base::getStringPropertyValue(OwlInstance iInstance, const strin
 		if ((strPropertyUniqueName == "prop:str:" + strName) || 
 			_string::startsEndsWith(strPropertyUniqueName, "prop:str:", ":" + strName, false))
 		{
-			assert((GetPropertyType(iPropertyInstance) == DATATYPEPROPERTY_TYPE_WCHAR_T_ARRAY) ||
-				(GetPropertyType(iPropertyInstance) == DATATYPEPROPERTY_TYPE_STRING));
+			assert(GetPropertyType(iPropertyInstance) == DATATYPEPROPERTY_TYPE_STRING);
 
 			SetCharacterSerialization(getSite()->getOwlModel(), 0, 0, false);
 
-			wchar_t** szValue = nullptr;
+			char** szValue = nullptr;
 			int64_t iValuesCount = 0;
 			GetDatatypeProperty(
 				iInstance,
