@@ -100,6 +100,39 @@ typedef	int_t			SchemaDecl;
 typedef	int_t			* SchemaAggr;
 
 
+enum class enum_string_encoding : unsigned char
+{
+	IGNORE_DEFAULT				= (0 + 0 * 2 + 0 * 4 + 0 * 8 + 0 * 16 + 0 * 32),	//		 0   0   0   0   0   0
+	WINDOWS_1250				= (0 + 0 * 2 + 1 * 4 + 0 * 8 + 0 * 16 + 0 * 32),	//		 0   0   1   0   0   0
+	WINDOWS_1251				= (0 + 0 * 2 + 0 * 4 + 1 * 8 + 0 * 16 + 0 * 32),	//		 0   0   0   1   0   0
+	WINDOWS_1252				= (0 + 0 * 2 + 1 * 4 + 1 * 8 + 0 * 16 + 0 * 32),	//		 0   0   1   1   0   0
+	WINDOWS_1253				= (0 + 0 * 2 + 0 * 4 + 0 * 8 + 1 * 16 + 0 * 32),	//		 0   0   0   0   1   0
+	WINDOWS_1254				= (0 + 0 * 2 + 1 * 4 + 0 * 8 + 1 * 16 + 0 * 32),	//		 0   0   1   0   1   0
+	WINDOWS_1255				= (0 + 0 * 2 + 0 * 4 + 1 * 8 + 1 * 16 + 0 * 32),	//		 0   0   0   1   1   0
+	WINDOWS_1256				= (0 + 0 * 2 + 1 * 4 + 1 * 8 + 1 * 16 + 0 * 32),	//		 0   0   1   1   1   0
+	WINDOWS_1257				= (0 + 0 * 2 + 0 * 4 + 0 * 8 + 0 * 16 + 1 * 32),	//		 0   0   0   0   0   1
+	WINDOWS_1258				= (0 + 0 * 2 + 1 * 4 + 0 * 8 + 0 * 16 + 1 * 32),	//		 0   0   1   0   0   1
+	ISO8859_1					= (1 + 0 * 2 + 0 * 4 + 0 * 8 + 0 * 16 + 0 * 32),	//		 1   0   0   0   0   0
+	ISO8859_2					= (1 + 0 * 2 + 1 * 4 + 0 * 8 + 0 * 16 + 0 * 32),	//		 1   0   1   0   0   0
+	ISO8859_3					= (1 + 0 * 2 + 0 * 4 + 1 * 8 + 0 * 16 + 0 * 32),	//		 1   0   0   1   0   0
+	ISO8859_4					= (1 + 0 * 2 + 1 * 4 + 1 * 8 + 0 * 16 + 0 * 32),	//		 1   0   1   1   0   0
+	ISO8859_5					= (1 + 0 * 2 + 0 * 4 + 0 * 8 + 1 * 16 + 0 * 32),	//		 1   0   0   0   1   0
+	ISO8859_6					= (1 + 0 * 2 + 1 * 4 + 0 * 8 + 1 * 16 + 0 * 32),	//		 1   0   1   0   1   0
+	ISO8859_7					= (1 + 0 * 2 + 0 * 4 + 1 * 8 + 1 * 16 + 0 * 32),	//		 1   0   0   1   1   0
+	ISO8859_8					= (1 + 0 * 2 + 1 * 4 + 1 * 8 + 1 * 16 + 0 * 32),	//		 1   0   1   1   1   0
+	ISO8859_9					= (1 + 0 * 2 + 0 * 4 + 0 * 8 + 0 * 16 + 1 * 32),	//		 1   0   0   0   0   1
+	ISO8859_10					= (1 + 0 * 2 + 1 * 4 + 0 * 8 + 0 * 16 + 1 * 32),	//		 1   0   1   0   0   1
+	ISO8859_11					= (1 + 0 * 2 + 0 * 4 + 1 * 8 + 0 * 16 + 1 * 32),	//		 1   0   0   1   0   1
+	ISO8859_13					= (1 + 0 * 2 + 0 * 4 + 0 * 8 + 1 * 16 + 1 * 32),	//		 1   0   0   0   1   1
+	ISO8859_14					= (1 + 0 * 2 + 1 * 4 + 0 * 8 + 1 * 16 + 1 * 32),	//		 1   0   1   0   1   1
+	ISO8859_15					= (1 + 0 * 2 + 0 * 4 + 1 * 8 + 1 * 16 + 1 * 32),	//		 1   0   0   1   1   1
+	ISO8859_16					= (1 + 0 * 2 + 1 * 4 + 1 * 8 + 1 * 16 + 1 * 32),	//		 1   0   1   1   1   1
+	MACINTOSH_CENTRAL_EUROPEAN	= (0 + 1 * 2 + 0 * 4 + 0 * 8 + 0 * 16 + 0 * 32),	//		 0   1   0   0   0   0
+	SHIFT_JIS_X_213				= (1 + 1 * 2 + 0 * 4 + 0 * 8 + 0 * 16 + 0 * 32),    //		 1   1   0   0   0   0
+	UTF8						= (1 + 1 * 2 + 0 * 4 + 0 * 8 + 0 * 16 + 1 * 32)     //		 1   1   0   0   0   1
+};
+
+
 enum class enum_express_declaration : unsigned char
 {
 	__NONE						= 0,
@@ -160,6 +193,7 @@ enum class enum_validation_type : uint64_t
 	__UNIQUE_RULE				= 1 << 13,				//	unique-rule check
 	__STAR_USAGE				= 1 << 14,  			//	* is used only for derived arguments
 	__CALL_ARGUMENT				= 1 << 15,  			//	validateModel / validateInstance function argument should be model / instance
+	__INVALID_TEXT_LITERAL		= 1 << 16,				//	invalid text literal string
 	__INTERNAL_ERROR			= UINT64_C(1) << 63   	//	unspecified error
 };
 
@@ -550,7 +584,7 @@ static	inline	const char	* GetSchemaName(
 #endif
 
 //
-//		engiSetMappingSupport                                 (http://rdf.bg/ifcdoc/CP64/engiSetMappingSupport.html)
+//		engiSetMappingSupport                                   (http://rdf.bg/ifcdoc/CP64/engiSetMappingSupport.html)
 //				SdaiEntity				entity								IN
 //				bool					enable								IN
 //
@@ -564,7 +598,7 @@ bool			DECL STDC	engiSetMappingSupport(
 								);
 
 //
-//		engiGetMappingSupport                                 (http://rdf.bg/ifcdoc/CP64/engiGetMappingSupport.html)
+//		engiGetMappingSupport                                   (http://rdf.bg/ifcdoc/CP64/engiGetMappingSupport.html)
 //				SdaiEntity				entity								IN
 //
 //				bool					returns								OUT
@@ -1553,7 +1587,7 @@ static	inline	int_t	engiGetEntityAttributeIndexEx(
 //
 //				const char				* returns							OUT
 //
-//	This call can be used to retrieve the name of the n-th argument of the given entity. Arguments of parent entities are included in the index. Both direct and inverse arguments are included.
+//	This call can be used to retrieve the name of the n-th argument of the given entity. Arguments of parent entities are included in the index. Both explicit and inverse attributes are included.
 //
 const char		DECL * STDC	engiGetEntityArgumentName(
 									SdaiEntity				entity,
@@ -1611,7 +1645,7 @@ static	inline	const char	* engiGetEntityArgumentName(
 //
 //				void					returns
 //
-//	This call can be used to retrieve the type of the n-th argument of the given entity. In case of a select argument no relevant information is given by this call as it depends on the instance. Arguments of parent entities are included in the index. Both direct and inverse arguments are included.
+//	This call can be used to retrieve the type of the n-th argument of the given entity. In case of a select argument no relevant information is given by this call as it depends on the instance. Arguments of parent entities are included in the index. Both explicit and inverse attributes are included.
 //
 void			DECL STDC	engiGetEntityArgumentType(
 									SdaiEntity				entity,
@@ -1802,7 +1836,7 @@ SdaiPrimitiveType	DECL STDC	engiGetArgumentType(
 //
 //				SdaiEntity				returns								OUT
 //
-//	Returns the first direct parent entity, for example the parent of IfcObject is IfcObjectDefinition, of IfcObjectDefinition is IfcRoot and of IfcRoot is 0.
+//	Returns the first parent entity, for example the parent of IfcObject is IfcObjectDefinition, of IfcObjectDefinition is IfcRoot and of IfcRoot is 0.
 //
 SdaiEntity		DECL STDC	engiGetEntityParent(
 									SdaiEntity				entity
@@ -1814,7 +1848,7 @@ SdaiEntity		DECL STDC	engiGetEntityParent(
 //
 //				int_t					returns								OUT
 //
-//	Returns number of direct parents entity
+//	Returns number of parent entities
 //
 int_t			DECL STDC	engiGetEntityNoParents(
 									SdaiEntity				entity
@@ -1827,7 +1861,7 @@ int_t			DECL STDC	engiGetEntityNoParents(
 //
 //				SdaiEntity				returns								OUT
 //
-//	Returns the N-th direct parent of entity or NULL if index exceeds number of parents
+//	Returns the N-th parent of entity or NULL if index exceeds number of parents
 //
 SdaiEntity		DECL STDC	engiGetEntityParentEx(
 									SdaiEntity				entity,
@@ -3178,7 +3212,7 @@ static	inline	int_t	sdaiIsKindOfBN(
 //	In case of SELECT and sdaiINSTANCE, return value will be combined with engiTypeFlagAggrOption if some options are aggregation
 //	or engiTypeFlagAggr if all options are aggregations of instances
 //
-//	It works for direct and inverse attributes
+//	It works for explicit and inverse attributes
 //
 SdaiPrimitiveType	DECL STDC	engiGetAttrType(
 									const SdaiAttr			attribute
@@ -5155,7 +5189,11 @@ static	inline	const char	* internalGetXMLID(
 //
 //				int_t					returns								OUT
 //
-//	...
+//	Set mode of interpretation for arguments of type char*
+//		0 - char* (default)
+//		1 - wchar_t*
+//		2 - char16_t*
+//		4 - char32_t*
 //
 int_t			DECL STDC	setStringUnicode(
 									int_t					unicode
@@ -5168,6 +5206,22 @@ int_t			DECL STDC	setStringUnicode(
 //	...
 //
 int_t			DECL STDC	getStringUnicode(
+								);
+
+//
+//		engiSetStringEncoding                                   (http://rdf.bg/ifcdoc/CP64/engiSetStringEncoding.html)
+//				SdaiModel				model								IN
+//				enum_string_encoding	encoding							IN
+//
+//				int_t					returns								OUT
+//
+//	sets encoding for sdaiSTRING data type in put and get functions
+//	if model is NULL it will set codepage for models, created after the call or for contexts when model is not known
+//	returns 1 when successfull of 0 when fails
+//
+int_t			DECL STDC	engiSetStringEncoding(
+									SdaiModel				model,
+									enum_string_encoding	encoding
 								);
 
 //

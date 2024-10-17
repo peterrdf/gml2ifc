@@ -123,7 +123,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <AdditionalLibraryDirectories>../lib/x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ifcengine.lib;gisengine.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gisengine.lib;ifcengine.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>

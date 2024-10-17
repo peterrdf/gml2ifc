@@ -5,11 +5,12 @@
 
 #ifdef _WINDOWS
 #include "gisengine.h"
-#include "_string.h"
+#include "_log.h"
 #endif
 
 #ifdef __EMSCRIPTEN__
 #include "../gisengine/gisengine.h"
+#include "../gisengine/_log.h"
 #endif
 
 #include "_guid.h"
