@@ -10,7 +10,7 @@
 
 #ifdef __EMSCRIPTEN__
 #include "../gisengine/gisengine.h"
-#include "../gisengine/_log.h"
+#include "../gisengine/Parsers/_log.h"
 #endif
 
 #include "_guid.h"
