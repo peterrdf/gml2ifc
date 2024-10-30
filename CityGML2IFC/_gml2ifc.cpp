@@ -198,7 +198,7 @@ _gml2ifc_exporter::_gml2ifc_exporter(
 	strSettingsFile += L"CityGML2IFC.settings";
 	m_pSettingsProvider = new _settings_provider(this, strSettingsFile);
 
-	SetGISOptionsW(strRootFolder.c_str(), true, m_pLogCallback);
+	SetGISOptionsW(strRootFolder.c_str(), true, (void *)m_pLogCallback);
 }
 
 /*virtual*/ _gml2ifc_exporter::~_gml2ifc_exporter()
