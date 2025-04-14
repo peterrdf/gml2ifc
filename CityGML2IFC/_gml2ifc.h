@@ -395,7 +395,7 @@ protected: // Methods
 	virtual void onPostCreateSite(SdaiInstance iSiteInstance) {}
 
 	/* Model */
-	void createIfcModel(const wchar_t* szSchemaName);
+	void createIfcModel(const wchar_t* szFileName, const wchar_t* szSchemaName);
 	void saveIfcFile(const wchar_t* szFileName);
 
 	/* Geometry */

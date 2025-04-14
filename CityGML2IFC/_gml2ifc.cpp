@@ -6,6 +6,9 @@
 #include <codecvt>
 #include <cassert>
 
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+
 // ************************************************************************************************
 _settings_provider::_settings_provider(_gml2ifc_exporter* pSite, const wstring& strSettingsFile)
 	: m_pSite(pSite)
@@ -932,7 +935,7 @@ SdaiInstance _exporter_base::getGeometricRepresentationContextInstance()
 	return m_iGeometricRepresentationContextInstance;
 }
 
-void _exporter_base::createIfcModel(const wchar_t* szSchemaName)
+void _exporter_base::createIfcModel(const wchar_t* szFileName, const wchar_t* szSchemaName)
 {
 	assert(szSchemaName != nullptr);
 
@@ -945,33 +948,11 @@ void _exporter_base::createIfcModel(const wchar_t* szSchemaName)
 	m_iSdaiModel = sdaiCreateModelBNUnicode(1, NULL, szSchemaName);
 	assert(m_iSdaiModel != 0);
 
-	//#tbd
-	char    description[512], timeStamp[512];
-	time_t  t;
-	struct tm* tInfo;
+	char timeStamp[512];
 
+	time_t t;
 	time(&t);
-	tInfo = localtime(&t);
-
-	//#tbd
-	if (true)//view == COORDINATIONVIEW) {
-		//if (m_Quantities.GetCheck()) {
-		memcpy(description, "ViewDefinition [CoordinationView, QuantityTakeOffAddOnView]", sizeof("ViewDefinition [CoordinationView, QuantityTakeOffAddOnView]"));
-	//}
-	/*else {
-		memcpy(description, "ViewDefinition [CoordinationView]", sizeof("ViewDefinition [CoordinationView]"));
-	}*/
-	/*}
-	else {
-		ASSERT(view == PRESENTATIONVIEW);
-		if (m_Quantities.GetCheck()) {
-			memcpy(description, "ViewDefinition [PresentationView, QuantityTakeOffAddOnView]", sizeof("ViewDefinition [PresentationView, QuantityTakeOffAddOnView]"));
-		}
-		else {
-			memcpy(description, "ViewDefinition [PresentationView]", sizeof("ViewDefinition [PresentationView]"));
-		}
-	}*/
-
+	struct tm* tInfo = localtime(&t);
 	sprintf(&timeStamp[0], "%d", 1900 + tInfo->tm_year);
 	sprintf(&timeStamp[4], "%d", 100 + 1 + tInfo->tm_mon);
 	sprintf(&timeStamp[7], "%d", 100 + tInfo->tm_mday);
@@ -983,24 +964,32 @@ void _exporter_base::createIfcModel(const wchar_t* szSchemaName)
 	timeStamp[10] = 'T';
 	timeStamp[13] = ':';
 	timeStamp[16] = ':';
-	timeStamp[19] = 0;
+	timeStamp[19] = 0;	
 
 	SetSPFFHeader(
 		m_iSdaiModel,
-		(const char*)description,           //  description //#tbd
-		"2;1",                              //  implementationLevel //#tbd
-		(const char*)nullptr,	            //  name //#tbd
-		(const char*)&timeStamp[0],         //  timeStamp //#tbd
-		"Architect",                        //  author //#tbd
-		"Building Designer Office",         //  organization //#tbd
-		"IFC Engine DLL version 1.03 beta", //  preprocessorVersion //#tbd
-		"IFC Engine DLL version 1.03 beta", //  originatingSystem //#tbd
-		"The authorising person",           //  authorization //#tbd
+		"ViewDefinition [ReferenceView]",   //  description
+		"2;1",                              //  implementationLevel
 #ifdef _WINDOWS
-		CW2A(szSchemaName)                  //  fileSchema //#tbd
+		CW2A(szFileName),                   //  name
 #else
 #ifdef __EMSCRIPTEN__
-		(LPCSTR)CW2A(szSchemaName)                  //  fileSchema //#tbd
+		(LPCSTR)CW2A(szFileName),           //  name
+#else
+#error NOT IMPLEMENTED!
+#endif
+#endif
+		(const char*)&timeStamp[0],         //  timeStamp
+		"Peter Bonsma",                     //  author
+		"RDF Ltd.",					        //  organization
+		"'IFC Engine Library, revision 9999, 2099 - 12 - 31T23:59 : 59", //  preprocessorVersion
+		"RDF Ltd. - GML2IFC - 1.0.0.0",     //  originatingSystem
+		"none",								//  authorization
+#ifdef _WINDOWS
+		CW2A(szSchemaName)                  //  fileSchema
+#else
+#ifdef __EMSCRIPTEN__
+		(LPCSTR)CW2A(szSchemaName)          //  fileSchema
 #else
 #error NOT IMPLEMENTED!
 #endif
@@ -2797,7 +2786,9 @@ _citygml_exporter::_citygml_exporter(_gml2ifc_exporter* pSite)
 
 	collectSRSData(iRootInstance);
 
-	createIfcModel(L"IFC4");
+	fs::path pthOutoutFile = strOuputFile;
+
+	createIfcModel(pthOutoutFile.stem().c_str(), L"IFC4");
 
 	// Global SRS (if any)
 	createBuildings();
